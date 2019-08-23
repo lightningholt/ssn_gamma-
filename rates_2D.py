@@ -11,7 +11,9 @@ def dvdt(vv, kk, nn, N, rcpt_types, cons, Wtot, I_total, tauSvec, dt):
     return delta_v
 
 
-def loss(Jee, Jei, Jie, Jii, i2e):
+
+
+def PS_ratesSS(Jee, Jei, Jie, Jii, i2e):
     N = 2
     rcpt_types = 3
     t = np.arange(0,5000.1, 0.1)
@@ -19,9 +21,9 @@ def loss(Jee, Jei, Jie, Jii, i2e):
     fs = fs/1000 #convert from Hz to kHz
     c = np.array([0, 25, 50, 100])
     cons = len(c)
-    
+
     J0 = np.array([[Jee, -Jei], [Jie, -Jii]])
-    
+
     W = J0
 #     print('Det(W) =', '%.3f' % np.linalg.det(W))
 
@@ -46,7 +48,7 @@ def loss(Jee, Jei, Jie, Jii, i2e):
     tauNMDA = 100 * t_scale
     tauAMPA = 3 * t_scale
     tauGABA = 5 * t_scale
-    nmdaRatio = 0.1 # sets the ratio of NMDA cells to AMPA cell 
+    nmdaRatio = 0.1 # sets the ratio of NMDA cells to AMPA cell
 
     NoiseNMDAratio = 0
     NoiseTau = 1 * t_scale
@@ -55,7 +57,7 @@ def loss(Jee, Jei, Jie, Jii, i2e):
     totalT = t[-1]
     dt = np.mean(np.diff(t))
     dt2 = np.sqrt(dt)
-    
+
     if rcpt_types > 1:
         tauS = np.array([tauAMPA, tauNMDA, tauGABA])
         tauSvec = np.kron(tauS, np.ones(N))
@@ -66,41 +68,41 @@ def loss(Jee, Jei, Jie, Jii, i2e):
         tauSvec = tau
         Wrcpt = W
         Wtot = W
-    
-    
+
+
     v1 = np.zeros([N*rcpt_types, cons])
     r_starcons = np.zeros([N, cons])
-    
+
     I_total = np.kron( g.reshape(N*rcpt_types,1),  c.reshape(1,cons))
     #Conv = True
     indt = 0
-    
+
     xtol = 1e-3
-    xmin = 1 
-    
+    xmin = 1
+
     for tt in t:
 
         dv = dvdt(v1, kk, nn,  N, rcpt_types, cons, Wtot, I_total, tauSvec, dt)
         v1 = dv + v1
     #     vv_t[:,:, tt] = v1
         indt += 1
-        
+
         if np.abs( dv /np.maximum(xmin, np.abs(v1)) ).max() < xtol:
             # print('\n converged to fixed point at t=%g,      as max(abs(dx./max(xvec,%g))) < %g \n' % (n*dt,xmin,xtol))
             # CONVG = 1
-            print(tt)
+            # print(tt)
             break
-            
+
 
 #         if tt >= totalT - 1000*dt:
 #             itr = np.max(np.abs(dv))
 
 #             if itr > 0.01:
 #                 Conv = False
-                
+
     r_starcons = rect_powerLaw(v1, kk, nn, N, cons)
     rs = nn*kk**(1/nn)*r_starcons**(1-1/nn)
-    
+
     Phi = lambda rr: np.diag(rr)
     eE = np.array([[1], [0]])
     eE = np.kron(np.ones([rcpt_types,1]), eE)
@@ -109,7 +111,7 @@ def loss(Jee, Jei, Jie, Jii, i2e):
 
     cuE = np.array([eE for cc in range(cons) for ff in fs])
     fscons = np.kron(np.ones([1, cons]), fs)
-    
+
     # iGf = np.linalg.inv(Gf)
 
     # x = np.einsum("ijk, ikm-> ijm", iGf, cuE)
@@ -126,7 +128,13 @@ def loss(Jee, Jei, Jie, Jii, i2e):
 
     spect = np.reshape(spect*2/1000, [len(fs), cons], order='F')
     spect = spect/np.mean(spect)
-    
+
+    return spect, r_starcons
+
+def loss(Jee, Jei, Jie, Jii, i2e):
+
+    spect, r_starcons = PS_ratesSS(Jee, Jei, Jie, Jii, i2e)
+
     ideal_spect = np.array([[0.08905868-3.83732629e-11j, 2.28040481-9.82572024e-10j,
               1.5483824 -6.67161049e-10j, 1.07329059-4.62455296e-10j],
              [0.08902354-8.64453092e-11j, 2.02083063+5.47442802e-09j,
@@ -330,7 +338,7 @@ def loss(Jee, Jei, Jie, Jii, i2e):
              [0.01402381-1.63865060e-10j, 0.2572476 -2.50080801e-09j,
               1.05882764+1.00782414e-08j, 0.5717662 +2.03064052e-10j]])
     ideal_spect =ideal_spect/np.mean(ideal_spect)
-    
-    ll = np.mean(np.abs(ideal_spect - spect)**2)
-    
+
+    ll = -np.mean(np.abs(ideal_spect - spect)**2)
+
     return ll
