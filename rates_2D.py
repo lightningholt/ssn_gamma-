@@ -133,7 +133,7 @@ def PS_ratesSS(Jee, Jei, Jie, Jii, i2e):
 
 def loss(Jee, Jei, Jie, Jii, i2e):
 
-    spect, r_starcons = PS_ratesSS(Jee, Jei, Jie, Jii, i2e)
+    spect, _ = PS_ratesSS(Jee, Jei, Jie, Jii, i2e)
 
     ideal_spect = np.array([[0.08905868-3.83732629e-11j, 2.28040481-9.82572024e-10j,
               1.5483824 -6.67161049e-10j, 1.07329059-4.62455296e-10j],
@@ -339,6 +339,6 @@ def loss(Jee, Jei, Jie, Jii, i2e):
               1.05882764+1.00782414e-08j, 0.5717662 +2.03064052e-10j]])
     ideal_spect =ideal_spect/np.mean(ideal_spect)
 
-    ll = -np.mean(np.abs(ideal_spect - spect)**2)
+    ll = np.mean(np.abs(ideal_spect - spect)**2)
 
     return ll

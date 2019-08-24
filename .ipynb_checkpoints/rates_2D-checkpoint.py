@@ -339,6 +339,6 @@ def loss(Jee, Jei, Jie, Jii, i2e):
               1.05882764+1.00782414e-08j, 0.5717662 +2.03064052e-10j]])
     ideal_spect =ideal_spect/np.mean(ideal_spect)
 
-    ll = -np.mean(np.abs(ideal_spect - spect)**2)
+    ll = np.mean(np.abs(ideal_spect - spect)**2)
 
     return ll
