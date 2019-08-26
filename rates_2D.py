@@ -10,7 +10,92 @@ def dvdt(vv, kk, nn, N, rcpt_types, cons, Wtot, I_total, tauSvec, dt):
     delta_v = np.reshape(dt/tauSvec, [N*rcpt_types,1]) * (-vv + Wtot @ np.kron(np.ones([rcpt_types,1]), rect_powerLaw(vv, kk ,nn, N, cons)) + I_total)
     return delta_v
 
+def ratesSS(Jee, Jei, Jie, Jii, i2e):
+    N = 2
+    rcpt_types = 3
+    t = np.arange(0,5000.1, 0.1)
+    fs = np.arange(0, 101, 1)
+    fs = fs/1000 #convert from Hz to kHz
+    c = np.array([0, 25, 50, 100])
+    cons = len(c)
 
+    J0 = np.array([[Jee, -Jei], [Jie, -Jii]])
+
+    W = J0
+#     print('Det(W) =', '%.3f' % np.linalg.det(W))
+
+    #define nonlinearity parameters
+    kk = 0.04
+    nn = 2
+
+    if rcpt_types > 1:
+        g = np.array([1, i2e, 0, 0, 0, 0])
+    else:
+        g = np.array([1, i2e])
+
+    tauE = 15
+    tau_ratio = 1
+    tauI = tauE/tau_ratio
+
+    # tau = np.ones(N)
+    # tau[:2:] = tauE
+    # tau[1:2:] = tauI
+
+    t_scale = 1
+    tauNMDA = 100 * t_scale
+    tauAMPA = 3 * t_scale
+    tauGABA = 5 * t_scale
+    nmdaRatio = 0.1 # sets the ratio of NMDA cells to AMPA cell
+
+    NoiseNMDAratio = 0
+    NoiseTau = 1 * t_scale
+
+
+    totalT = t[-1]
+    dt = np.mean(np.diff(t))
+    dt2 = np.sqrt(dt)
+
+    if rcpt_types > 1:
+        tauS = np.array([tauAMPA, tauNMDA, tauGABA])
+        tauSvec = np.kron(tauS, np.ones(N))
+
+        Wtot = np.array([[(1-nmdaRatio)*Jee, 0, 0, 0, 0, 0], [(1-nmdaRatio)* Jie, 0, 0, 0, 0, 0], [0, 0, nmdaRatio * Jee, 0, 0, 0], [0, 0, nmdaRatio * Jie, 0, 0, 0], [0, 0, 0, 0, 0, -Jei], [0, 0, 0, 0, 0, -Jii]])
+
+    else:
+        tauSvec = tau
+        Wrcpt = W
+        Wtot = W
+
+
+    v1 = np.zeros([N*rcpt_types, cons])
+    vv_t = []
+    r_starcons = np.zeros([N, cons])
+
+    I_total = np.kron( g.reshape(N*rcpt_types,1),  c.reshape(1,cons))
+    #Conv = True
+    indt = 0
+
+    xtol = 1e-3
+    xmin = 1
+
+    for tt in t:
+
+        dv = dvdt(v1, kk, nn,  N, rcpt_types, cons, Wtot, I_total, tauSvec, dt)
+        v1 = dv + v1
+    #     vv_t[:,:, tt] = v1
+        vv_t.append(v1)
+        
+        indt += 1
+
+        if np.abs( dv /np.maximum(xmin, np.abs(v1)) ).max() < xtol:
+            # print('\n converged to fixed point at t=%g,      as max(abs(dx./max(xvec,%g))) < %g \n' % (n*dt,xmin,xtol))
+            # CONVG = 1
+            # print(tt)
+            break
+        
+        
+    
+    return v1, vv_t 
 
 
 def PS_ratesSS(Jee, Jei, Jie, Jii, i2e):
