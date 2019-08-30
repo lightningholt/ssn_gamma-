@@ -8,7 +8,7 @@ def rect_powerLaw(vv, kk, nn, N, cons):
 
 def dvdt(vv, kk, nn, N, rcpt_types, cons, Wtot, I_total, tauSvec, dt):
     '''Evaluates the RHS of the v-eqn'''
-    delta_v = np.reshape(dt/tauSvec, [N*rcpt_types,1]) * (-vv + Wtot @ np.kron(np.ones([rcpt_types,1]), rect_powerLaw(vv, kk ,nn, N, cons)) + I_total)
+    delta_v = np.reshape(dt/tauSvec, [N*rcpt_types,1]) * (-vv + Wtot @ rect_powerLaw(vv, kk ,nn, N, cons) + I_total)
     return delta_v
 
 def rate_powerLaw(rr, W, I_total, kk ,nn):
@@ -64,7 +64,9 @@ def r_SS(params):
         tauS = np.array([tauAMPA, tauNMDA, tauGABA])
         tauSvec = np.kron(tauS, np.ones(N))
 
-        Wtot = np.array([[(1-nmdaRatio)*Jee, 0, 0, 0, 0, 0], [(1-nmdaRatio)* Jie, 0, 0, 0, 0, 0], [0, 0, nmdaRatio * Jee, 0, 0, 0], [0, 0, nmdaRatio * Jie, 0, 0, 0], [0, 0, 0, 0, 0, -Jei], [0, 0, 0, 0, 0, -Jii]])
+#         Wtot = np.array([[(1-nmdaRatio)*Jee, 0, 0, 0, 0, 0], [(1-nmdaRatio)* Jie, 0, 0, 0, 0, 0], [0, 0, nmdaRatio * Jee, 0, 0, 0], [0, 0, nmdaRatio * Jie, 0, 0, 0], [0, 0, 0, 0, 0, -Jei], [0, 0, 0, 0, 0, -Jii]])
+        
+        Wtot = np.array([[(1-nmdaRatio)*Jee, 0], [(1-nmdaRatio)* Jie, 0], [nmdaRatio * Jee, 0], [nmdaRatio * Jie, 0], [0, -Jei], [0, -Jii]])
         
     else:
         tauSvec = np.reshape(tau, (N,1))
@@ -107,7 +109,14 @@ def r_SS(params):
     
     
 
-def ratesSS(Jee, Jei, Jie, Jii, i2e):
+def ratesSS(params):
+    
+    Jee = params[0]
+    Jei = params[1]
+    Jie = params[2]
+    Jii = params[3]
+    i2e = params[4]
+    
     N = 2
     rcpt_types = 3
     t = np.arange(0,5000.1, 0.1)
@@ -156,7 +165,9 @@ def ratesSS(Jee, Jei, Jie, Jii, i2e):
         tauS = np.array([tauAMPA, tauNMDA, tauGABA])
         tauSvec = np.kron(tauS, np.ones(N))
 
-        Wtot = np.array([[(1-nmdaRatio)*Jee, 0, 0, 0, 0, 0], [(1-nmdaRatio)* Jie, 0, 0, 0, 0, 0], [0, 0, nmdaRatio * Jee, 0, 0, 0], [0, 0, nmdaRatio * Jie, 0, 0, 0], [0, 0, 0, 0, 0, -Jei], [0, 0, 0, 0, 0, -Jii]])
+#         Wtot = np.array([[(1-nmdaRatio)*Jee, 0, 0, 0, 0, 0], [(1-nmdaRatio)* Jie, 0, 0, 0, 0, 0], [0, 0, nmdaRatio * Jee, 0, 0, 0], [0, 0, nmdaRatio * Jie, 0, 0, 0], [0, 0, 0, 0, 0, -Jei], [0, 0, 0, 0, 0, -Jii]])
+        
+        Wtot = np.array([[(1-nmdaRatio)*Jee, 0], [(1-nmdaRatio)* Jie, 0], [nmdaRatio * Jee, 0], [nmdaRatio * Jie, 0], [0, -Jei], [0, -Jii]])
 
     else:
         tauSvec = tau
@@ -250,7 +261,9 @@ def PS(params, v1):
         tauS = np.array([tauAMPA, tauNMDA, tauGABA])
         tauSvec = np.kron(tauS, np.ones(N))
 
-        Wtot = np.array([[(1-nmdaRatio)*Jee, 0, 0, 0, 0, 0], [(1-nmdaRatio)* Jie, 0, 0, 0, 0, 0], [0, 0, nmdaRatio * Jee, 0, 0, 0], [0, 0, nmdaRatio * Jie, 0, 0, 0], [0, 0, 0, 0, 0, -Jei], [0, 0, 0, 0, 0, -Jii]])
+#         Wtot = np.array([[(1-nmdaRatio)*Jee, 0, 0, 0, 0, 0], [(1-nmdaRatio)* Jie, 0, 0, 0, 0, 0], [0, 0, nmdaRatio * Jee, 0, 0, 0], [0, 0, nmdaRatio * Jie, 0, 0, 0], [0, 0, 0, 0, 0, -Jei], [0, 0, 0, 0, 0, -Jii]])
+        
+        Wtot = np.array([[(1-nmdaRatio)*Jee, 0], [(1-nmdaRatio)* Jie, 0], [nmdaRatio * Jee, 0], [nmdaRatio * Jie, 0], [0, -Jei], [0, -Jii]])
 
     else:
         tauSvec = tau
@@ -268,7 +281,7 @@ def PS(params, v1):
     Phi = lambda rr: np.diag(rr)
     eE = np.array([[1], [0]])
     eE = np.kron(np.ones([rcpt_types,1]), eE)
-    J = np.array([Wtot @ np.kron(np.ones([rcpt_types, rcpt_types]), Phi(rs[:,cc])) -np.eye(N*rcpt_types) for cc in range(cons)])
+    J = np.array([np.kron(np.ones((1, rcpt_types)), Wtot @  Phi(rs[:,cc])) - np.eye(N*rcpt_types) for cc in range(cons)])
     Gf = np.array([-1j * 2 * np.pi * ff * np.diag(np.kron(tauS, np.ones(N))) - J[cc] for cc in range(cons) for ff in fs])
 
 
@@ -296,7 +309,13 @@ def PS(params, v1):
     
 
 
-def PS_ratesSS(Jee, Jei, Jie, Jii, i2e):
+def PS_ratesSS(params):
+    
+    Jee = params[0]
+    Jei = params[1]
+    Jie = params[2]
+    Jii = params[3]
+    i2e = params[4]
     
     N = 2
     rcpt_types = 3
@@ -346,7 +365,9 @@ def PS_ratesSS(Jee, Jei, Jie, Jii, i2e):
         tauS = np.array([tauAMPA, tauNMDA, tauGABA])
         tauSvec = np.kron(tauS, np.ones(N))
 
-        Wtot = np.array([[(1-nmdaRatio)*Jee, 0, 0, 0, 0, 0], [(1-nmdaRatio)* Jie, 0, 0, 0, 0, 0], [0, 0, nmdaRatio * Jee, 0, 0, 0], [0, 0, nmdaRatio * Jie, 0, 0, 0], [0, 0, 0, 0, 0, -Jei], [0, 0, 0, 0, 0, -Jii]])
+#         Wtot = np.array([[(1-nmdaRatio)*Jee, 0, 0, 0, 0, 0], [(1-nmdaRatio)* Jie, 0, 0, 0, 0, 0], [0, 0, nmdaRatio * Jee, 0, 0, 0], [0, 0, nmdaRatio * Jie, 0, 0, 0], [0, 0, 0, 0, 0, -Jei], [0, 0, 0, 0, 0, -Jii]])
+        
+        Wtot = np.array([[(1-nmdaRatio)*Jee, 0], [(1-nmdaRatio)* Jie, 0], [nmdaRatio * Jee, 0], [nmdaRatio * Jie, 0], [0, -Jei], [0, -Jii]])
 
     else:
         tauSvec = tau
@@ -390,7 +411,8 @@ def PS_ratesSS(Jee, Jei, Jie, Jii, i2e):
     Phi = lambda rr: np.diag(rr)
     eE = np.array([[1], [0]])
     eE = np.kron(np.ones([rcpt_types,1]), eE)
-    J = np.array([Wtot @ np.kron(np.ones([rcpt_types, rcpt_types]), Phi(rs[:,cc])) - np.eye(N*rcpt_types) for cc in range(cons)])
+#     J = np.array([Wtot @ Phi(rs[:,cc]) - np.eye(N*rcpt_types) for cc in range(cons)])
+    J = np.array([np.kron(np.ones((1, rcpt_types)), Wtot @  Phi(rs[:,cc])) - np.eye(N*rcpt_types) for cc in range(cons)])
     Gf = np.array([-1j * 2 * np.pi * ff * np.diag(np.kron(tauS, np.ones(N))) - J[cc] for cc in range(cons) for ff in fs])
     
     cuE = np.array([eE for cc in range(cons) for ff in fs])
