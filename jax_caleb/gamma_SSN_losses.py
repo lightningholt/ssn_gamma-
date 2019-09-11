@@ -13,6 +13,32 @@ def loss_SSN_2D_contrast(fs, spect):
 
     return np.mean((target_spect - spect)**2)
 
+def loss_spect_contrasts(fs, spect):
+    '''
+    MSE loss quantifying match of power spectra across
+    contrasts [0, 25, 50, 100] with target spectra 
+    '''
+    
+    target_spect = np.array(get_target_spect(fs))
+    spect = spect/np.mean(spect)
+    
+    spect_loss = np.mean((target_spect - spect) ** 2) #MSE
+    return spect_loss
+
+def loss_rates_contrasts(r_fp):
+    '''
+    Tanh function loss quantifying match of firing rates across
+    contrasts [0, 25, 50, 100] with target firing rates
+    Tanh function loss is used so that firing rates are neither too 
+    small or too large, but the actual values don't matter so much 
+    '''
+    target_rates = np.array(get_target_rates())
+    
+    half_width = 20
+    slope = 5
+    power = 4
+    rates_loss = rates_error_fcn(target_rates - r_fp, half_width, slope, power)  # error in the rates 
+    return np.mean(rates_loss)
 
 def get_target_spect(fs):
     """
@@ -228,3 +254,22 @@ def get_target_spect(fs):
     fs = numpy.array(fs)
     target_PS = np.array([numpy.interp(fs, fs_ideal, idl_ps) for idl_ps in ideal_spect.T]).T
     return target_PS/numpy.mean(target_PS)
+
+def get_target_rates():
+    return np.array([[ 0.       ,  3.55938888,  3.01921749,  1.07516611],
+             [ 0.       , 11.7695055, 18.87521935, 32.06238556]])
+
+def rates_error_fcn(error, half_width, slope_control, power):
+    '''
+    This fcn has two parts. The first, tanh_error, forces rates to be in the neighborhood around 
+    realistic rates. 
+    error = difference between ideal rates, and observed rates
+    half_width = half the width of the tanh canyon
+    slope_control = sets how quickly the canyon walls rise. Increasing slope_control increases their 
+    slope.
+    
+    The second part is so that the gradient isn't zero outside the canyon. It goes like error ** power
+    '''
+    tanh_error = 2 + np.tanh((error-half_width)/slope_control)-np.tanh((error+half_width)/slope_control)
+    nonzero_grad_error = tanh_error # * (error ** power)
+    return nonzero_grad_error
