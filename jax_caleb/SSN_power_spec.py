@@ -5,8 +5,10 @@ import jax.numpy as np
 
 from util import toeplitz
 
+#corr_time = 5 originally
+
 class NoisePars(object):
-	def __init__(self, stdevE=1.5, stdevI=1.5, corr_time=5, corr_length=0, NMDAratio=0):
+	def __init__(self, stdevE=1.5, stdevI=1.5, corr_time=1, corr_length=0, NMDAratio=0):
 		self.stdevE = stdevE
 		self.stdevI = stdevI
 		self.corr_time = corr_time
