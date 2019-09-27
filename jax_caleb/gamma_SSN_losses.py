@@ -52,7 +52,7 @@ def loss_params(params):
     Jie = params[2]
     Jii = params[3]
     
-    if len(params) < 5:
+    if len(params) < 6:
         i2e = params[4]
         gE = 1
         gI = 1
@@ -64,7 +64,7 @@ def loss_params(params):
         nmdaRatio = params[6]
     
     A = 10 # ReLu scaling
-    J_range = [3,0] # upper bound, lower bound
+    J_range = [0,3] # lower bound, upper bound
     
     ee_loss =  param_relu(Jee, A, J_range)
     ei_loss = param_relu(Jei, A,  J_range)
@@ -82,10 +82,11 @@ def loss_params(params):
 def param_relu(param, A, acceptable_range):
     '''
     Returns reLU that is 0 in acceptable range, and nonzero outside that range
+    acceptable_range = [lower bound, upper bound]
     '''
-    return A * (np.maximum(param - acceptable_range[0],0) + np.maximum(acceptable_range[1] - param, 0))
+    return A * (np.maximum(acceptable_range[0] - param, 0) + np.maximum(param - acceptable_range[1], 0))
 
-def get_target_spect(fs):
+def get_target_spect(fs, fname='standJ19-09-20-BestSpect.mat'):
     """
     uses only non-jax numpy to interpolate our target spectrum to any feasible vector of freqs' (fs)
     """
@@ -292,7 +293,7 @@ def get_target_spect(fs):
 #               1.17719555+1.03646993e-08j, 0.58113426-3.11666914e-10j],
 #              [0.01402381-1.63865060e-10j, 0.2572476 -2.50080801e-09j,
 #               1.05882764+1.00782414e-08j, 0.5717662 +2.03064052e-10j]])
-    ideal_spect = sio.loadmat("standJ19-09-20-BestSpect.mat")
+    ideal_spect = sio.loadmat(fname)
     ideal_spect = ideal_spect['best_spect']
     
     ideal_spect = numpy.real(ideal_spect)
@@ -303,8 +304,13 @@ def get_target_spect(fs):
     target_PS = np.array([numpy.interp(fs, fs_ideal, idl_ps) for idl_ps in ideal_spect.T]).T
     return target_PS/numpy.mean(target_PS)
 
-def get_target_rates():
-    return np.array([[ 0.       ,  3.55938888,  3.01921749,  1.07516611],
+def get_target_rates(fname='standJ19-09-20-BestSpect.mat'):
+    
+    ideal_spect = sio.loadmat(fname)
+    if 'best_rate' in ideal_spect:
+        return ideal_spect['best_rate']
+    else:
+        return np.array([[ 0.       ,  3.55938888,  3.01921749,  1.07516611],
              [ 0.       , 11.7695055, 18.87521935, 32.06238556]])
 
 def rates_error_fcn(error, half_width, slope_control, power):
