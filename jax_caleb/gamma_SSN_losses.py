@@ -86,7 +86,7 @@ def param_relu(param, A, acceptable_range):
     '''
     return A * (np.maximum(acceptable_range[0] - param, 0) + np.maximum(param - acceptable_range[1], 0))
 
-def get_target_spect(fs, fname='standJ19-09-20-BestSpect.mat'):
+def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.mat'):
     """
     uses only non-jax numpy to interpolate our target spectrum to any feasible vector of freqs' (fs)
     """
@@ -293,18 +293,33 @@ def get_target_spect(fs, fname='standJ19-09-20-BestSpect.mat'):
 #               1.17719555+1.03646993e-08j, 0.58113426-3.11666914e-10j],
 #              [0.01402381-1.63865060e-10j, 0.2572476 -2.50080801e-09j,
 #               1.05882764+1.00782414e-08j, 0.5717662 +2.03064052e-10j]])
-    ideal_spect = sio.loadmat(fname)
-    ideal_spect = ideal_spect['best_spect']
     
-    ideal_spect = numpy.real(ideal_spect)
-    ideal_spect = ideal_spect/numpy.mean(ideal_spect)
-
     fs_ideal = numpy.arange(0,101,1)
     fs = numpy.array(fs)
+    
+    if ground_truth:
+        ideal_spect = sio.loadmat(fname)
+        ideal_spect = ideal_spect['best_spect']
+
+        ideal_spect = numpy.real(ideal_spect)
+        ideal_spect = ideal_spect/numpy.mean(ideal_spect)
+
+    else:
+        con_range = numpy.array([0, 25, 50, 100])
+        ideal_spect = numpy.zeros((len(fs_ideal), len(con_range)))
+        ind = 0
+
+        for rr in con_range:
+            ideal_spect[:, ind] = ray_spect(fs_ideal, rr)
+            ind += 1
+
+        ideal_spect = ideal_spect/numpy.mean(ideal_spect)
+    
+    
     target_PS = np.array([numpy.interp(fs, fs_ideal, idl_ps) for idl_ps in ideal_spect.T]).T
     return target_PS/numpy.mean(target_PS)
 
-def get_target_rates(fname='standJ19-09-20-BestSpect.mat'):
+def get_target_rates(ground_truth = False, fname='standJ19-09-20-BestSpect.mat'):
     
     ideal_spect = sio.loadmat(fname)
     if 'best_rate' in ideal_spect:
@@ -327,3 +342,20 @@ def rates_error_fcn(error, half_width, slope_control, power):
     tanh_error = 2 + np.tanh((error-half_width)/slope_control)-np.tanh((error+half_width)/slope_control)
     nonzero_grad_error = tanh_error # * (error ** power)
     return nonzero_grad_error
+
+
+def ray_spect(fs, contrast):
+#     spect = (10**3)*np.exp(-fs/5)
+    
+    a = 1e5
+    r = 10
+    
+    spect = a/(r**2 + fs**2)
+    
+    if contrast != 0:
+        sig = 10
+        shift = 4 * numpy.sqrt(contrast) + 20
+        gaussian = 300 * numpy.exp(-(fs - shift)**2/(numpy.sqrt(2) * sig)**2)
+        spect = spect + gaussian
+    
+    return spect
