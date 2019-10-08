@@ -26,7 +26,7 @@ def loss_spect_contrasts(fs, spect):
     spect_loss = np.mean((target_spect - spect) ** 2) #MSE
     return spect_loss
 
-def loss_rates_contrasts(r_fp):
+def loss_rates_contrasts(r_fp, half_width, kink_control, slope = 1):
     '''
     Tanh function loss quantifying match of firing rates across
     contrasts [0, 25, 50, 100] with target firing rates
@@ -35,10 +35,11 @@ def loss_rates_contrasts(r_fp):
     '''
     target_rates = np.array(get_target_rates())
     
-    half_width = 20
-    slope = 5
-    power = 4
-    rates_loss = rates_error_fcn(target_rates - r_fp, half_width, slope, power)  # error in the rates 
+    #half_width = 20
+    #slope = 5
+    #power = 4
+    #rates_loss = rates_error_fcn(target_rates - r_fp, half_width, slope, power)  # error in the rates 
+    rates_loss = rates_error_fcn(target_rates - r_fp, half_width, kink_control, slope)  # error in the rates 
     return np.mean(rates_loss)
 
 #     return np.mean(((target_rates - r_fp)/half_width)**power)
@@ -63,26 +64,32 @@ def loss_params(params):
         gI = params[5]
         nmdaRatio = params[6]
     
-    A = 10 # ReLu scaling
+    A = 1 # ReLu scaling
     J_range = [0,3] # lower bound, upper bound
     
-    ee_loss =  param_relu(Jee, A, J_range)
-    ei_loss = param_relu(Jei, A,  J_range)
-    ie_loss = param_relu(Jie, A,  J_range)
-    ii_loss = param_relu(Jii, A,  J_range)
-    i2e_loss = param_relu(i2e, A, [0.5, 2])
+    ee_loss =  param_relu(Jee, J_range, A)
+    ei_loss = param_relu(Jei, J_range, A)
+    ie_loss = param_relu(Jie, J_range, A)
+    ii_loss = param_relu(Jii, J_range,  A)
+    i2e_loss = param_relu(i2e, [0.5, 2], A)
     
-    gE_loss = param_relu(gE, A, [0, 2])
-    gI_loss = param_relu(gI, A, [0.5, 2])
-    nmda_loss = param_relu(nmdaRatio, A, [0.2, 1])
-    
-    return ee_loss + ei_loss + ie_loss + i2e_loss + gE_loss + gI_loss + nmda_loss
+    gE_loss = param_relu(gE, [0, 2], A)
+    gI_loss = param_relu(gI, [0.5, 2], A)
+    nmda_loss = param_relu(nmdaRatio, [0.2, 1], A)
+        
+    if len(params) < 6:
+        param_loss = (1/5) * (ee_loss + ei_loss + ie_loss + ii_loss + i2e_loss)
+    else:
+        param_loss = (1/7) * (ee_loss + ei_loss + ie_loss + ii_loss + gE_loss + gI_loss + nmda_loss)
+        
+    return param_loss
 
     
-def param_relu(param, A, acceptable_range):
+def param_relu(param, acceptable_range, A=1):
     '''
     Returns reLU that is 0 in acceptable range, and nonzero outside that range
     acceptable_range = [lower bound, upper bound]
+    A is the slope of the ReLu, defauls to 1.
     '''
     return A * (np.maximum(acceptable_range[0] - param, 0) + np.maximum(param - acceptable_range[1], 0))
 
@@ -328,19 +335,25 @@ def get_target_rates(ground_truth = False, fname='standJ19-09-20-BestSpect.mat')
         return np.array([[ 0.       ,  3.55938888,  3.01921749,  1.07516611],
              [ 0.       , 11.7695055, 18.87521935, 32.06238556]])
 
-def rates_error_fcn(error, half_width, slope_control, power):
+#def rates_error_fcn(error, half_width, slope_control, power): #old definition of fcn
+def rates_error_fcn(error, half_width, kink_control, slope = 1):
     '''
     This fcn has two parts. The first, tanh_error, forces rates to be in the neighborhood around 
     realistic rates. 
     error = difference between ideal rates, and observed rates
     half_width = half the width of the tanh canyon
-    slope_control = sets how quickly the canyon walls rise. Increasing slope_control increases their 
-    slope.
+    kink_control = how quickly does the log(1 + exp(x)) transition from 0 to ~x
+    slope = once log(1 + exp(x)) transitions to ~x, what's the slope? 
     
-    The second part is so that the gradient isn't zero outside the canyon. It goes like error ** power
+    slope_control = sets how quickly the canyon walls rise. Increasing slope_control increases their 
+    slope. No t the same thing as slope --- Prev iteration of code 
+    
+    The second part is so that the gradient isn't zero outside the canyon. It goes like error ** power -- don't need this since now we're using that soft ReLu thing
     '''
-    tanh_error = 2 + np.tanh((error-half_width)/slope_control)-np.tanh((error+half_width)/slope_control)
-    nonzero_grad_error = tanh_error # * (error ** power)
+    #tanh_error = 2 + np.tanh((error-half_width)/slope_control)-np.tanh((error+half_width)/slope_control)
+    tanh_error = myReLu((error-half_width)/kink_control) + myReLu((-half_width - error)/kink_control)
+    
+    nonzero_grad_error = slope * tanh_error # * (error ** power) -> from a different iteration of the code
     return nonzero_grad_error
 
 
@@ -359,3 +372,6 @@ def ray_spect(fs, contrast):
         spect = spect + gaussian
     
     return spect
+
+def myReLu(x):
+    return np.log(1 + np.exp(x))
