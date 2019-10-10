@@ -303,6 +303,7 @@ def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.m
     
     fs_ideal = numpy.arange(0,101,1)
     fs = numpy.array(fs)
+    ideal_spect = np.real(ideal_spect)/np.mean(np.real(ideal_spect))
     
 #     if ground_truth:
 #         ideal_spect = sio.loadmat(fname)
@@ -336,12 +337,19 @@ def get_target_rates(ground_truth = False, fname='standJ19-09-20-BestSpect.mat')
              [ 0.       , 11.7695055, 18.87521935, 32.06238556]])
 
 #def rates_error_fcn(error, half_width, slope_control, power): #old definition of fcn
-def rates_error_fcn(error, half_width, kink_control, slope = 1):
+#def rates_error_fcn(rates, half_width, kink_control, slope = 1):
+def rates_error_fcn(rates, lower_bound, upper_bound, kink_control, slope = 1):
     '''
     This fcn has two parts. The first, tanh_error, forces rates to be in the neighborhood around 
     realistic rates. 
     error = difference between ideal rates, and observed rates
+    CHANGED ERROR --- error is rates, the observed rates coming in. 
+    
+    rates = observed rates
+    
     half_width = half the width of the tanh canyon
+    lower_bound = where the valley starts. If > 0 valley starts at -lower_bound
+    upper_bound = where the valley ends, keeps rates from blowing up
     kink_control = how quickly does the log(1 + exp(x)) transition from 0 to ~x
     slope = once log(1 + exp(x)) transitions to ~x, what's the slope? 
     
@@ -351,11 +359,14 @@ def rates_error_fcn(error, half_width, kink_control, slope = 1):
     The second part is so that the gradient isn't zero outside the canyon. It goes like error ** power -- don't need this since now we're using that soft ReLu thing
     '''
     #tanh_error = 2 + np.tanh((error-half_width)/slope_control)-np.tanh((error+half_width)/slope_control)
-    tanh_error = myReLu((error-half_width)/kink_control) + myReLu((-half_width - error)/kink_control)
+    #tanh_error = myReLu((error-half_width)/kink_control) + myReLu((-half_width - error)/kink_control)
+    tanh_error = myReLu((rates - upper_bound)/kink_control) + myReLu((-lower_bound - rates)/ kink_control) #gives a valley from near -lower_bound to upper bound (as long as lower_bound >0)
     
     nonzero_grad_error = slope * tanh_error # * (error ** power) -> from a different iteration of the code
     return nonzero_grad_error
 
+def myReLu(x):
+    return np.log(1 + np.exp(x))
 
 def ray_spect(fs, contrast):
 #     spect = (10**3)*np.exp(-fs/5)
@@ -372,9 +383,6 @@ def ray_spect(fs, contrast):
         spect = spect + gaussian
     
     return spect
-
-def myReLu(x):
-    return np.log(1 + np.exp(x))
 
 def acceptable_rates_ranges(r_fp, test_contrasts, half_width_rates, kink_control):
     x = np.linspace(-30, 30, 10000)
