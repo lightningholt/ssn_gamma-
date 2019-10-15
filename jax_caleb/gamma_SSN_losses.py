@@ -313,8 +313,16 @@ def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.m
               1.17719555+1.03646993e-08j, 0.58113426-3.11666914e-10j],
              [0.01402381-1.63865060e-10j, 0.2572476 -2.50080801e-09j,
               1.05882764+1.00782414e-08j, 0.5717662 +2.03064052e-10j]])
+<<<<<<< HEAD
         
         ideal_spect = np.real(ideal_spect)/np.mean(np.real(ideal_spect))
+=======
+
+        ideal_spect = np.real(ideal_spect)/np.mean(np.real(ideal_spect))
+#        fs_ideal = numpy.arange(0,101,1)
+#        fs = numpy.array(fs)
+#        ideal_spect = np.real(ideal_spect)/np.mean(np.real(ideal_spect))
+>>>>>>> e1229a47d6847b1445f077a1ef3a3246705d704e
     
 
 #         ideal_spect = sio.loadmat(fname)
