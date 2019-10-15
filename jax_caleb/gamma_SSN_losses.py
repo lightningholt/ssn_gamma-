@@ -98,7 +98,8 @@ def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.m
     uses only non-jax numpy to interpolate our target spectrum to any feasible vector of freqs' (fs)
     """
     
-    ideal_spect = numpy.array([[0.08905868-3.83732629e-11j, 2.28040481-9.82572024e-10j,
+    if ground_truth:
+        ideal_spect = numpy.array([[0.08905868-3.83732629e-11j, 2.28040481-9.82572024e-10j,
               1.5483824 -6.67161049e-10j, 1.07329059-4.62455296e-10j],
              [0.08902354-8.64453092e-11j, 2.02083063+5.47442802e-09j,
               1.38844359-9.76937753e-10j, 0.97001064+1.92841498e-09j],
@@ -306,23 +307,23 @@ def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.m
     fs = numpy.array(fs)
     ideal_spect = np.real(ideal_spect)/np.mean(np.real(ideal_spect))
     
-#     if ground_truth:
+
 #         ideal_spect = sio.loadmat(fname)
 #         ideal_spect = ideal_spect['best_spect']
 
 #         ideal_spect = numpy.real(ideal_spect)
 #         ideal_spect = ideal_spect/numpy.mean(ideal_spect)
 
-#     else:
-#         con_range = numpy.array([0, 25, 50, 100])
-#         ideal_spect = numpy.zeros((len(fs_ideal), len(con_range)))
-#         ind = 0
+    else:
+        con_range = numpy.array([0, 25, 50, 100])
+        ideal_spect = numpy.zeros((len(fs_ideal), len(con_range)))
+        ind = 0
 
-#         for rr in con_range:
-#             ideal_spect[:, ind] = ray_spect(fs_ideal, rr)
-#             ind += 1
+        for rr in con_range:
+            ideal_spect[:, ind] = ray_spect(fs_ideal, rr)
+            ind += 1
 
-#         ideal_spect = ideal_spect/numpy.mean(ideal_spect)
+        ideal_spect = ideal_spect/numpy.mean(ideal_spect)
     
     
     target_PS = np.array([numpy.interp(fs, fs_ideal, idl_ps) for idl_ps in ideal_spect.T]).T
@@ -380,7 +381,7 @@ def ray_spect(fs, contrast):
     if contrast != 0:
         sig = 10
         shift = 4 * numpy.sqrt(contrast) + 20
-        gaussian = 300 * numpy.exp(-(fs - shift)**2/(numpy.sqrt(2) * sig)**2)
+        gaussian = 100 * numpy.exp(-(fs - shift)**2/(numpy.sqrt(2) * sig)**2)
         spect = spect + gaussian
     
     return spect
