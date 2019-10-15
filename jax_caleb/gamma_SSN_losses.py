@@ -107,6 +107,9 @@ def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.m
     uses only non-jax numpy to interpolate our target spectrum to any feasible vector of freqs' (fs)
     """
     
+    fs_ideal = numpy.arange(0,101,1)
+    fs = numpy.array(fs)
+    
     if ground_truth:
         ideal_spect = numpy.array([[0.08905868-3.83732629e-11j, 2.28040481-9.82572024e-10j,
               1.5483824 -6.67161049e-10j, 1.07329059-4.62455296e-10j],
@@ -310,10 +313,8 @@ def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.m
               1.17719555+1.03646993e-08j, 0.58113426-3.11666914e-10j],
              [0.01402381-1.63865060e-10j, 0.2572476 -2.50080801e-09j,
               1.05882764+1.00782414e-08j, 0.5717662 +2.03064052e-10j]])
-    
-    fs_ideal = numpy.arange(0,101,1)
-    fs = numpy.array(fs)
-    ideal_spect = np.real(ideal_spect)/np.mean(np.real(ideal_spect))
+        
+        ideal_spect = np.real(ideal_spect)/np.mean(np.real(ideal_spect))
     
 
 #         ideal_spect = sio.loadmat(fname)
