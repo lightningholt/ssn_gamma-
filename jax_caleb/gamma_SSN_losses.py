@@ -26,12 +26,21 @@ def loss_spect_contrasts(fs, spect):
     spect_loss = np.mean((target_spect - spect) ** 2) #MSE
     return spect_loss
 
-def loss_rates_contrasts(r_fp, half_width, kink_control, slope = 1):
+#def loss_rates_contrasts(r_fp, half_width, kink_control, slope = 1):
+#     '''
+#     Tanh function loss quantifying match of firing rates across
+#     contrasts [0, 25, 50, 100] with target firing rates
+#     Tanh function loss is used so that firing rates are neither too 
+#     small or too large, but the actual values don't matter so much 
+#     '''
+    
+def loss_rates_contrasts(r_fp, lower_bound, upper_bound, kink_control, slope = 1):
     '''
-    Tanh function loss quantifying match of firing rates across
-    contrasts [0, 25, 50, 100] with target firing rates
-    Tanh function loss is used so that firing rates are neither too 
-    small or too large, but the actual values don't matter so much 
+    This function finds the loss from rates. It uses a 2 ReLu type fcns to define a valley that is near zero in the valley and rises sort of linear out of it. 
+    r_fp = observed rates
+    lower_bound = lower bound of the error or the rates. should be posiitve. If just worried about rates valley waill start at -lower_bound. Works well with kink_control=1
+    kink_control = determines how quickely the fcn rises out of the valley
+    slope = multiplicative factor if I want to increase the rel strenght of rates loss
     '''
     target_rates = np.array(get_target_rates())
     
@@ -39,7 +48,7 @@ def loss_rates_contrasts(r_fp, half_width, kink_control, slope = 1):
     #slope = 5
     #power = 4
     #rates_loss = rates_error_fcn(target_rates - r_fp, half_width, slope, power)  # error in the rates 
-    rates_loss = rates_error_fcn(target_rates - r_fp, half_width, kink_control, slope)  # error in the rates 
+    rates_loss = rates_error_fcn(r_fp - target_rates, lower_bound, upper_bound, kink_control, slope)  # error in the rates 
     return np.mean(rates_loss)
 
 #     return np.mean(((target_rates - r_fp)/half_width)**power)
