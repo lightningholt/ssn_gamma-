@@ -3,6 +3,7 @@ import jax.numpy as np
 
 import numpy
 import scipy.io as sio
+from SSN_power_spec import find_peak_freq
 
 def loss_SSN_2D_contrast(fs, spect):
     """
@@ -26,10 +27,13 @@ def loss_spect_contrasts(fs, spect):
     spect_loss = np.mean((target_spect - spect) ** 2) #MSE
     return spect_loss
 
-def loss_peak_freq(obs_f0, target_f0):
+def loss_peak_freq(fs, obs_f0):
     '''
-    Find the loss if the obs_f0 and target_f0 are different..
+    Find the loss if the obs_f0 and target_f0 are different using a normalized mean square error thing
     '''
+    target_spect = np.array(get_target_spect(fs))
+    cons = len(obs_f0)+1 # the +1 is for the background spect
+    target_f0 = find_peak_freq(fs, target_spect, cons)
     
     f0_error = np.mean(((obs_f0 - target_f0)/target_f0)**2)
     return f0_error
