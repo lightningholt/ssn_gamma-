@@ -26,6 +26,14 @@ def loss_spect_contrasts(fs, spect):
     spect_loss = np.mean((target_spect - spect) ** 2) #MSE
     return spect_loss
 
+def loss_peak_freq(obs_f0, target_f0):
+    '''
+    Find the loss if the obs_f0 and target_f0 are different..
+    '''
+    
+    f0_error = np.mean(((obs_f0 - target_f0)/target_f0)**2)
+    return f0_error
+
 #def loss_rates_contrasts(r_fp, half_width, kink_control, slope = 1):
 #     '''
 #     Tanh function loss quantifying match of firing rates across
@@ -48,7 +56,7 @@ def loss_rates_contrasts(r_fp, lower_bound, upper_bound, kink_control, slope = 1
     #slope = 5
     #power = 4
     #rates_loss = rates_error_fcn(target_rates - r_fp, half_width, slope, power)  # error in the rates 
-    rates_loss = rates_error_fcn(r_fp, lower_bound, upper_bound, kink_control, slope)  # error in the rates 
+    rates_loss = rates_error_fcn(r_fp - target_rates, lower_bound, upper_bound, kink_control, slope)  # error in the rates 
     return np.mean(rates_loss)
 
 #     return np.mean(((target_rates - r_fp)/half_width)**power)
@@ -313,9 +321,9 @@ def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.m
               1.17719555+1.03646993e-08j, 0.58113426-3.11666914e-10j],
              [0.01402381-1.63865060e-10j, 0.2572476 -2.50080801e-09j,
               1.05882764+1.00782414e-08j, 0.5717662 +2.03064052e-10j]])
-
         
         ideal_spect = np.real(ideal_spect)/np.mean(np.real(ideal_spect))
+    
 
 #         ideal_spect = sio.loadmat(fname)
 #         ideal_spect = ideal_spect['best_spect']
