@@ -60,7 +60,7 @@ def loss_rates_contrasts(r_fp, lower_bound, upper_bound, kink_control, slope = 1
     #slope = 5
     #power = 4
     #rates_loss = rates_error_fcn(target_rates - r_fp, half_width, slope, power)  # error in the rates 
-    rates_loss = rates_error_fcn(r_fp - target_rates, lower_bound, upper_bound, kink_control, slope)  # error in the rates 
+    rates_loss = rates_error_fcn(r_fp, lower_bound, upper_bound, kink_control, slope)  # error in the rates 
     return np.mean(rates_loss)
 
 #     return np.mean(((target_rates - r_fp)/half_width)**power)
