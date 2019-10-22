@@ -33,8 +33,8 @@ tau_s = np.array([3, 5, 100])*t_scale #in ms, AMPA, GABA, NMDA current decay tim
 
 contrasts = np.array([0, 25, 50, 100])
 cons = len(contrasts)
-lower_bound_rates = 5 * np.ones([2, cons])
-upper_bound_rates = np.array([[80*np.ones(len(contrasts))], [100*np.ones(len(contrasts))]])
+lower_bound_rates = -5 * np.ones([2, cons-1])
+upper_bound_rates = np.vstack((70*np.ones(cons-1), 100*np.ones(cons-1)))
 kink_control = 1 # how quickly log(1 + exp(x)) goes to ~x, where x = target_rates - found_rates    
 
 def full_gd_gamma(params_init, eta):
@@ -151,7 +151,7 @@ def loss(params):
 #     fs_loss = fs[np.where(fs > 20)]
     
     spect_loss = losses.loss_spect_contrasts(fs[fs_loss_inds], np.real(spect[fs_loss_inds, :]))
-    rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp, lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
+    rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp[:,1:], lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
     param_loss = prefact_params * losses.loss_params(params)
 #     peak_freq_loss = losses.loss_peak_freq(fs, obs_f0)
     
