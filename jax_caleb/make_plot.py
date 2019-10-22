@@ -21,11 +21,11 @@ def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, ta
     
     if initial_spect is not(None):
         ax_spect_init = fig_combined.add_subplot(gs[4:,0:2])
-        ax_spect_init.plot(fs, initial_spect, ":")
+        ax_spect_init.plot(fs, target_spect, ":")
         ax_spect_init.set_prop_cycle(None)
-        ax_spect_init.plot(fs, obs_spect)
+        ax_spect_init.plot(fs, initial_spect)
         
-        ax_spect_init.set_title('Pre and Post Gradient Descent')
+        ax_spect_init.set_title('Pre Gradient Descent')
         ax_spect_init.set_ylabel('power spectrum (a.u.)')
         ax_spect_init.set_xlabel('frequency (Hz)')   
         
@@ -49,13 +49,13 @@ def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, ta
         ax_E_init = fig_combined.add_subplot(gs[4:6, 2])
         ax_I_init = fig_combined.add_subplot(gs[6:8, 2])
         
-        ax_E_init.plot(contrasts, obs_rates[:,0], "r")
+        ax_E_init.plot(contrasts, initial_rates[:,0], "r")
         ax_E_init.set_prop_cycle(None)
-        ax_E_init.plot(contrasts, initial_rates[:,0], "r:")
+        ax_E_init.plot(contrasts, target_rates[:,0], "r:")
         
-        ax_I_init.plot(contrasts, obs_rates[:,1], "b")
+        ax_I_init.plot(contrasts, initial_rates[:,1], "b")
         ax_I_init.set_prop_cycle(None)
-        ax_I_init.plot(contrasts, initial_rates[:,1], "b:")
+        ax_I_init.plot(contrasts, target_rates[:,1], "b:")
         
         ax_E_init.set_title('E Rates Pre/Post')
         ax_I_init.set_title('I Rates Pre/Post')
