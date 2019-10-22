@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, target_rates, initial_spect=None, initial_rates= None):
+def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, target_rates, initial_spect=None, initial_rates= None, lower_bound = 0, upper_bound = 80):
     
     fig_combined = plt.figure(13, constrained_layout=True)
     if initial_spect is None:
@@ -57,8 +57,8 @@ def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, ta
         ax_I_init.set_prop_cycle(None)
         ax_I_init.plot(contrasts, target_rates[:,1], "b:")
         
-        ax_E_init.set_title('E Rates Pre/Post')
-        ax_I_init.set_title('I Rates Pre/Post')
+        ax_E_init.set_title('E Rates Pre')
+        ax_I_init.set_title('I Rates Pre')
     
     # ax_I.set_xlabel('Contrasts')
     # ax_I.set_ylabel('Firing Rates (Hz)')
