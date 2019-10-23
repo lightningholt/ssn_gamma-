@@ -27,6 +27,24 @@ def loss_spect_contrasts(fs, spect):
     spect_loss = np.mean((target_spect - spect) ** 2) #MSE
     return spect_loss
 
+def loss_spect_nonzero_contrasts(fs, spect):
+    '''
+    MSE loss quantifying match of power spectra across
+    contrasts [0, 25, 50, 100] with target spectra 
+    '''
+    
+    target_spect = np.array(get_target_spect(fs, norm = False))
+    BS = target_spect[:,0]
+    target_spect = target_spect[:,1:] - BS[:,None]
+    target_spect = target_spect/np.mean(target_spect)
+    
+    BS = spect[:, 0]
+    spect = np.real(spect[:, 1:] - BS[:, None])
+    spect = spect/np.mean(spect)
+    
+    spect_loss = np.mean((target_spect - spect) ** 2) #MSE
+    return spect_loss
+
 def loss_peak_freq(fs, obs_f0):
     '''
     Find the loss if the obs_f0 and target_f0 are different using a normalized mean square error thing
@@ -114,7 +132,7 @@ def param_relu(param, acceptable_range, A=1):
     '''
     return A * (np.maximum(acceptable_range[0] - param, 0) + np.maximum(param - acceptable_range[1], 0))
 
-def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.mat'):
+def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.mat', norm = True):
     """
     uses only non-jax numpy to interpolate our target spectrum to any feasible vector of freqs' (fs)
     """
@@ -326,7 +344,7 @@ def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.m
              [0.01402381-1.63865060e-10j, 0.2572476 -2.50080801e-09j,
               1.05882764+1.00782414e-08j, 0.5717662 +2.03064052e-10j]])
         
-        ideal_spect = np.real(ideal_spect)/np.mean(np.real(ideal_spect))
+        #ideal_spect = np.real(ideal_spect)/np.mean(np.real(ideal_spect))
     
 
 #         ideal_spect = sio.loadmat(fname)
@@ -344,7 +362,12 @@ def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.m
             ideal_spect[:, ind] = ray_spect(fs_ideal, rr)
             ind += 1
 
-        ideal_spect = ideal_spect/numpy.mean(ideal_spect)
+        #ideal_spect = ideal_spect/numpy.mean(ideal_spect)
+    
+    if norm:
+        ideal_spect = np.real(ideal_spect)/np.mean(np.real(ideal_spect))
+    else:
+        ideal_spect = np.real(ideal_spect)
     
     
     target_PS = np.array([numpy.interp(fs, fs_ideal, idl_ps) for idl_ps in ideal_spect.T]).T
