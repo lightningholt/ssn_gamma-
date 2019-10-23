@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from numpy import ones_like
+import numpy as np
 
 def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, target_rates, initial_spect=None, initial_rates= None, lower_bound = 0, upper_bound = 80):
     
+    cons = len(contrasts)
     fig_combined = plt.figure(13, constrained_layout=True)
     if initial_spect is None:
         gs = gridspec.GridSpec(4,3, figure=fig_combined)
@@ -41,7 +42,7 @@ def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, ta
     ax_E.plot(contrasts, target_rates[:, 0],  "r--")
     ax_E.set_prop_cycle(None)
     ax_E.plot(contrasts, obs_rates[:,0], 'r')
-    ax_E.fill_between(contrasts[-len(lower_bound):], lower_bound[0,:], upper_bound[0,:], color="r", alpha=0.3)
+    ax_E.fill_between(contrasts[-np.max(lower_bound.shape):cons], lower_bound[0,:], upper_bound[0,:], color="r", alpha=0.3)
     ax_E.set_title('E Rates Post GD')
     # ax_E.set_xlabel('Contrasts')
     # ax_E.set_ylabel('Firing Rates (Hz)')
@@ -49,7 +50,7 @@ def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, ta
     ax_I.plot(contrasts, target_rates[:, 1],  "b--")
     ax_I.set_prop_cycle(None)
     ax_I.plot(contrasts, obs_rates[:,1], 'b')
-    ax_I.fill_between(contrasts[-len(lower_bound):], lower_bound[1,:], upper_bound[1,:], color="b", alpha=0.3)
+    ax_I.fill_between(contrasts[-np.max(lower_bound.shape):cons], lower_bound[1,:], upper_bound[1,:], color="b", alpha=0.3)
     ax_I.set_title('I Rates Post GD')
     
     
@@ -60,12 +61,12 @@ def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, ta
         ax_E_init.plot(contrasts, initial_rates[:,0], "r")
         ax_E_init.set_prop_cycle(None)
         ax_E_init.plot(contrasts, target_rates[:,0], "r:")
-        ax_E_init.fill_between(contrasts[-len(lower_bound):], lower_bound[0,:], upper_bound[0,:], color="r", alpha=0.3,)
+        ax_E_init.fill_between(contrasts[-np.max(lower_bound.shape):cons], lower_bound[0,:], upper_bound[0,:], color="r", alpha=0.3,)
         
         ax_I_init.plot(contrasts, initial_rates[:,1], "b")
         ax_I_init.set_prop_cycle(None)
         ax_I_init.plot(contrasts, target_rates[:,1], "b:")
-        ax_I_init.fill_between(contrasts[-len(lower_bound):], lower_bound[1,:], upper_bound[1,:], color="b", alpha=0.3)
+        ax_I_init.fill_between(contrasts[-np.max(lower_bound.shape):cons], lower_bound[1,:], upper_bound[1,:], color="b", alpha=0.3)
         
         ax_E_init.set_title('E Rates Pre')
         ax_I_init.set_title('I Rates Pre')
