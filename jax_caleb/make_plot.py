@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
 
-def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, target_rates, initial_spect=None, initial_rates= None, lower_bound = 0, upper_bound = 80):
+def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, target_rates, initial_spect=None, initial_rates= None, lower_bound = 0, upper_bound = 80, fname = None):
     
     cons = len(contrasts)
     fig_combined = plt.figure(13, constrained_layout=True)
@@ -70,6 +70,9 @@ def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, ta
         
         ax_E_init.set_title('E Rates Pre')
         ax_I_init.set_title('I Rates Pre')
+    
+    if fname != None
+        plt.savefig(fname)
     
     # ax_I.set_xlabel('Contrasts')
     # ax_I.set_ylabel('Firing Rates (Hz)')
