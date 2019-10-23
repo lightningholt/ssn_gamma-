@@ -50,7 +50,7 @@ def loss_rates_contrasts(r_fp, lower_bound, upper_bound, kink_control, slope = 1
     '''
     This function finds the loss from rates. It uses a 2 ReLu type fcns to define a valley that is near zero in the valley and rises sort of linear out of it. 
     r_fp = observed rates
-    lower_bound = lower bound of the error or the rates. should be posiitve. If just worried about rates valley waill start at -lower_bound. Works well with kink_control=1
+    lower_bound = lower bound of the error or the rates. should be posiitve. If just worried about rates valley will start at lower_bound. Works well with kink_control=1
     kink_control = determines how quickely the fcn rises out of the valley
     slope = multiplicative factor if I want to increase the rel strenght of rates loss
     '''
@@ -371,7 +371,7 @@ def rates_error_fcn(rates, lower_bound, upper_bound, kink_control, slope = 1):
     rates = observed rates
     
     half_width = half the width of the tanh canyon
-    lower_bound = where the valley starts. If > 0 valley starts at -lower_bound
+    lower_bound = where the valley starts. If < 0 valley starts at -lower_bound
     upper_bound = where the valley ends, keeps rates from blowing up
     kink_control = how quickly does the log(1 + exp(x)) transition from 0 to ~x
     slope = once log(1 + exp(x)) transitions to ~x, what's the slope? 
@@ -383,7 +383,7 @@ def rates_error_fcn(rates, lower_bound, upper_bound, kink_control, slope = 1):
     '''
     #tanh_error = 2 + np.tanh((error-half_width)/slope_control)-np.tanh((error+half_width)/slope_control)
     #tanh_error = myReLu((error-half_width)/kink_control) + myReLu((-half_width - error)/kink_control)
-    tanh_error = myReLu((rates - upper_bound)/kink_control) + myReLu((-lower_bound - rates)/ kink_control) #gives a valley from near -lower_bound to upper bound (as long as lower_bound >0)
+    tanh_error = myReLu((rates - upper_bound)/kink_control) + myReLu((lower_bound - rates)/ kink_control) #gives a valley from near -lower_bound to upper bound (as long as lower_bound >0)
     
     nonzero_grad_error = slope * tanh_error # * (error ** power) -> from a different iteration of the code
     return nonzero_grad_error
