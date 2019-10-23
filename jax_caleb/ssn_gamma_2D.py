@@ -34,7 +34,7 @@ tau_s = np.array([3, 5, 100])*t_scale #in ms, AMPA, GABA, NMDA current decay tim
 contrasts = np.array([0, 25, 50, 100])
 cons = len(contrasts)
 lower_bound_rates = -5 * np.ones([2, cons-1])
-upper_bound_rates = np.vstack((70*np.ones(cons-1), 100*np.ones(cons-1)))
+upper_bound_rates = np.vstack((70*np.ones(cons-1), 100*np.ones(cons-1)))t
 kink_control = 1 # how quickly log(1 + exp(x)) goes to ~x, where x = target_rates - found_rates    
 
 def full_gd_gamma(params_init, eta):
