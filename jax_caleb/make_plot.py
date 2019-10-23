@@ -71,7 +71,7 @@ def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, ta
         ax_E_init.set_title('E Rates Pre')
         ax_I_init.set_title('I Rates Pre')
     
-    if fname != None
+    if fname is not None:
         plt.savefig(fname)
     
     # ax_I.set_xlabel('Contrasts')
