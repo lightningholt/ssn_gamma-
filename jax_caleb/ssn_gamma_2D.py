@@ -37,7 +37,7 @@ lower_bound_rates = 10 * np.ones([2, cons-1])
 upper_bound_rates = np.vstack((70*np.ones(cons-1), 100*np.ones(cons-1)))
 kink_control = 1 # how quickly log(1 + exp(x)) goes to ~x, where x = target_rates - found_rates    
 
-def full_gd_gamma(params_init, eta):
+def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
 #     #the constant (non-optimized) parameters:
 
 #     #fixed point algorithm:
@@ -92,7 +92,7 @@ def full_gd_gamma(params_init, eta):
     obs_spect, fs, f0, obs_rates = ssn_PS(params, contrasts)
     obs_spect = np.real(obs_spect/np.mean(np.real(obs_spect)))
     
-    fname = 'Lzian_Higher_Freqs_GD.pdf'
+    #fname = 'Lzian_Higher_Freqs_Wider_Peaks_GD.pdf'
     
     make_plot.power_spect_rates_plot(fs, obs_spect, target_PS, contrasts, obs_rates.T, target_rates.T, init_spect, init_r.T, lower_bound_rates, upper_bound_rates, fname)
     
@@ -148,12 +148,12 @@ def loss(params):
     prefact_rates = 1
     prefact_params = 10
     
-    #fs_loss_inds = np.arange(0 , len(fs))
-    #fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])#np.where(fs > 0, fs_loss_inds, )
+    fs_loss_inds = np.arange(0 , len(fs))
+    fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])#np.where(fs > 0, fs_loss_inds, )
 #     fs_loss = fs[np.where(fs > 20)]
     
     #spect_loss = losses.loss_spect_contrasts(fs[fs_loss_inds], np.real(spect[fs_loss_inds, :]))
-    spect_loss = losses.loss_spect_nonzero_contrasts(fs, spect)
+    spect_loss = losses.loss_spect_nonzero_contrasts(fs[fs_loss_inds], spect[fs_loss_inds,:])
     rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp[:,1:], lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
     param_loss = prefact_params * losses.loss_params(params)
 #     peak_freq_loss = losses.loss_peak_freq(fs, obs_f0)
