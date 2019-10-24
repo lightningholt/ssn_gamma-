@@ -424,9 +424,10 @@ def ray_spect(fs, contrast):
     
     if contrast != 0:
         sig = 10
-        shift = 4 * numpy.sqrt(contrast) + 20
-        gaussian = 100 * numpy.exp(-(fs - shift)**2/(numpy.sqrt(2) * sig)**2)
-        spect = spect + gaussian
+        shift = 4 * (contrast)**(3/5) + 20
+#         gaussian = 100 * np.exp(-(fs - shift)**2/(np.sqrt(2) * sig)**2)
+        lzian = 0.1*a/(r**2 + (fs - shift)**2)
+        spect = spect + lzian #gaussian
     
     return spect
 
