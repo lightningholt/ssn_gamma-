@@ -92,7 +92,7 @@ def full_gd_gamma(params_init, eta):
     obs_spect, fs, f0, obs_rates = ssn_PS(params, contrasts)
     obs_spect = np.real(obs_spect/np.mean(np.real(obs_spect)))
     
-    fname = 'PS_bar_GD.pdf'
+    fname = 'Lzian_Higher_Freqs_GD.pdf'
     
     make_plot.power_spect_rates_plot(fs, obs_spect, target_PS, contrasts, obs_rates.T, target_rates.T, init_spect, init_r.T, lower_bound_rates, upper_bound_rates, fname)
     
