@@ -4,6 +4,8 @@ import time
 import jax.numpy as np
 from jax import grad, value_and_grad, jit, ops
 
+import scipy.io as sio
+
 import SSN_classes
 import SSN_power_spec
 import gamma_SSN_losses as losses
@@ -68,8 +70,12 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
         os.environ["CUDA_VISIBLE_DEVICES"] = "1"
         gd_iters = 1000
     
+    min_L = []
+    min_params = []
+    
     #eta = .001 #learning rate
-
+    dd = 100 # time scale for scaling eta down. 
+    
     params = params_init
     loss_t = []
     t0 = time.time()
@@ -77,8 +83,16 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
         if ii % 100 == 0:
             print("G.D. step ", ii+1)
         L, dL = dloss(params)
-        params = params - eta * dL #dloss(params)
+        params = params - eta/(1 + ii/dd) * dL #dloss(param)
         loss_t.append(L)
+        
+        # save out the lowest loss params for initializing other runs
+        if ii == 0:
+            min_L = L
+        elif L < min_L:
+            min_L = L
+            min_params = params
+        
 
     print("{} GD steps took {} seconds.".format(gd_iters, time.time()-t0))
     print("fit [Jee, Jei, Jie, Jii, i2e] = ", params)
@@ -89,12 +103,34 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
     target_PS = losses.get_target_spect(fs)
     target_rates = losses.get_target_rates()
     
-    obs_spect, fs, f0, obs_rates = ssn_PS(params, contrasts)
+    obs_spect, fs, obs_f0, obs_rates = ssn_PS(params, contrasts)
     obs_spect = np.real(obs_spect/np.mean(np.real(obs_spect)))
     
     #fname = 'Lzian_Higher_Freqs_Wider_Peaks_GD.pdf'
     
     make_plot.power_spect_rates_plot(fs, obs_spect, target_PS, contrasts, obs_rates.T, target_rates.T, init_spect, init_r.T, lower_bound_rates, upper_bound_rates, fname)
+    
+    Results = {
+        'obs_spect':obs_spect,
+        'obs_rates':obs_rates,
+        'obs_f0':obs_f0,
+        'init_spect':init_spect,
+        'init_rates':init_r,
+        'target_spect':target_PS,
+        'target_rates':target_rates,
+        'lower_bound_rates':lower_bound_rates,
+        'upper_bound_rates':upper_bound_rates,
+        'kink_control':kink_control,
+        'loss_t':loss_t,
+        'min_L':min_L,
+        'min_params':min_params,
+        'params':params,
+        
+    }
+    if fname is not None:
+        f_out = fname.split('.')[0]+'.mat'
+#         f_out.append('.mat')
+        sio.savemat(f_out, Results)
     
     return obs_spect, obs_rates, params, loss_t
    
