@@ -6,10 +6,16 @@ def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, ta
     
     cons = len(contrasts)
     fig_combined = plt.figure(13, constrained_layout=True)
+#     if loss_t is None:
     if initial_spect is None:
         gs = gridspec.GridSpec(4,3, figure=fig_combined)
     else:
         gs = gridspec.GridSpec(8, 3, figure=fig_combined)
+#     else:
+#         if initial_spect is None:
+#             gs = gridspec.GridSpec(6, 3, figure=fig_combined)
+#         else:
+#             gs = gridspec.GridSpec(10, 3, figure=fig_combined)
 
     ax_spect_targ = fig_combined.add_subplot(gs[0:4,0:2])
     ax_spect_targ.plot(fs, target_spect, "--")
@@ -22,7 +28,7 @@ def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, ta
     ax_spect_targ.set_xlabel('frequency (Hz)')    
     
     if initial_spect is not(None):
-        ax_spect_init = fig_combined.add_subplot(gs[4:,0:2])
+        ax_spect_init = fig_combined.add_subplot(gs[4:8,0:2])
         ax_spect_init.plot(fs, target_spect, ":")
         ax_spect_init.set_prop_cycle(None)
         ax_spect_init.plot(fs, initial_spect)
@@ -70,6 +76,11 @@ def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, ta
         
         ax_E_init.set_title('E Rates Pre')
         ax_I_init.set_title('I Rates Pre')
+        
+#     if loss_t is not None:
+#         ax_loss = fig_combined.add_subplot(gs[-2:, :])
+#         ax_loss.plot(loss_t)
+#         ax_loss.set_xlabel('loss')
     
     if fname is not None:
         plt.savefig(fname)
