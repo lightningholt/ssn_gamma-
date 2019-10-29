@@ -25,11 +25,11 @@ def Euler2fixedpt(dxdt, x_initial, Tmax, dt, xtol=1e-5, xmin=1e-0, PLOT=False, i
     CONVG = True if determined converged, False if not
     """
 
-    if PLOT:
-        if inds is None:
-            N = x_initial.size
-            inds = [int(N/4), int(3*N/4)]
-        xplot = x_initial[inds][:,None]
+#     if PLOT:
+#         if inds is None:
+#             N = x_initial.size
+#             inds = [int(N/4), int(3*N/4)]
+#         xplot = x_initial[inds][:,None]
 
     Nmax = int(np.round(Tmax/dt))
     xvec = x_initial
@@ -37,14 +37,15 @@ def Euler2fixedpt(dxdt, x_initial, Tmax, dt, xtol=1e-5, xmin=1e-0, PLOT=False, i
     for n in range(Nmax):
         dx = dxdt(xvec) * dt
         xvec = xvec + dx
-        if PLOT:
-            #xplot = np.asarray([xplot, xvvec[inds]])
-            xplot = np.hstack((xplot,xvec[inds][:,None]))
-
-        if np.abs( dx /np.maximum(xmin, np.abs(xvec)) ).max() < xtol:
-            #print("      converged to fixed point at iter={},      as max(abs(dx./max(xvec,{}))) < {} ".format(n, xmin, xtol))
-            CONVG = True
-            break
+#         if PLOT:
+#             #xplot = np.asarray([xplot, xvvec[inds]])
+#             xplot = np.hstack((xplot,xvec[inds][:,None]))
+        
+        if n > 200
+            if np.abs( dx /np.maximum(xmin, np.abs(xvec)) ).max() < xtol:
+                #print("      converged to fixed point at iter={},      as max(abs(dx./max(xvec,{}))) < {} ".format(n, xmin, xtol))
+                CONVG = True
+                break
 
     if not CONVG: # n == Nmax:
         print("\n Warning 1: reached Tmax={}, before convergence to fixed point.".format(Tmax))
@@ -52,10 +53,10 @@ def Euler2fixedpt(dxdt, x_initial, Tmax, dt, xtol=1e-5, xmin=1e-0, PLOT=False, i
         #mybeep(.2,350)
         #beep
 
-    if PLOT:
-        import matplotlib.pyplot as plt
-        plt.figure(244459)
-        plt.plot(np.arange(n+2)*dt, xplot.T, 'o-')
+#     if PLOT:
+#         import matplotlib.pyplot as plt
+#         plt.figure(244459)
+#         plt.plot(np.arange(n+2)*dt, xplot.T, 'o-')
 
     return xvec, CONVG
 
