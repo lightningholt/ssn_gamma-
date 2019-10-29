@@ -10,7 +10,7 @@ def loss_SSN_2D_contrast(fs, spect):
     MSE loss quantifying match of power spectra across
     contrasts [0,25,50,100] with target spectra
     """
-    epsilon = 0.001 # a regularization term
+    epsilon = 0.0045 # a regularization term
     target_spect = np.array(get_target_spect(fs))
     spect = spect/(np.mean(spect) + epsilon)
 
@@ -22,7 +22,7 @@ def loss_spect_contrasts(fs, spect):
     contrasts [0, 25, 50, 100] with target spectra 
     '''
     
-    epsilon = 0.001 # a regularization term
+    epsilon = 0.0045 # a regularization term
     target_spect = np.array(get_target_spect(fs))
     spect = spect/(np.mean(spect)+ epsilon)
     
@@ -34,7 +34,7 @@ def loss_spect_nonzero_contrasts(fs, spect):
     MSE loss quantifying match of power spectra across
     contrasts [0, 25, 50, 100] with target spectra 
     '''
-    epsilon = 0.001 # a regularization term
+    epsilon = 0.0045 # a regularization term, this is the unnormalized value of the first target PS 
     
     target_spect = np.array(get_target_spect(fs, norm = False))
     BS = target_spect[:,0]
