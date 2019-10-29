@@ -41,7 +41,7 @@ def Euler2fixedpt(dxdt, x_initial, Tmax, dt, xtol=1e-5, xmin=1e-0, PLOT=False, i
 #             #xplot = np.asarray([xplot, xvvec[inds]])
 #             xplot = np.hstack((xplot,xvec[inds][:,None]))
         
-        if n > 200
+        if n > 200:
             if np.abs( dx /np.maximum(xmin, np.abs(xvec)) ).max() < xtol:
                 #print("      converged to fixed point at iter={},      as max(abs(dx./max(xvec,{}))) < {} ".format(n, xmin, xtol))
                 CONVG = True
