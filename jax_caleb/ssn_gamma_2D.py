@@ -2,6 +2,7 @@ import os
 from sys import platform
 import time
 import jax.numpy as np
+#mport numpy as np
 from jax import grad, value_and_grad, jit, ops
 
 import scipy.io as sio
@@ -68,7 +69,8 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
         gd_iters = 10
     else:
         os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-        gd_iters = 1000
+        #gd_iters = 1000
+        gd_iters = 3
     
     min_L = []
     min_params = []
@@ -83,6 +85,7 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
         if ii % 100 == 0:
             print("G.D. step ", ii+1)
         L, dL = dloss(params)
+        #params = params - eta * dL #dloss(param)
         params = params - eta/(1 + ii/dd) * dL #dloss(param)
         loss_t.append(L)
         
