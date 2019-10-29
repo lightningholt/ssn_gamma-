@@ -10,8 +10,9 @@ def loss_SSN_2D_contrast(fs, spect):
     MSE loss quantifying match of power spectra across
     contrasts [0,25,50,100] with target spectra
     """
+    epsilon = 0.001 # a regularization term
     target_spect = np.array(get_target_spect(fs))
-    spect = spect/np.mean(spect)
+    spect = spect/(np.mean(spect) + epsilon)
 
     return np.mean((target_spect - spect)**2)
 
@@ -21,8 +22,9 @@ def loss_spect_contrasts(fs, spect):
     contrasts [0, 25, 50, 100] with target spectra 
     '''
     
+    epsilon = 0.001 # a regularization term
     target_spect = np.array(get_target_spect(fs))
-    spect = spect/np.mean(spect)
+    spect = spect/(np.mean(spect)+ epsilon)
     
     spect_loss = np.mean((target_spect - spect) ** 2) #MSE
     return spect_loss
@@ -32,6 +34,7 @@ def loss_spect_nonzero_contrasts(fs, spect):
     MSE loss quantifying match of power spectra across
     contrasts [0, 25, 50, 100] with target spectra 
     '''
+    epsilon = 0.001 # a regularization term
     
     target_spect = np.array(get_target_spect(fs, norm = False))
     BS = target_spect[:,0]
@@ -40,7 +43,7 @@ def loss_spect_nonzero_contrasts(fs, spect):
     
     BS = spect[:, 0]
     spect = np.real(spect[:, 1:] - BS[:, None])
-    spect = spect/np.mean(spect)
+    spect = spect/(np.mean(spect) + epsilon)
     
     spect_loss = np.mean((target_spect - spect) ** 2) #MSE
     return spect_loss
