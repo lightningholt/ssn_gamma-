@@ -22,8 +22,8 @@ def loss_spect_contrasts(fs, spect):
     contrasts [0, 25, 50, 100] with target spectra 
     '''
     
-    epsilon = 0.0045 # a regularization term
-    target_spect = np.array(get_target_spect(fs))
+    epsilon = 0 #0.0045 # a regularization term
+    target_spect = np.array(get_target_spect(fs, ground_truth=True))
     spect = spect/(np.mean(spect)+ epsilon)
     
     spect_loss = np.mean((target_spect - spect) ** 2) #MSE
@@ -36,7 +36,7 @@ def loss_spect_nonzero_contrasts(fs, spect):
     '''
     epsilon = 0.0045 # a regularization term, this is the unnormalized value of the first target PS 
     
-    target_spect = np.array(get_target_spect(fs, norm = False))
+    target_spect = np.array(get_target_spect(fs, norm = False, ground_truth=True))
     BS = target_spect[:,0]
     target_spect = target_spect[:,1:] - BS[:,None]
     target_spect = target_spect/np.mean(target_spect)
