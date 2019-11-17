@@ -36,11 +36,11 @@ tau_s = np.array([3, 5, 100])*t_scale #in ms, AMPA, GABA, NMDA current decay tim
 
 contrasts = np.array([0, 25, 50, 100])
 cons = len(contrasts)
-#lower_bound_rates = 10 * np.ones([2, cons-1])
-#upper_bound_rates = np.vstack((70*np.ones(cons-1), 100*np.ones(cons-1)))
+lower_bound_rates = -5 * np.ones([2, cons-1])
+upper_bound_rates = np.vstack((70*np.ones(cons-1), 100*np.ones(cons-1)))
 
-lower_bound_rates = -5 * np.ones([2, cons])
-upper_bound_rates = np.vstack((80*np.ones(cons), 80*np.ones(cons)))
+#lower_bound_rates = -5 * np.ones([2, cons])
+#upper_bound_rates = np.vstack((80*np.ones(cons), 80*np.ones(cons)))
 
 kink_control = 1 # how quickly log(1 + exp(x)) goes to ~x, where x = target_rates - found_rates    
 
@@ -89,8 +89,8 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
         if ii % 100 == 0:
             print("G.D. step ", ii+1)
         L, dL = dloss(params)
-        params = params - eta * dL #dloss(param)
-        #params = params - eta/(1 + ii/dd) * dL #dloss(param)
+        #params = params - eta * dL #dloss(param)
+        params = params - eta/(1 + ii/dd) * dL #dloss(param)
         loss_t.append(L)
         
         # save out the lowest loss params for initializing other runs
@@ -194,13 +194,13 @@ def loss(params):
     prefact_params = 10
     
     fs_loss_inds = np.arange(0 , len(fs))
-    #fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])#np.where(fs > 0, fs_loss_inds, )
+    fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])#np.where(fs > 0, fs_loss_inds, )
 #     fs_loss = fs[np.where(fs > 20)]
     
     spect_loss = losses.loss_spect_contrasts(fs[fs_loss_inds], np.real(spect[fs_loss_inds, :]))
-    #spect_loss = losses.loss_spect_nonzero_contrasts(fs[fs_loss_inds], spect[fs_loss_inds,:])
-    #rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp[:,1:], lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
-    rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp, lower_bound_rates, upper_bound_rates, kink_control) # recreate ground truth
+    #$spect_loss = losses.loss_spect_nonzero_contrasts(fs[fs_loss_inds], spect[fs_loss_inds,:])
+    rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp[:,1:], lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
+    #rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp, lower_bound_rates, upper_bound_rates, kink_control) # recreate ground truth
     param_loss = prefact_params * losses.loss_params(params)
 #     peak_freq_loss = losses.loss_peak_freq(fs, obs_f0)
     
