@@ -89,8 +89,8 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
         if ii % 100 == 0:
             print("G.D. step ", ii+1)
         L, dL = dloss(params)
-        #params = params - eta * dL #dloss(param)
-        params = params - eta/(1 + ii/dd) * dL #dloss(param)
+        params = params - eta * dL #dloss(param)
+        #params = params - eta/(1 + ii/dd) * dL #dloss(param)
         loss_t.append(L)
         
         # save out the lowest loss params for initializing other runs
@@ -142,9 +142,9 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
     return obs_spect, obs_rates, params, loss_t
    
 
-def ssn_PS(params, contrasts):
+def ssn_PS(pos_params, contrasts):
     #unpack parameters
-    #params = sigmoid_jee(pos_params)
+    params = sigmoid_jee(pos_params)
     
     psi = 0.774
     Jee = params[0] * np.pi * psi  
