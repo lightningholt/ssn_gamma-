@@ -36,8 +36,12 @@ tau_s = np.array([3, 5, 100])*t_scale #in ms, AMPA, GABA, NMDA current decay tim
 
 contrasts = np.array([0, 25, 50, 100])
 cons = len(contrasts)
-lower_bound_rates = 10 * np.ones([2, cons-1])
+lower_bound_rates = -5 * np.ones([2, cons-1])
 upper_bound_rates = np.vstack((70*np.ones(cons-1), 100*np.ones(cons-1)))
+
+#lower_bound_rates = -5 * np.ones([2, cons])
+#upper_bound_rates = np.vstack((80*np.ones(cons), 80*np.ones(cons)))
+
 kink_control = 1 # how quickly log(1 + exp(x)) goes to ~x, where x = target_rates - found_rates    
 
 def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
@@ -69,8 +73,8 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
         gd_iters = 10
     else:
         os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-        #gd_iters = 1000
-        gd_iters = 3
+        gd_iters = 1000
+        #gd_iters = 3
     
     min_L = []
     min_params = []
@@ -85,8 +89,8 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
         if ii % 100 == 0:
             print("G.D. step ", ii+1)
         L, dL = dloss(params)
-        #params = params - eta * dL #dloss(param)
-        params = params - eta/(1 + ii/dd) * dL #dloss(param)
+        params = params - eta * dL #dloss(param)
+        #params = params - eta/(1 + ii/dd) * dL #dloss(param)
         loss_t.append(L)
         
         # save out the lowest loss params for initializing other runs
@@ -103,7 +107,7 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
     init_spect, fs, _, init_r = ssn_PS(params_init, contrasts)
     init_spect = np.real(init_spect/np.mean(np.real(init_spect)))
     
-    target_PS = losses.get_target_spect(fs)
+    target_PS = losses.get_target_spect(fs, ground_truth=True)
     target_rates = losses.get_target_rates()
     
     obs_spect, fs, obs_f0, obs_rates = ssn_PS(params, contrasts)
@@ -138,12 +142,15 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
     return obs_spect, obs_rates, params, loss_t
    
 
-def ssn_PS(params, contrasts):
+def ssn_PS(pos_params, contrasts):
     #unpack parameters
-    Jee = params[0]
-    Jei = params[1]
-    Jie = params[2]
-    Jii = params[3]
+    params = sigmoid_jee(pos_params)
+    
+    psi = 0.774
+    Jee = params[0] * np.pi * psi  
+    Jei = params[1] * np.pi * psi  
+    Jie = params[2] * np.pi * psi  
+    Jii = params[3] * np.pi * psi  
     
     if len(params) < 6:
         i2e = params[4]
@@ -159,9 +166,8 @@ def ssn_PS(params, contrasts):
     
     cons = len(contrasts)
     
-    psi = 0.774
-    J2x2 = np.array([[Jee, -Jei], [Jie,  -Jii]]) * np.pi * psi #np.array([[2.5, -1.3], [2.4,  -1.0]]) * np.pi * psi
-    ssn = SSN_classes.SSN_2D_AMPAGABA(tau_s, NMDAratio, n,k,tauE,tauI, *np.abs(J2x2).ravel())
+    #2x2 = np.array([[Jee, -Jei], [Jie,  -Jii]]) * np.pi * psi #np.array([[2.5, -1.3], [2.4,  -1.0]]) * np.pi * psi
+    ssn = SSN_classes.SSN_2D_AMPAGABA(tau_s, NMDAratio, n,k,tauE,tauI, Jee, Jei, Jie, Jii)
     
     r_init = np.zeros([ssn.N, len(contrasts)])
     inp_vec = np.array([[gE], [gI*i2e]]) * contrasts
@@ -194,6 +200,7 @@ def loss(params):
     #spect_loss = losses.loss_spect_contrasts(fs[fs_loss_inds], np.real(spect[fs_loss_inds, :]))
     spect_loss = losses.loss_spect_nonzero_contrasts(fs[fs_loss_inds], spect[fs_loss_inds,:])
     rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp[:,1:], lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
+    #rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp, lower_bound_rates, upper_bound_rates, kink_control) # recreate ground truth
     param_loss = prefact_params * losses.loss_params(params)
 #     peak_freq_loss = losses.loss_peak_freq(fs, obs_f0)
     
@@ -202,3 +209,17 @@ def loss(params):
 #     print(spect_loss/rates_loss) 
     
     return spect_loss + param_loss + rates_loss # + peak_freq_loss #
+
+def sigmoid_jee(pos_params):
+    J_max = 3
+    Jee = J_max * logistic_sig(pos_params[0])
+    Jei = J_max * logistic_sig(pos_params[1])
+    Jie = J_max * logistic_sig(pos_params[2])
+    Jii = J_max * logistic_sig(pos_params[3])
+    
+    params = np.hstack((Jee, Jei, Jie, Jii, pos_params[4:]))
+    
+    return params
+
+def logistic_sig(x):
+    return 1/(1 + np.exp(-x))
