@@ -91,11 +91,10 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
     for ii in range(gd_iters):
         if ii % 100 == 0:
             print("G.D. step ", ii+1)
-        L, r_fp, dL = dloss(params, r_init)
+        L, dL = dloss(params, r_init)
         params = params - eta * dL #dloss(param)
         #params = params - eta/(1 + ii/dd) * dL #dloss(param)
         loss_t.append(L)
-        r_init = r_fp
         
         # save out the lowest loss params for initializing other runs
         if ii == 0:
@@ -146,7 +145,7 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
     return obs_spect, obs_rates, params, loss_t
    
 
-def ssn_PS(pos_params, contrasts, r_init=np.zeros((2,4))):
+def ssn_PS(pos_params, contrasts):
     #unpack parameters
     params = sigmoid_params(pos_params)
     
@@ -172,7 +171,7 @@ def ssn_PS(pos_params, contrasts, r_init=np.zeros((2,4))):
     #2x2 = np.array([[Jee, -Jei], [Jie,  -Jii]]) * np.pi * psi #np.array([[2.5, -1.3], [2.4,  -1.0]]) * np.pi * psi
     ssn = SSN_classes.SSN_2D_AMPAGABA(tau_s, NMDAratio, n,k,tauE,tauI, Jee, Jei, Jie, Jii)
     
-    #r_init = np.zeros([ssn.N, len(contrasts)])
+    r_init = np.zeros([ssn.N, len(contrasts)])
     inp_vec = np.array([[gE], [gI*i2e]]) * contrasts
     
     r_fp = ssn.fixed_point_r(inp_vec, r_init=r_init, Tmax=Tmax, dt=dt, xtol=xtol)
@@ -184,7 +183,7 @@ def ssn_PS(pos_params, contrasts, r_init=np.zeros((2,4))):
 
 #@jit
 def loss(params, r_init):
-    spect, fs, obs_f0, r_fp = ssn_PS(params, contrasts, r_init) 
+    spect, fs, obs_f0, r_fp = ssn_PS(params, contrasts) 
     
     if np.max(np.abs(np.imag(spect))) > 0.01:
         print("Spectrum is dangerously imaginary")
@@ -211,7 +210,7 @@ def loss(params, r_init):
         print('rates loss is greater than spect loss')
 #     print(spect_loss/rates_loss) 
     
-    return spect_loss + param_loss + rates_loss, r_fp # + peak_freq_loss #
+    return spect_loss + param_loss + rates_loss # + peak_freq_loss #
 
 # def sigmoid_params(pos_params):
 #     J_max = 3
