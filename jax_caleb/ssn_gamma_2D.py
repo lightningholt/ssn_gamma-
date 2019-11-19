@@ -11,6 +11,7 @@ import SSN_classes
 import SSN_power_spec
 import gamma_SSN_losses as losses
 import make_plot
+from util import sigmoid_params
 
 #the constant (non-optimized) parameters:
 
@@ -147,7 +148,7 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
 
 def ssn_PS(pos_params, contrasts, r_init=np.zeros((2,4))):
     #unpack parameters
-    params = sigmoid_jee(pos_params)
+    params = sigmoid_params(pos_params)
     
     psi = 0.774
     Jee = params[0] * np.pi * psi  
@@ -212,14 +213,34 @@ def loss(params, r_init):
     
     return spect_loss + param_loss + rates_loss, r_fp # + peak_freq_loss #
 
-def sigmoid_jee(pos_params):
+def sigmoid_params(pos_params):
     J_max = 3
+    i2e_max = 2
+    gE_max = 2
+    gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
+    gI_min = 0.5
+    NMDA_max = 1
+    
     Jee = J_max * logistic_sig(pos_params[0])
     Jei = J_max * logistic_sig(pos_params[1])
     Jie = J_max * logistic_sig(pos_params[2])
     Jii = J_max * logistic_sig(pos_params[3])
     
-    params = np.hstack((Jee, Jei, Jie, Jii, pos_params[4:]))
+    if len(pos_params) < 6:
+        i2e = i2e_max * logistic_sig(pos_params[4])
+        gE = 1
+        gI = 1
+        NMDAratio = 0.4
+        
+        params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio])
+        
+    else:
+        i2e = 1
+        gE = gE_max * logistic_sig(pos_params[4])
+        gI = gI_max * logistic_sig(pos_params[5]) + gI_min
+        NMDAratio = NMDA_max * logistic_sig(pos_params[6])
+        
+        params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio])
     
     return params
 
