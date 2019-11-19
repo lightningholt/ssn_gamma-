@@ -199,18 +199,18 @@ def loss(params, r_init):
     fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])#np.where(fs > 0, fs_loss_inds, )
 #     fs_loss = fs[np.where(fs > 20)]
     
-    #spect_loss = losses.loss_spect_contrasts(fs[fs_loss_inds], np.real(spect[fs_loss_inds, :]))
-    spect_loss = losses.loss_spect_nonzero_contrasts(fs[fs_loss_inds], spect[fs_loss_inds,:])
-    rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp[:,1:], lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
+    spect_loss = losses.loss_spect_contrasts(fs[fs_loss_inds], np.real(spect[fs_loss_inds, :]))
+    #spect_loss = losses.loss_spect_nonzero_contrasts(fs[fs_loss_inds], spect[fs_loss_inds,:])
+    #rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp[:,1:], lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
     #rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp, lower_bound_rates, upper_bound_rates, kink_control) # recreate ground truth
-    param_loss = prefact_params * losses.loss_params(params)
+    #param_loss = prefact_params * losses.loss_params(params)
 #     peak_freq_loss = losses.loss_peak_freq(fs, obs_f0)
     
-    if spect_loss/rates_loss < 1:
-        print('rates loss is greater than spect loss')
+    #if spect_loss/rates_loss < 1:
+        #print('rates loss is greater than spect loss')
 #     print(spect_loss/rates_loss) 
     
-    return spect_loss + param_loss + rates_loss # + peak_freq_loss #
+    return spect_loss # + param_loss + rates_loss # + peak_freq_loss #
 
 # def sigmoid_params(pos_params):
 #     J_max = 3
