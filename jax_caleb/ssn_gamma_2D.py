@@ -213,36 +213,36 @@ def loss(params, r_init):
     
     return spect_loss + param_loss + rates_loss, r_fp # + peak_freq_loss #
 
-def sigmoid_params(pos_params):
-    J_max = 3
-    i2e_max = 2
-    gE_max = 2
-    gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
-    gI_min = 0.5
-    NMDA_max = 1
+# def sigmoid_params(pos_params):
+#     J_max = 3
+#     i2e_max = 2
+#     gE_max = 2
+#     gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
+#     gI_min = 0.5
+#     NMDA_max = 1
     
-    Jee = J_max * logistic_sig(pos_params[0])
-    Jei = J_max * logistic_sig(pos_params[1])
-    Jie = J_max * logistic_sig(pos_params[2])
-    Jii = J_max * logistic_sig(pos_params[3])
+#     Jee = J_max * logistic_sig(pos_params[0])
+#     Jei = J_max * logistic_sig(pos_params[1])
+#     Jie = J_max * logistic_sig(pos_params[2])
+#     Jii = J_max * logistic_sig(pos_params[3])
     
-    if len(pos_params) < 6:
-        i2e = i2e_max * logistic_sig(pos_params[4])
-        gE = 1
-        gI = 1
-        NMDAratio = 0.4
+#     if len(pos_params) < 6:
+#         i2e = i2e_max * logistic_sig(pos_params[4])
+#         gE = 1
+#         gI = 1
+#         NMDAratio = 0.4
         
-        params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio])
+#         params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio])
         
-    else:
-        i2e = 1
-        gE = gE_max * logistic_sig(pos_params[4])
-        gI = gI_max * logistic_sig(pos_params[5]) + gI_min
-        NMDAratio = NMDA_max * logistic_sig(pos_params[6])
+#     else:
+#         i2e = 1
+#         gE = gE_max * logistic_sig(pos_params[4])
+#         gI = gI_max * logistic_sig(pos_params[5]) + gI_min
+#         NMDAratio = NMDA_max * logistic_sig(pos_params[6])
         
-        params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio])
+#         params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio])
     
-    return params
+#     return params
 
-def logistic_sig(x):
-    return 1/(1 + np.exp(-x))
+# def logistic_sig(x):
+#     return 1/(1 + np.exp(-x))
