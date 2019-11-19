@@ -118,3 +118,58 @@ def toeplitz(c, r=None):
     # `indx` is a 2D array of indices into the 1D array `vals`, arranged so
     # that `vals[indx]` is the Toeplitz matrix.
     return vals[indx]
+
+
+def find_params_to_sigmoid(params, Jmax = 3, i2e_max = 2, gE_max = 2, gI_max = 1.5, gI_min = 0.5, NMDA_max = 1):
+    '''
+    Takes the params I was using without sigmoids and finds what would produce the same values in the sigmoid 
+    params = unsigmoided parameters
+    the max inputs are the upper bounds for the sigmoid
+    '''
+    
+    #print('Jmax ', Jmax, ' i2e_max ', i2e_max, ' gE_max ', gE_max, ' gI_max ', gI_max, ' gI_min ', gI_min ' NMDA_max ', NMDA_max)
+    
+    sig_ready_J = -np.log(Jmax/params[:4] - 1)
+    
+    if len(params) < 6:
+        sig_ready_i2e = -np.log(i2e_max/params[4] - 1)
+        return np.hstack((sig_ready_J, sig_ready_i2e))
+    else:
+        sig_gE = -np.log(gE_max/params[4] - 1)
+        sig_gI = -np.log(gI_max/(params[5] - gI_min) - 1)
+        sig_NMDA = -np.log(NMDA_max/params[6] - 1)
+        return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA))
+    
+def sigmoid_params(pos_params):
+    J_max = 3
+    i2e_max = 2
+    gE_max = 2
+    gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
+    gI_min = 0.5
+    NMDA_max = 1
+    
+    Jee = J_max * logistic_sig(pos_params[0])
+    Jei = J_max * logistic_sig(pos_params[1])
+    Jie = J_max * logistic_sig(pos_params[2])
+    Jii = J_max * logistic_sig(pos_params[3])
+    
+    if len(pos_params) < 6:
+        i2e = i2e_max * logistic_sig(pos_params[4])
+        gE = 1
+        gI = 1
+        NMDAratio = 0.4
+        
+        params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio])
+        
+    else:
+        i2e = 1
+        gE = gE_max * logistic_sig(pos_params[4])
+        gI = gI_max * logistic_sig(pos_params[5]) + gI_min
+        NMDAratio = NMDA_max * logistic_sig(pos_params[6])
+        
+        params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio])
+    
+    return params
+
+def logistic_sig(x):
+    return 1/(1 + np.exp(-x))
