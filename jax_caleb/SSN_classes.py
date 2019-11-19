@@ -82,7 +82,7 @@ class _SSN_Base(object):
             print('Did not reach fixed point.')
         #else:
         #    return r_fp
-        return r_fp
+        return r_fp, CONVG
 
     def fixed_point(self, inp_vec, x_init=None, Tmax=500, dt=1, xtol=1e-5, PLOT=False):
         if x_init is None:
