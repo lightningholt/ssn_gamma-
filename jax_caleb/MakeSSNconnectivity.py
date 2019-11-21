@@ -1,4 +1,5 @@
 import jax.numpy as np
+import jax.random as random
 # import numpy as onp
 
 # Python functions that recreates a MATLAB function of the same name, but hopefully in a clearer way. 
@@ -70,7 +71,7 @@ def make_orimap(hyper_col, X, Y, nn=30, prngKey=0):
     
     return OMap, Nthetas
 
-def make_Wxx_dist(dist, ori_dist, sigma, sigma_ori, from_neuron, MinSyn=1e-4, JNoise=0, JNoise_normal=False, CellWiseNormalized=True):
+def make_Wxx_dist(dist, ori_dist, sigma, sigma_ori, from_neuron, MinSyn=1e-4, JNoise=0, JNoise_Normal=False, CellWiseNormalized=True, prngKey=0):
     '''
     Makes the connection from neuron y to neuron x  if that connection only depended on their spatial position and their preferred orientation difference.
     dist = distances between neurons (deltaD)
@@ -82,6 +83,8 @@ def make_Wxx_dist(dist, ori_dist, sigma, sigma_ori, from_neuron, MinSyn=1e-4, JN
     outpus 
     Wxy = connection strength between neuron y and neuron x. 
     '''
+    
+    key = random.PRNGKey(prngKey)
     
     if from_neuron == 'E':
         W = np.exp(-np.abs(dist)/sigma - ori_dist**2/(2*sigma_ori**2))
@@ -104,7 +107,7 @@ def make_Wxx_dist(dist, ori_dist, sigma, sigma_ori, from_neuron, MinSyn=1e-4, JN
     
     return W
 
-def make_full_W(Plocal, Jee, Jei, Jie, Jii, gridsizedeg = 4, gridperdeg = 5, hyper_col = 8):
+def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigR, gridsizedeg = 4, gridperdeg = 5, hyper_col = 8, sigXI =0.02):
     '''
     Function that makes the full rank W = [[Wee, Wei], [Wie, Wii]] which obeys Dale's law (meaning Wxi is defined negative)
     
@@ -127,18 +130,24 @@ def make_full_W(Plocal, Jee, Jei, Jie, Jii, gridsizedeg = 4, gridperdeg = 5, hyp
     X, Y, deltaD = make_neur_distances(gridsizedeg, gridperdeg, hyper_col, Lx, Ly)
     OMap, Nthetas = make_orimap(hyper_col, X, Y)
     
-    OriDist =  np.abs(np.ravel(OMap) np.ravel(OMap)[:, None])
+    OriDist =  np.abs(np.ravel(OMap) - np.ravel(OMap)[:, None])
     OriDist = np.where( OriDist > 90, 180- OriDist, OriDist)
     sigOri = 45
     
+    sigEE = 0.35*np.sqrt(sigR)
+    sigIE = 0.35/np.sqrt(sigR)
+    sigEI = sigXI
+    sigII = sigXI
+    
     # Wxe = Jxe * (lambda * identity + (1-lambda)*exp(distance)* gaussian(Ori))
-    Wee = Jee * (Plocal*np.eye(deltaD.shape) + (1 - Plocal) * make_Wxx_dist(deltaD, OriDist, sigEE, sigOri, 'E'))
+    Wee = Jee * (Plocal*np.eye(deltaD.shape[0], deltaD.shape[1]) + (1 - Plocal) * make_Wxx_dist(deltaD, OriDist, sigEE, sigOri, 'E'))
     
     #Wxi = Jxi * gaussian(distance and Ori)
     Wei = -Jei * make_Wxx_dist(deltaD, OriDist, sigEI, sigOri, 'I')
-    Wie = Jie * (Plocal*np.eye(deltaD.shape) + (1 - Plocal) * make_Wxx_dist(deltaD, OriDist, sigIE, sigOri, 'E'))
-    Wei = -Jii * make_Wxx_dist(deltaD, OriDist, sigII, sigOri, 'I')
+    Wie = Jie * (Plocal*np.eye(deltaD.shape[0], deltaD.shape[1]) + (1 - Plocal) * make_Wxx_dist(deltaD, OriDist, sigIE, sigOri, 'E'))
+    Wii = -Jii * make_Wxx_dist(deltaD, OriDist, sigII, sigOri, 'I')
     
-    W = np.vstack(np.hstack(Wee, Wei), np.hstack(Wie, Wii))
+    
+    W = np.vstack((np.hstack((Wee, Wei)), np.hstack((Wie, Wii))))
     
     return W
