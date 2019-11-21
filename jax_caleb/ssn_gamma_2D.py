@@ -91,7 +91,7 @@ def full_gd_gamma(params_init, eta, fname = 'new_fig.pdf'):
     for ii in range(gd_iters):
         if ii % 100 == 0:
             print("G.D. step ", ii+1)
-        L, dL = dloss(params, r_init)
+        L, dL = dloss(params)
         params = params - eta * dL #dloss(param)
         #params = params - eta/(1 + ii/dd) * dL #dloss(param)
         loss_t.append(L)
@@ -182,7 +182,7 @@ def ssn_PS(pos_params, contrasts):
 
 
 #@jit
-def loss(params, r_init):
+def loss(params):
     spect, fs, obs_f0, r_fp = ssn_PS(params, contrasts) 
     
     if np.max(np.abs(np.imag(spect))) > 0.01:
