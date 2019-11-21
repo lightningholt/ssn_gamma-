@@ -104,7 +104,7 @@ class _SSN_AMPAGABA(_SSN_Base):
     Convention for indexing of state-vector v (which is 2N or 3N dim)
     is according to kron(receptor_type_index, neural_index).
     """
-    def __init__(self, tau_s=[4,5,100], NMDAratio=0.4):
+    def __init__(self, tau_s=[3,5,100], NMDAratio=0.4, *args):
         """
         tau_s = [tau_AMPA, tau_GABA, tau_NMDA] or [tau_AMPA, tau_GABA]
           decay time-consants for synaptic currents of different receptor types.
@@ -115,6 +115,9 @@ class _SSN_AMPAGABA(_SSN_Base):
          tau_AMPA = 4, tau_GABA= 5  #in ms
          NMDAratio = 0.3-0.4
         """
+        if len(args) != 0:
+            super(_SSN_AMPAGABA, self).__init__(*args)
+        #super(_SSN_Base, _SSN_Base).__init__(*args)
         self.tau_s = np.squeeze(np.asarray(tau_s))
         self.tau_AMPA = tau_s[0]
         self.tau_GABA = tau_s[1]
