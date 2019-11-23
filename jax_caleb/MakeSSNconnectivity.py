@@ -3,6 +3,7 @@ import jax.random as random
 # import numpy as onp
 
 # Python functions that recreates a MATLAB function of the same name, but hopefully in a clearer way. 
+# Also contains functions that make inputs to the network
 
 def make_neur_distances(gridsizedeg, gridperdeg, hyper_col, Lx, Ly, PERIODIC = True):
     '''
@@ -107,7 +108,7 @@ def make_Wxx_dist(dist, ori_dist, sigma, sigma_ori, from_neuron, MinSyn=1e-4, JN
     
     return W
 
-def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigR, gridsizedeg = 4, gridperdeg = 5, hyper_col = 8, sigXI =0.02):
+def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigR, gridsizedeg = 4, gridperdeg = 5, hyper_col = 8, sigXI = 0.02):
     '''
     Function that makes the full rank W = [[Wee, Wei], [Wie, Wii]] which obeys Dale's law (meaning Wxi is defined negative)
     
@@ -151,3 +152,64 @@ def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigR, gridsizedeg = 4, gridperdeg = 
     W = np.vstack((np.hstack((Wee, Wei)), np.hstack((Wie, Wii))))
     
     return W
+
+def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWidth=32, Lx=4):
+    '''
+    makes the input arrays for the various stimulus conditions
+    all radii at the highest contrast - to test Surround Suppression
+    all contrasts at the highest radius - to test contrast effect
+    highest contrast and radius with a Gabor filter - to test Ray-Maunsell Effect
+    
+    OMap = orientation preference across the cortex
+    r_cent = array of stimulus radii
+    contrasts = array of stimulus contrasts
+    various parameters of the network
+    
+    Outputs
+    StimConds = array of dim Ne x stimCondition (the name is short for Stimulus Conditions)
+    stimCondition = [max radii * varying contrasts, max contrast * vary radii, Gabor]
+    
+    '''
+    rads = np.hstack((np.max(r_cent)*np.ones(len(contrasts)-1), r_cent)) # cause I don't want to double up the Contrast = 100 condition
+    Contrasts = np.hstack((contrasts, np.ones(len(r_cent))*np.max(contrasts))) # need to add one for Gabor condition, but I would subtract one to not double up the C= 100 R= max condition
+    
+    gridsize = OMap.shape
+    dx = Lx/gridsize[0]
+    
+    Mid1 = int(round(gridsize[0]/2))
+    Mid2 = int(round(gridsize[1]/2))
+    
+    # Python does linear indexing weird, just going to use the found midpts
+    # trgt = onp.ravel_multi_index((Mid1, Mid2), (Len[0], Len[1]))
+
+    Orientation = OMap[Mid1, Mid2]
+
+    dOri = np.abs(OMap - Orientation)
+    dOri = np.where(dOri > 90, 180-dOri, dOri)
+    In0 = np.exp(-dOri**2/(2*AngWidth**2))
+    
+    RFdecay = dx
+    GaborSigma = np.max(r_cent)
+
+    x0 = X[Mid1, Mid2]
+    y0 = Y[Mid1, Mid2]
+
+    x_space = X - x0
+    y_space = Y - y0
+
+    # find the distances across the cortex
+    r_space = np.ravel(np.sqrt(x_space**2 + y_space**2))
+    
+    #find the spatial input for a constant grating
+    InSr = (1 - (1/(1 + np.exp(-(r_space - rads[:, None])/RFdecay))))
+    #find the spatial input for a Gabor 
+    InGabor = np.exp(- r_space**2/2/GaborSigma**2);
+    #include the contrasts with it
+    StimConds = Contrasts[:,None] * np.vstack((InSr, InGabor))
+    #include the relative drive between E and I cells  -- nixing this cause gE and gI are parametrs
+    #InSpace = np.hstack( (StimConds, gI*StimConds)).T #.T makes it neurons by stimcond
+    
+    #array to reference to find max contrasts, etc
+    stimulus_condition = np.vstack((Contrasts, np.hstack((rads, np.max(rads)))))
+    
+    return StimConds.T, stimulus_condition
