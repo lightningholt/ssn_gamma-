@@ -174,43 +174,46 @@ def ssn_PS(pos_params, contrasts):
     r_init = np.zeros([ssn.N, len(contrasts)])
     inp_vec = np.array([[gE], [gI*i2e]]) * contrasts
     
-    r_fp = ssn.fixed_point_r(inp_vec, r_init=r_init, Tmax=Tmax, dt=dt, xtol=xtol)
+    r_fp, CONVG = ssn.fixed_point_r(inp_vec, r_init=r_init, Tmax=Tmax, dt=dt, xtol=xtol)
     
     spect, fs, f0, _ = SSN_power_spec.linear_PS_sameTime(ssn, r_fp, SSN_power_spec.NoisePars(), freq_range, fnums, cons)
     
-    return spect, fs, f0, r_fp
+    return spect, fs, f0, r_fp, CONVG
 
 
 #@jit
 def loss(params):
-    spect, fs, obs_f0, r_fp = ssn_PS(params, contrasts) 
+    spect, fs, obs_f0, r_fp, CONVG = ssn_PS(params, contrasts) 
     
-    if np.max(np.abs(np.imag(spect))) > 0.01:
-        print("Spectrum is dangerously imaginary")
-    
-    #half_width_rates = 20 # basin around acceptable rates 
-    #lower_bound_rates = 0 # needs to be > 0, valley will start -lower_bound, 5 is a nice value with kink_control = 5
-    #upper_bound_rates = 80 # valley ends at upper_bound, keeps rates from blowing up
-    
-    prefact_rates = 1
-    prefact_params = 10
-    
-    fs_loss_inds = np.arange(0 , len(fs))
-    fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])#np.where(fs > 0, fs_loss_inds, )
-#     fs_loss = fs[np.where(fs > 20)]
-    
-    spect_loss = losses.loss_spect_contrasts(fs[fs_loss_inds], np.real(spect[fs_loss_inds, :]))
-    #spect_loss = losses.loss_spect_nonzero_contrasts(fs[fs_loss_inds], spect[fs_loss_inds,:])
-    #rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp[:,1:], lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
-    #rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp, lower_bound_rates, upper_bound_rates, kink_control) # recreate ground truth
-    #param_loss = prefact_params * losses.loss_params(params)
-#     peak_freq_loss = losses.loss_peak_freq(fs, obs_f0)
-    
-    #if spect_loss/rates_loss < 1:
-        #print('rates loss is greater than spect loss')
-#     print(spect_loss/rates_loss) 
-    
-    return spect_loss # + param_loss + rates_loss # + peak_freq_loss #
+    if CONVG:
+        if np.max(np.abs(np.imag(spect))) > 0.01:
+            print("Spectrum is dangerously imaginary")
+
+        #half_width_rates = 20 # basin around acceptable rates 
+        #lower_bound_rates = 0 # needs to be > 0, valley will start -lower_bound, 5 is a nice value with kink_control = 5
+        #upper_bound_rates = 80 # valley ends at upper_bound, keeps rates from blowing up
+
+        prefact_rates = 1
+        prefact_params = 10
+
+        fs_loss_inds = np.arange(0 , len(fs))
+        fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])#np.where(fs > 0, fs_loss_inds, )
+    #     fs_loss = fs[np.where(fs > 20)]
+
+        spect_loss = losses.loss_spect_contrasts(fs[fs_loss_inds], np.real(spect[fs_loss_inds, :]))
+        #spect_loss = losses.loss_spect_nonzero_contrasts(fs[fs_loss_inds], spect[fs_loss_inds,:])
+        #rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp[:,1:], lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
+        #rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp, lower_bound_rates, upper_bound_rates, kink_control) # recreate ground truth
+        #param_loss = prefact_params * losses.loss_params(params)
+    #     peak_freq_loss = losses.loss_peak_freq(fs, obs_f0)
+
+        #if spect_loss/rates_loss < 1:
+            #print('rates loss is greater than spect loss')
+    #     print(spect_loss/rates_loss) 
+
+        return spect_loss # + param_loss + rates_loss # + peak_freq_loss #
+    else:
+        return np.inf
 
 # def sigmoid_params(pos_params):
 #     J_max = 3
