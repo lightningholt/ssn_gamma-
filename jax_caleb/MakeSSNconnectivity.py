@@ -5,7 +5,7 @@ import jax.random as random
 # Python functions that recreates a MATLAB function of the same name, but hopefully in a clearer way. 
 # Also contains functions that make inputs to the network
 
-def make_neur_distances(gridsizedeg, gridperdeg, hyper_col, Lx, Ly, PERIODIC = True):
+def make_neur_distances(gridsizedeg, gridperdeg, hyper_col, Lx, Ly, PERIODIC = False):
     '''
     Makes a matrix of distances between neurons in the network
     gridsizedeg = size of grid in degress
