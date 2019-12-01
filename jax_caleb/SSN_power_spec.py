@@ -163,11 +163,11 @@ def linear_PS_sameTime(ssn, rs, noise_pars, freq_range, fnums, cons, LFPrange=No
     minF = freq_range[0]
     fs = np.linspace(minF,maxF,fnums) # grid of frequencies in Hz
     fs = fs/1000 # coverting from Hz to kHz = 1/ms
-
+    cuE = np.array([eE1 for cc in range(cons) for ff in fs])
     #AnalPowSpecE = np.empty_like(fs)
     #AnalPowSpecE = []
     inv_G = np.array([-1j * 2 * np.pi * ff * np.diag(ssn.tau_s_vec) - J[cc] for cc in range(cons) for ff in fs])
-    cuE = np.array([eE1 for cc in range(cons) for ff in fs])
+    
     fscons = np.kron(np.ones([1, cons]), fs)
     noiseCov_fscons = np.kron(np.ones([1, fnums*cons]), noiseCov)
     
