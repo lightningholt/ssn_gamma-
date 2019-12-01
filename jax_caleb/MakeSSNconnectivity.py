@@ -5,7 +5,7 @@ import jax.random as random
 # Python functions that recreates a MATLAB function of the same name, but hopefully in a clearer way. 
 # Also contains functions that make inputs to the network
 
-def make_neur_distances(gridsizedeg, gridperdeg, hyper_col, Lx, Ly, PERIODIC = False):
+def make_neur_distances(gridsizedeg, gridperdeg, hyper_col, PERIODIC = False):
     '''
     Makes a matrix of distances between neurons in the network
     gridsizedeg = size of grid in degress
@@ -20,6 +20,9 @@ def make_neur_distances(gridsizedeg, gridperdeg, hyper_col, Lx, Ly, PERIODIC = F
     deltaD = matrix of distances between neurons used to make W
     '''
     gridsize = 1 + round(gridperdeg *  gridsizedeg)
+    
+    Lx = gridsizedeg
+    Ly = gridsizedeg
     
     dx = Lx/(gridsize - 1)
     dy = Ly/(gridsize - 1)
@@ -108,7 +111,7 @@ def make_Wxx_dist(dist, ori_dist, sigma, sigma_ori, from_neuron, MinSyn=1e-4, JN
     
     return W
 
-def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigR, gridsizedeg = 4, gridperdeg = 5, hyper_col = 8, sigXI = 0.02):
+def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigR, deltaD, OMap, sigXI = 0.01):
     '''
     Function that makes the full rank W = [[Wee, Wei], [Wie, Wii]] which obeys Dale's law (meaning Wxi is defined negative)
     
@@ -124,12 +127,8 @@ def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigR, gridsizedeg = 4, gridperdeg = 
     W = [[Wee, Wei], [Wie, Wii]]
     '''
     
-    
-    Lx = gridsizedeg
-    Ly = gridsizedeg
-    
-    X, Y, deltaD = make_neur_distances(gridsizedeg, gridperdeg, hyper_col, Lx, Ly)
-    OMap, Nthetas = make_orimap(hyper_col, X, Y)
+    #X, Y, deltaD = make_neur_distances(gridsizedeg, gridperdeg, hyper_col)
+    #OMap, Nthetas = make_orimap(hyper_col, X, Y)
     
     OriDist =  np.abs(np.ravel(OMap) - np.ravel(OMap)[:, None])
     OriDist = np.where( OriDist > 90, 180- OriDist, OriDist)
@@ -153,7 +152,7 @@ def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigR, gridsizedeg = 4, gridperdeg = 
     
     return W
 
-def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWidth=32, Lx=4):
+def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWidth=32):
     '''
     makes the input arrays for the various stimulus conditions
     all radii at the highest contrast - to test Surround Suppression
@@ -174,10 +173,10 @@ def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWi
     Contrasts = np.hstack((contrasts, np.ones(len(r_cent))*np.max(contrasts))) # need to add one for Gabor condition, but I would subtract one to not double up the C= 100 R= max condition
     
     gridsize = OMap.shape
-    dx = Lx/gridsize[0]
+    dx = gridsizedeg/gridsize[0]
     
-    Mid1 = int(round(gridsize[0]/2))
-    Mid2 = int(round(gridsize[1]/2))
+    Mid1 = int(np.floor(gridsize[0]/2))
+    Mid2 = int(np.floor(gridsize[1]/2))
     
     # Python does linear indexing weird, just going to use the found midpts
     # trgt = onp.ravel_multi_index((Mid1, Mid2), (Len[0], Len[1]))
@@ -186,10 +185,11 @@ def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWi
 
     dOri = np.abs(OMap - Orientation)
     dOri = np.where(dOri > 90, 180-dOri, dOri)
-    In0 = np.exp(-dOri**2/(2*AngWidth**2))
+    In0 = np.ravel(np.exp(-dOri**2/(2*AngWidth**2)))
     
-    RFdecay = dx
-    GaborSigma = np.max(r_cent)
+    RFdecay = 0.8/2 #biologic decay is 0.8 mm, magfactor =2 mm/deg 
+    #RFdecay = dx
+    GaborSigma = 0.3*np.max(r_cent) 
 
     x0 = X[Mid1, Mid2]
     y0 = Y[Mid1, Mid2]
@@ -206,6 +206,7 @@ def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWi
     InGabor = np.exp(- r_space**2/2/GaborSigma**2);
     #include the contrasts with it
     StimConds = Contrasts[:,None] * np.vstack((InSr, InGabor))
+    StimConds = StimConds * In0
     #include the relative drive between E and I cells  -- nixing this cause gE and gI are parametrs
     #InSpace = np.hstack( (StimConds, gI*StimConds)).T #.T makes it neurons by stimcond
     
