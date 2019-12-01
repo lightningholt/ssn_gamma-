@@ -1,4 +1,3 @@
-#import numpy as np
 import jax.numpy as np
 
 #from jax.ops import index_update
@@ -139,15 +138,19 @@ def linear_PS_sameTime(ssn, rs, noise_pars, freq_range, fnums, cons, LFPrange=No
     Trgt = round(noise_pars.Ori1/OriVec(end)*ssn.Nthetas);
     LFPrange = Trgt+(-10:+10);
     cons = number of contrasts 
+    probes = number of probes 
 
     example run:
     powspecE = linear_power_spect(ssn, r_fp, NoisePars(), freq_range=[10,100], fnums=50)
 
     by Yashar Ahmadian -- Nov 2015. Modified by Caleb Holt -- Sep 2019
     """
+    
     if LFPrange is None:
         LFPrange = [0]
+    
     eE, noiseCov, SpatialFilt = make_eE_noiseCov(ssn, noise_pars, LFPrange)
+        
     tau_corr = noise_pars.corr_time
     
     #switch-block case 'ampa-gaba-nmda' in MATLAB code
