@@ -40,7 +40,7 @@ def make_neur_distances(gridsizedeg, gridperdeg, hyper_col, PERIODIC = False):
     
     return X, Y, deltaD
 
-def make_orimap(hyper_col, X, Y, nn=30, prngKey=0):
+def make_orimap(hyper_col, X, Y, nn=30, prngKey=4):
     '''
     Makes the orientation map for the grid
     hyper_col = hyper column length for the network in retinotopic degrees
@@ -111,7 +111,7 @@ def make_Wxx_dist(dist, ori_dist, sigma, sigma_ori, from_neuron, MinSyn=1e-4, JN
     
     return W
 
-def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigR, deltaD, OMap, sigXI = 0.01):
+def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigR, deltaD, OMap, sigXI = 0.02):
     '''
     Function that makes the full rank W = [[Wee, Wei], [Wie, Wii]] which obeys Dale's law (meaning Wxi is defined negative)
     
@@ -213,4 +213,4 @@ def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWi
     #array to reference to find max contrasts, etc
     stimulus_condition = np.vstack((Contrasts, np.hstack((rads, np.max(rads)))))
     
-    return StimConds.T, stimulus_condition
+    return StimConds.T, stimulus_condition, InSr
