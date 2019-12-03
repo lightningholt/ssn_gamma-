@@ -172,7 +172,7 @@ class _SSN_AMPAGABA(_SSN_Base):
     			np.tile( self.Wrcpt * Phi[None,:] , (1, self.num_rcpt)) ) # broadcasting so that gain (Phi) varies by 2nd (presynaptic) neural index, and does not depend on receptor type or post-synaptic (1st) neural index
         else:
             Phi = lambda rr: np.diag(self.gains_from_r(rr))
-            return ( np.array([np.kron(np.ones((1, self.num_rcpt)), np.dot(self.Wrcpt,  Phi(r[:,cc]))) - np.eye(self.N*self.num_rcpt) for cc in range(r.shape[1])]) )
+            return ( np.array([np.kron(np.ones((1, self.num_rcpt)), np.dot(self.Wrcpt, Phi(r[:,cc]))) - np.eye(self.N*self.num_rcpt) for cc in range(r.shape[1])]) )
 
 
 class SSN_2D(_SSN_Base):
