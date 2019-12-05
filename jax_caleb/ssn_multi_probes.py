@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 %matplotlib inline 
 import scipy.io as sio
 import numpy as onp
+import time
 
 import SSN_classes
 import SSN_power_spec
@@ -162,9 +163,85 @@ def bfgs_multi_gamma(params_init, fname='new_multi.pdf'):
         sio.savemat(f_out, Results)
     
     return obs_spect, obs_rates, params, loss_t
+
+def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf'):
+    
+    dloss = value_and_grad(loss)
+    
+    if platform == 'darwin':
+        gd_iters = 10
+    else:
+        os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+        gd_iters = 10
+        #gd_iters = 3
+        
+    min_L = []
+    min_params = []
+    dd = 100 # time scale for scaling eta down.
+    
+    params = params_init
+    loss_t = []
+    t0 = time.time()
+    
+    for ii in range(gd_iters):
+        print("G.D. step ", ii+1)
+        L, dL = dloss(params, probes)
+        params = params - eta * dL #dloss(params)
+        loss_t.append(L)
+
+    print("{} GD steps took {} seconds.".format(gd_iters, time.time()-t0))
+    if len(params) < 8:
+        print("fit [Jee, Jei, Jie, Jii, i2e, Plocal, sigR] = ", sigmoid_params(params, MULTI=True))
+    else:
+        print("fit [Jee, Jei, Jie, Jii, gE, gI, NMDAratio, Plocal, sigR] = ", sigmoid_params(params, MULTI=True))
+    
+    ssn_init, init_r, CONVG = ssn_FP(params_init)
+    init_PS, fs, _, _ = SSN_power_spec.linear_PS_sameTime(ssn_init, init_r[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
+    init_outer = make_outer_spect(ssn_init, init_r[:,gabor_inds], probes)
+    init_spect = np.real(np.concatenate((init_PS, init_outer), axis=1))
+
+    init_r = init_r[(trgt, trgt+ssn_init.Ne),:]
+
+    init_f0 = SSN_power_spec.find_peak_freq(fs, init_spect, len(Contrasts))
+    target_PS = np.real(np.array(losses.get_multi_probe_spect(fs, fname ='test_spect.mat')))
+    target_PS = target_PS/np.mean(target_PS)
+    
+    ssn_obs, obs_r, CONVG = ssn_FP(params)
+    obs_PS, fs, _, _ = SSN_power_spec.linear_PS_sameTime(ssn_obs, obs_r[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
+    obs_outer = make_outer_spect(ssn_obs, obs_r[:,gabor_inds], probes)
+    obs_spect = np.real(np.concatenate((obs_PS, obs_outer), axis=1))
+    obs_spect = obs_spect/np.mean(obs_spect)
+
+    obs_r = obs_r[(trgt, trgt+ssn_obs.Ne), :]
+
+    obs_f0 = SSN_power_spec.find_peak_freq(fs, obs_spect, len(Contrasts))
+
+    make_plot.Maun_Con_plots(fs, obs_spect, target_PS, Contrasts[con_inds],obs_r[:, con_inds].T, np.reshape(Inp[:,-1], (11,11)), obs_f0, initial_spect=init_spect, initial_rates=init_r[:, con_inds].T, initial_f0= init_f0, fname=fname)
+    
+    Results = {
+        'obs_spect':obs_spect,
+        'obs_rates':obs_rates,
+        'obs_f0':obs_f0,
+        'init_spect':init_spect,
+        'init_rates':init_r,
+        'target_spect':target_PS,=
+        'loss_t':loss_t,
+        'params':params,
+    }
+    
+    
+    if fname is not None:
+        f_out = fname.split('.')[0]+'.mat'
+#         f_out.append('.mat')
+        sio.savemat(f_out, Results)
+    
+    return obs_spect, obs_rates, params, loss_t
+    
+
+    
     
 def ssn_FP(pos_params):
-    params = sigmoid_params(pos_params)
+    params = sigmoid_params(pos_params, MULTI=True)
     
     #unpack parameters
     Jee = params[0] * np.pi * psi
@@ -192,7 +269,7 @@ def ssn_FP(pos_params):
     ssn = SSN_classes._SSN_AMPAGABA(tau_s, NMDAratio, n, k, Ne, Ni, tau_vec, W)
     ssn.topos_vec = np.ravel(OMap)
                         
-    r_init = np.zeros([ssn.N, cons])
+    r_init = np.zeros([ssn.N, len(Contrasts)])
     inp_vec = np.vstack((gE*Inp, gI*Inp))
                         
     r_fp, CONVG = ssn.fixed_point_r(inp_vec, r_init=r_init, Tmax=Tmax, dt=dt, xtol=xtol)
@@ -226,17 +303,6 @@ def loss(params, probes):
         
         spect_loss = losses.loss_MaunCon_spect(fs[fs_loss_inds], total_spect[fs_loss_inds,:])
         return spect_loss
-        
-#         outer_loss = 0
-        
-#         for pp in range(1, probes): #want to start at 1 cause the zero case is covered in the above spect_loss
-#             outer_spect, _,_,_  = SSN_power_spec.linear_PS_sameTime(ssn, r_fp[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[pp]])
-#             outer_loss = outer_loss + loss.loss_outer_spect(fs[fs_loss_inds], outer_spect[fs_loss_inds, gabor_inds], pp)
-
-#         spect_loss = losses.loss_spect_contrasts(fs, np.real(spect))
-        #rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp[:,1:], lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
-        #param_loss = prefact_params * losses.loss_params(params)
-        #return spect_loss   #+ rates_loss + param_loss
     else:
         return np.inf
 
