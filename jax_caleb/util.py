@@ -120,7 +120,7 @@ def toeplitz(c, r=None):
     return vals[indx]
 
 
-def find_params_to_sigmoid(params, Jmax = 3, i2e_max = 2, gE_max = 2, gI_max = 1.5, gI_min = 0.5, NMDA_max = 1):
+def find_params_to_sigmoid(params, Jmax = 3, i2e_max = 2, gE_max = 2, gI_max = 1.5, gI_min = 0.5, NMDA_max = 1, plocal_max = 1, sigR_max = 0.8, sigR_min = 0.7, MULTI=False):
     '''
     Takes the params I was using without sigmoids and finds what would produce the same values in the sigmoid 
     params = unsigmoided parameters
@@ -130,15 +130,29 @@ def find_params_to_sigmoid(params, Jmax = 3, i2e_max = 2, gE_max = 2, gI_max = 1
     #print('Jmax ', Jmax, ' i2e_max ', i2e_max, ' gE_max ', gE_max, ' gI_max ', gI_max, ' gI_min ', gI_min ' NMDA_max ', NMDA_max)
     
     sig_ready_J = -np.log(Jmax/params[:4] - 1)
-    
-    if len(params) < 6:
-        sig_ready_i2e = -np.log(i2e_max/params[4] - 1)
-        return np.hstack((sig_ready_J, sig_ready_i2e))
+    if not MULTI:
+        if len(params) < 6:
+            sig_ready_i2e = -np.log(i2e_max/params[4] - 1)
+            return np.hstack((sig_ready_J, sig_ready_i2e))
+        else:
+            sig_gE = -np.log(gE_max/params[4] - 1)
+            sig_gI = -np.log(gI_max/(params[5] - gI_min) - 1)
+            sig_NMDA = -np.log(NMDA_max/params[6] - 1)
+            return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA))
     else:
-        sig_gE = -np.log(gE_max/params[4] - 1)
-        sig_gI = -np.log(gI_max/(params[5] - gI_min) - 1)
-        sig_NMDA = -np.log(NMDA_max/params[6] - 1)
-        return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA))
+        if len(params) < 8:
+            sig_ready_i2e = -np.log(i2e_max/params[4] - 1)
+            sig_plocal = -np.log(plocal_max/params[-2] - 1)
+            sig_sigR = -np.log(sigR_max/(params[-1]-sig_min) -1)
+            return np.hstack((sig_ready_J, sig_ready_i2e, sig_plocal, sig_sigR))
+        else:
+            sig_gE = -np.log(gE_max/params[4] - 1)
+            sig_gI = -np.log(gI_max/(params[5] - gI_min) - 1)
+            sig_NMDA = -np.log(NMDA_max/params[6] - 1)
+            sig_plocal = -np.log(plocal_max/params[-2] - 1)
+            sig_sigR = -np.log(sigR_max/(params[-1]-sig_min) -1)
+            return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA, sig_plocal, sig_sigR))
+        
     
 def sigmoid_params(pos_params, MULTI=False):
     J_max = 3
