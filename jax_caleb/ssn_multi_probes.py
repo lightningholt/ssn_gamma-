@@ -4,8 +4,7 @@ import jax.numpy as np
 import jax.random as random
 from jax import grad, value_and_grad, jit, ops
 
-import matplotlib.pyplot as plt
-%matplotlib inline 
+import matplotlib.pyplot as plt 
 import scipy.io as sio
 import numpy as onp
 import time
