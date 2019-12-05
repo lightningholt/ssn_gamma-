@@ -132,27 +132,19 @@ def Maun_Con_plots(fs, obs_spect, target_spect, contrasts, obs_rates, stim, obs_
     ax_I = fig_combined.add_subplot(gs[2:4, 2])
     
     ax_E.set_prop_cycle(None)
-    ax_E.plot(contrasts, obs_rates[:,0], 'r')
+    ax_E.plot(contrasts[:cons-1], obs_rates[:cons-1,0], 'r')
+    ax_E.plot(contrasts[cons-1], obs_rates[cons-1, 0], 'r^')
     ax_E.set_title('E Rates Post GD')
     
-    ax_I.plot(contrasts, obs_rates[:,1], 'b')
+    ax_I.plot(contrasts[:cons-1], obs_rates[:cons-1,1], 'b')
+    ax_I.plot(contrasts[cons-1], obs_rates[cons-1,1], 'b^')
     ax_I.set_title('I Rates Post GD')
-    
-    if initial_rates is not(None):
-        ax_E_init = fig_combined.add_subplot(gs[0:2, 5])
-        ax_I_init = fig_combined.add_subplot(gs[2:4, 5])
-        
-        ax_E_init.plot(contrasts, initial_rates[:,0], "r")
-        ax_E_init.set_title('E Rates Pre')
-        
-        ax_I_init.plot(contrasts, initial_rates[:,1], "b")
-        ax_I_init.set_title('I Rates Pre')
         
     ax_spect_maun = fig_combined.add_subplot(gs[4:8,1:3])
     ax_spect_maun.set_prop_cycle('color', maun_color)
-    ax_spect_maun.plot(fs, target_spect[:, -probes:0], '--')
+    ax_spect_maun.plot(fs, target_spect[:, -probes:], '--')
     ax_spect_maun.set_prop_cycle('color', maun_color)
-    ax_spect_maun.plot(fs, target_spect[:, -probes:0])
+    ax_spect_maun.plot(fs, obs_spect[:, -probes:])
     
     ax_spect_maun.set_title('Maun Effect - Post GD')
     ax_spect_maun.set_xlabel('frequency (Hz)')
@@ -161,9 +153,9 @@ def Maun_Con_plots(fs, obs_spect, target_spect, contrasts, obs_rates, stim, obs_
     if initial_spect is not None:
         ax_init_maun = fig_combined.add_subplot(gs[4:8,4:6])
         ax_init_maun.set_prop_cycle('color', maun_color)
-        ax_init_maun.plot(fs, target_spect[:, -probes:0], ':')
+        ax_init_maun.plot(fs, target_spect[:, -probes:], ':')
         ax_init_maun.set_prop_cycle('color', maun_color)
-        ax_init_maun.plot(fs, target_spect[:, -probes:0])
+        ax_init_maun.plot(fs, target_spect[:, -probes:])
 
         ax_init_maun.set_title('Maun Effect - Pre GD')
         ax_init_maun.set_xlabel('frequency (Hz)')
@@ -172,7 +164,7 @@ def Maun_Con_plots(fs, obs_spect, target_spect, contrasts, obs_rates, stim, obs_
     ax_f0_maun = fig_combined.add_subplot(gs[4:6, 0])
     ax_f0_maun.set_prop_cycle('color', maun_color)
     for pp in range(probes):
-        plot(pp, obs_f0[pp], 'o')
+        ax_f0_maun.plot(pp, obs_f0[pp], 'o')
     ax_f0_maun.set_title('Post GD')
     ax_f0_maun.set_xlabel('Probes')
     ax_f0_maun.set_ylabel('Peak frequency (Hz)')
@@ -194,7 +186,7 @@ def Maun_Con_plots(fs, obs_spect, target_spect, contrasts, obs_rates, stim, obs_
         ax_f0_init = fig_combined.add_subplot(gs[4:6, 3])
         ax_f0_init.set_prop_cycle('color', maun_color)
         for pp in range(probes):
-            plot(pp, initial_f0[pp], 'o')
+            ax_f0_init.plot(pp, initial_f0[pp], 'o')
         ax_f0_init.set_title('Pre GD')
         ax_f0_init.set_xlabel('Probes')
         ax_f0_init.set_ylabel('Peak frequency (Hz)')
