@@ -16,27 +16,36 @@ def loss_SSN_2D_contrast(fs, spect):
 
     return np.mean((target_spect - spect)**2)
 
-def loss_spect_contrasts(fs, spect):
+def loss_spect_contrasts(fs, spect, MULTI = False):
     '''
     MSE loss quantifying match of power spectra across
     contrasts [0, 25, 50, 100] with target spectra 
     '''
     
     epsilon = 0.0045 # a regularization term
-    target_spect = np.array(get_target_spect(fs, ground_truth=True))
+    
+    if MULTI:
+        target_spect = np.array(get_multi_probe_spect(fs, probe_loc=0, gabor_inds=-1, norm=False, fname ='test_spect.mat'))
+    else:
+        target_spect = np.array(get_target_spect(fs, ground_truth=True))
+        
     spect = spect/(np.mean(spect)+ epsilon)
     
     spect_loss = np.mean((target_spect - spect) ** 2) #MSE
     return spect_loss
 
-def loss_spect_nonzero_contrasts(fs, spect):
+def loss_spect_nonzero_contrasts(fs, spect, MULTI = False):
     '''
     MSE loss quantifying match of power spectra across
     contrasts [0, 25, 50, 100] with target spectra 
     '''
     epsilon = 0.0045 # a regularization term, this is the unnormalized value of the first target PS 
     
-    target_spect = np.array(get_target_spect(fs, ground_truth=True, norm = False))
+    if MULTI:
+        target_spect = np.array(get_multi_probe_spect(fs, probe_loc=0, gabor_inds=-1, norm=False, fname ='test_spect.mat'))
+    else:
+        target_spect = np.array(get_target_spect(fs, ground_truth=True, norm = False))
+    
     BS = target_spect[:,0]
     target_spect = target_spect[:,1:] - BS[:,None]
     target_spect = target_spect/np.mean(target_spect)
@@ -47,6 +56,18 @@ def loss_spect_nonzero_contrasts(fs, spect):
     
     spect_loss = np.mean((target_spect - spect) ** 2) #MSE
     return spect_loss
+
+def loss_MaunCon_spect(fs, spect, probe):
+    
+    target_spect = np.array(get_multi_probe_spect(fs, fname='test_spect.mat'))
+    
+    target_spect = np.real(target_spect/np.mean(target_spect))
+    
+    spect = np.real(spect)/np.mean(np.real(spect))
+    
+    outer_loss = np.mean((target_spect - spect) ** 2) #MSE
+    
+    return outer_loss
 
 def loss_peak_freq(fs, obs_f0):
     '''
@@ -372,9 +393,27 @@ def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.m
     else:
         ideal_spect = np.real(ideal_spect)
     
-    
     target_PS = np.array([numpy.interp(fs, fs_ideal, idl_ps) for idl_ps in ideal_spect.T]).T
     return target_PS/numpy.mean(target_PS)
+
+def get_multi_probe_spect(fs, fname ='test_spect.mat'):
+    
+    fs = numpy.array(fs)
+    
+    aa = sio.loadmat(fname)
+    ideal_spect = np.real(aa['spect'])
+    fs_ideal = numpy.linspace(0, 101, numpy.max(ideal_spect.shape))
+    
+#     if probe_loc != 0:
+#         key_str = 'spect_'+str(probe_loc)
+#         ideal_spect = aa[key_str]
+#     else:
+#         key_str = 'spect'
+#         ideal_spect = aa[key_str][:, gabor_inds]
+    
+    target_PS = np.array([numpy.interp(fs, fs_ideal, idl_ps) for idl_ps in ideal_spect.T]).T
+    return target_PS
+        
 
 def get_target_rates(ground_truth = False, fname='standJ19-09-20-BestSpect.mat'):
     
