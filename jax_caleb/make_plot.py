@@ -87,3 +87,23 @@ def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, ta
     
     # ax_I.set_xlabel('Contrasts')
     # ax_I.set_ylabel('Firing Rates (Hz)')
+
+def Maun_Con_plots(fs, obs_spect, target_spect, contrasts, obs_rates, probes=5, fname=None):
+    
+    cons = len(contrasts)
+    fig_combined = plt.figure(15, constrained_layout=True)
+#     if loss_t is None:
+    
+    gs = gridspec.GridSpec(8,3, figure=fig_combined)
+    
+    ax_spect_con = fig_combined.add_subplot(gs[0:4,0:2])
+    ax_spect_con.plot(fs, target_spect, "--")
+    #colrs = ax.get_color_cycle()
+    ax_spect_con.set_prop_cycle(None)
+    ax_spect_con.plot(fs, obs_spect)
+    ax_spect_con.title()
+    
+    
+    
+    if fname is not None:
+        plt.savefig(fname)
