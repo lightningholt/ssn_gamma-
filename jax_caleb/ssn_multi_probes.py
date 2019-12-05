@@ -63,6 +63,7 @@ Inp, stimCon, _ = make_conn.makeInputs(OMap, r_cent, contrasts, X, Y, gridperdeg
 Contrasts = stimCon[0,:]
 Radii = stimCon[1,:]
 
+trgt = np.floor(gridsize**2 / 2)
 probes = 5
 LFPtarget = trgt + np.array( [ii * gridsize for ii in range(probes)])
 
@@ -121,7 +122,7 @@ def bfgs_multi_gamma(params_init, fname='new_multi.pdf'):
     ssn_init, init_r, _ = ssn_FP(params_init)
     ssn_obs, obs_r, _ = ssn_FP(params)
     
-    init_PS, _, _, _ = SSN_power_spec.linear_PS_sameTime(ssn_init, init_r[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
+    init_PS, fs, _, _ = SSN_power_spec.linear_PS_sameTime(ssn_init, init_r[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
     obs_PS, _, _, _ = SSN_power_spec.linear_PS_sameTime(ssn_init, init_r[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
     
     init_outer = make_outer_spect(ssn_init, init_r[:,gabor_inds], probes)
@@ -133,7 +134,7 @@ def bfgs_multi_gamma(params_init, fname='new_multi.pdf'):
     init_f0 = SSN_power_spec.find_peak_freq(fs, init_spect, len(Contrasts))
     obs_f0 = SSN_power_spec.find_peak_freq(fs, obs_spect, len(Contrasts))
         
-    target_PS = np.real(np.array(losses.get_multi_probe_spect(fs, fname ='test_spect.mat'))
+    target_PS = np.real(np.array(losses.get_multi_probe_spect(fs, fname ='test_spect.mat')))
     target_rates = losses.get_target_rates()
     
     stim = np.reshape(Inp[:,gabor_inds], (ssn_obs.Ne, ssn_obs.Ne))
@@ -206,7 +207,7 @@ def loss(params, probes):
         spect, fs, f0, _ = SSN_power_spec.linear_PS_sameTime(ssn, r_fp[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
         outer_spect = make_outer_spect(ssn, r_fp[:,gabor_inds], probes)
         
-        total_spect = np.concatenate(spect, outer_spect, axis=1)
+        total_spect = np.concatenate((spect, outer_spect), axis=1)
         #normalize step
         total_spect = np.real(total_spect)/np.mean(np.real(total_spect))
         
