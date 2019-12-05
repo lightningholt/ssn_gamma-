@@ -140,34 +140,52 @@ def find_params_to_sigmoid(params, Jmax = 3, i2e_max = 2, gE_max = 2, gI_max = 1
         sig_NMDA = -np.log(NMDA_max/params[6] - 1)
         return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA))
     
-def sigmoid_params(pos_params):
+def sigmoid_params(pos_params, MULTI=False):
     J_max = 3
     i2e_max = 2
     gE_max = 2
     gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
     gI_min = 0.5
     NMDA_max = 1
+    plocal_max = 1
+    sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
+    sigR_min = 0.7 # so the max of sigR = sigR_max + sigR_min = 1.5
     
     Jee = J_max * logistic_sig(pos_params[0])
     Jei = J_max * logistic_sig(pos_params[1])
     Jie = J_max * logistic_sig(pos_params[2])
     Jii = J_max * logistic_sig(pos_params[3])
     
-    if len(pos_params) < 6:
-        i2e = i2e_max * logistic_sig(pos_params[4])
-        gE = 1
-        gI = 1
-        NMDAratio = 0.4
-        
-        params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio])
-        
+    if MULTI:
+        if len(params) < 8:
+            i2e = i2e_max * logistic_sig(pos_params[4])
+            plocal = plocal_max * logistic_sig(pos_params[-2])
+            sigR = sigR_max * logistic_sig(pos_params[-1]) + sigR_min
+            
+            params = np.array([Jee, Jei, Jie, Jii, i2e, plocal, sigR])
+        else:
+            gE = gE_max * logistic_sig(pos_params[4])
+            gI = gI_max * logistic_sig(pos_params[5]) + gI_min
+            plocal = plocal_max * logistic_sig(pos_params[-2])
+            sigR = sigR_max * logistic_sig(pos_params[-1]) + sigR_min
+            
+            params = np.array([Jee, Jei, Jie, Jii, gE, gI, plocal, sigR])
     else:
-        i2e = 1
-        gE = gE_max * logistic_sig(pos_params[4])
-        gI = gI_max * logistic_sig(pos_params[5]) + gI_min
-        NMDAratio = NMDA_max * logistic_sig(pos_params[6])
-        
-        params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio])
+        if len(pos_params) < 6:
+            i2e = i2e_max * logistic_sig(pos_params[4])
+            gE = 1
+            gI = 1
+            NMDAratio = 0.4
+
+            params = np.array([Jee, Jei, Jie, Jii, i2e])
+
+        else:
+            i2e = 1
+            gE = gE_max * logistic_sig(pos_params[4])
+            gI = gI_max * logistic_sig(pos_params[5]) + gI_min
+            NMDAratio = NMDA_max * logistic_sig(pos_params[6])
+
+            params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio])
     
     return params
 
