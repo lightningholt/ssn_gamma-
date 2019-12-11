@@ -49,10 +49,9 @@ magnFactor = 2 #mm/deg
 #biological hyper_col length is ~750 um, magFactor is typically 2 mm/deg in macaque V1
 # hyper_col = 0.8/magnFactor
 hyper_col = 8/magnFactor
-# r_cent = np.array([0.3, 0.6, 0.9, 1.2, 1.5])
-
 
 #define stimulus conditions r_cent = Radius of the stim, contrasts = contrasts. 
+# r_cent = np.array([0.3, 0.6, 0.9, 1.2, 1.5])
 #r_cent = np.arange(dradius, round(gridsizedeg/2)+dradius, dradius)
 r_cent = np.array([gridsizedeg/2])
 # r_cent = np.array([0.9750])
@@ -60,12 +59,11 @@ r_cent = np.array([gridsizedeg/2])
 contrasts = np.array([100])
 
 X,Y, deltaD = make_conn.make_neur_distances(gridsizedeg, gridperdeg, hyper_col, PERIODIC = False)
-OMap, _= make_conn.make_orimap(hyper_col, X, Y, prngKey=22)
+OMap, _ = make_conn.make_orimap(hyper_col, X, Y, prngKey=22)
 Inp, stimCon, _ = make_conn.makeInputs(OMap, r_cent, contrasts, X, Y, gridperdeg=gridperdeg, gridsizedeg=gridsizedeg)
 Contrasts = stimCon[0,:]
 Radii = stimCon[1,:]
 
-trgt = np.floor(gridsize**2 / 2)
 probes = 5
 LFPtarget = trgt + np.array( [ii * gridsize for ii in range(probes)])
 
@@ -93,7 +91,7 @@ def bfgs_multi_gamma(params_init, fname='new_multi.pdf'):
     else:
         os.environ["CUDA_VISIBLE_DEVICES"] = "0"
         os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
-        gd_iters = 1000
+        gd_iters = 10
     
     ## minimize instead
     dloss = grad(loss)
@@ -121,47 +119,7 @@ def bfgs_multi_gamma(params_init, fname='new_multi.pdf'):
     print("{} GD steps took {} seconds.".format(gd_iters, time.time()-t0))
     print("fit [Jee, Jei, Jie, Jii, i2e] = ", sigmoid_params(params))
     
-    ssn_init, init_r, _ = ssn_FP(params_init)
-    ssn_obs, obs_r, _ = ssn_FP(params)
-    
-    init_PS, fs, _, _ = SSN_power_spec.linear_PS_sameTime(ssn_init, init_r[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
-    obs_PS, _, _, _ = SSN_power_spec.linear_PS_sameTime(ssn_init, init_r[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
-    
-    init_outer = make_outer_spect(ssn_init, init_r[:,gabor_inds], probes)
-    obs_outer = make_outer_spect(ssn_obs, obs_r[:, gabor_inds], probes)
-    
-    init_spect = np.real(np.concatenate((init_PS, init_outer), axis=1))
-    obs_spect = np.real(np.concatenate((obs_PS, obs_outer), axis=1))
-    
-    init_f0 = SSN_power_spec.find_peak_freq(fs, init_spect, len(Contrasts))
-    obs_f0 = SSN_power_spec.find_peak_freq(fs, obs_spect, len(Contrasts))
-        
-    target_PS = np.real(np.array(losses.get_multi_probe_spect(fs, fname ='test_spect.mat')))
-    target_rates = losses.get_target_rates()
-    
-    stim = np.reshape(Inp[:,gabor_inds], (ssn_obs.Ne, ssn_obs.Ne))
-    make_plot.Maun_Con_plots(fs, obs_spect, target_spect, Contrasts[con_inds], obs_rates, stim, obs_f0, initial_spect=init_spect, initial_rates= init_r, initial_f0 = init_f0, probes=probes, fname=fname)
-    
-    Results = {
-        'obs_spect':obs_spect,
-        'obs_rates':obs_rates,
-        'obs_f0':obs_f0,
-        'init_spect':init_spect,
-        'init_rates':init_r,
-        'target_spect':target_PS,
-        'target_rates':target_rates,
-        'lower_bound_rates':lower_bound_rates,
-        'upper_bound_rates':upper_bound_rates,
-        'kink_control':kink_control,
-        'loss_t':loss_t,
-        'params':params,
-        'res':res,
-    }
-    
-    if fname is not None:
-        f_out = fname.split('.')[0]+'.mat'
-#         f_out.append('.mat')
-        sio.savemat(f_out, Results)
+    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp)
     
     return obs_spect, obs_rates, params, loss_t
 
@@ -195,39 +153,49 @@ def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf'):
         print("fit [Jee, Jei, Jie, Jii, i2e, Plocal, sigR] = ", sigmoid_params(params, MULTI=True))
     else:
         print("fit [Jee, Jei, Jie, Jii, gE, gI, NMDAratio, Plocal, sigR] = ", sigmoid_params(params, MULTI=True))
+        
+    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp)
     
-    ssn_init, init_r, CONVG = ssn_FP(params_init)
-    init_PS, fs, _, _ = SSN_power_spec.linear_PS_sameTime(ssn_init, init_r[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
-    init_outer = make_outer_spect(ssn_init, init_r[:,gabor_inds], probes)
-    init_spect = np.real(np.concatenate((init_PS, init_outer), axis=1))
+    return obs_spect, obs_r, params, loss_t
 
-    init_r = init_r[(trgt, trgt+ssn_init.Ne),:]
+        
+def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, res=None)
+
+    init_spect, _, _, init_r, init_CONVG = ssn_FP(params_init)
+    
+    #really just want to track the center neurons (E/I)
+    init_r = init_r[(trgt, trgt+Ne),:]
+    init_spect = init_spect/np.mean(init_spect)
 
     init_f0 = SSN_power_spec.find_peak_freq(fs, init_spect, len(Contrasts))
+    
     target_PS = np.real(np.array(losses.get_multi_probe_spect(fs, fname ='test_spect.mat')))
     target_PS = target_PS/np.mean(target_PS)
     
-    ssn_obs, obs_r, CONVG = ssn_FP(params)
-    obs_PS, fs, _, _ = SSN_power_spec.linear_PS_sameTime(ssn_obs, obs_r[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
-    obs_outer = make_outer_spect(ssn_obs, obs_r[:,gabor_inds], probes)
-    obs_spect = np.real(np.concatenate((obs_PS, obs_outer), axis=1))
+#     ssn_obs, obs_r, CONVG = ssn_FP(params)
+    obs_spect, fs, _, obs_r, CONVG = ssn_FP(params)
+    
+    obs_r = obs_r[(trgt, trgt+Ne), :]
     obs_spect = obs_spect/np.mean(obs_spect)
-
-    obs_r = obs_r[(trgt, trgt+ssn_obs.Ne), :]
-
+    
     obs_f0 = SSN_power_spec.find_peak_freq(fs, obs_spect, len(Contrasts))
 
     make_plot.Maun_Con_plots(fs, obs_spect, target_PS, Contrasts[con_inds],obs_r[:, con_inds].T, np.reshape(Inp[:,-1], (gridsize, gridsize)), obs_f0, initial_spect=init_spect, initial_rates=init_r[:, con_inds].T, initial_f0= init_f0, fname=fname)
     
+    #save the results in dict for savemat
     Results = {
         'obs_spect':obs_spect,
         'obs_rates':obs_rates,
         'obs_f0':obs_f0,
+        'CONVG':CONVG,
         'init_spect':init_spect,
         'init_rates':init_r,
+        'init_CONVG':init_CONVG,
         'target_spect':target_PS,
         'loss_t':loss_t,
         'params':params,
+        'params_init':params_init
+        'res':res
     }
     
     
@@ -236,7 +204,7 @@ def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf'):
 #         f_out.append('.mat')
         sio.savemat(f_out, Results)
     
-    return obs_spect, obs_rates, params, loss_t
+    return obs_spect, obs_rates, Results
     
 
     
@@ -275,30 +243,32 @@ def ssn_FP(pos_params):
                         
     r_fp, CONVG = ssn.fixed_point_r(inp_vec, r_init=r_init, Tmax=Tmax, dt=dt, xtol=xtol)
     
-    return ssn, r_fp, CONVG
-
-def loss(params, probes):
-    
-    ssn, r_fp, CONVG = ssn_FP(params)
-    
-    if CONVG:
+    #calculate power spectrum
+    if cons == 1:
+        spect, fs, f0, _ = SSN_power_spec.linear_power_spect(ssn, r_fp, noise_pas, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
+        
+        if np.max(np.abs(np.imag(spect))) > 0.01:
+            print("Spectrum is dangerously imaginary")
+            
+    else:
         spect, fs, f0, _ = SSN_power_spec.linear_PS_sameTime(ssn, r_fp[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
-        outer_spect = make_outer_spect(ssn, r_fp[:,gabor_inds], probes)
         
         if np.max(np.abs(np.imag(spect))) > 0.01:
             print("Spectrum is dangerously imaginary")
         
-        spect = np.concatenate((spect, outer_spect), axis=1)
-        #normalize step
-        spect = np.real(spect)/np.mean(np.real(spect))
+        outer_spect = make_outer_spect(ssn, r_fp[:,gabor_inds], probes)
+        spect = np.real(np.concatenate((spect, outer_spect), axis=1))
+    
+    return spect, fs, f0, r_fp, CONVG
+
+def loss(params, probes):
+    
+#     ssn, r_fp, CONVG = ssn_FP(params)
+    spect, fs, _, r_fp, CONVG = ssn_FP(params)
+    
+    if CONVG:
+        spect = spect/np.mean(spect)
         
-        #lower_bound_rates = -5 * np.ones([2, cons-1])
-        #upper_bound_rates = np.vstack((70*np.ones(cons-1), 100*np.ones(cons-1)))
-        #kink_control = 1 # how quickly log(1 + exp(x)) goes to ~x, where x = target_rates - found_rates    
-
-        #prefact_rates = 1
-        #prefact_params = 10
-
         fs_loss_inds = np.arange(0 , len(fs))
         fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])
         
