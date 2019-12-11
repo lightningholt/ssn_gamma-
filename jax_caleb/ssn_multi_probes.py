@@ -52,11 +52,11 @@ hyper_col = 8/magnFactor
 
 #define stimulus conditions r_cent = Radius of the stim, contrasts = contrasts. 
 # r_cent = np.array([0.3, 0.6, 0.9, 1.2, 1.5])
-#r_cent = np.arange(dradius, round(gridsizedeg/2)+dradius, dradius)
-r_cent = np.array([gridsizedeg/2])
+r_cent = np.arange(dradius, round(gridsizedeg/2)+dradius, dradius)
+#r_cent = np.array([gridsizedeg/2])
 # r_cent = np.array([0.9750])
-#contrasts = np.array([0, 25, 50, 100])
-contrasts = np.array([100])
+contrasts = np.array([0, 25, 50, 100])
+#contrasts = np.array([100])
 
 #more spatial constants of the network
 X,Y, deltaD = make_conn.make_neur_distances(gridsizedeg, gridperdeg, hyper_col, PERIODIC = False)
@@ -246,8 +246,12 @@ def ssn_FP(pos_params):
     r_fp, CONVG = ssn.fixed_point_r(inp_vec, r_init=r_init, Tmax=Tmax, dt=dt, xtol=xtol)
     
     #calculate power spectrum
+    for cc in range(cons):
+        if cc == 0:
+            spect, fs, _, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], noise_)
+    
     if cons == 1:
-        spect, fs, f0, _ = SSN_power_spec.linear_power_spect(ssn, r_fp, noise_pas, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
+        spect, fs, f0, _ = SSN_power_spec.linear_power_spect(ssn, r_fp, noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
         
         if np.max(np.abs(np.imag(spect))) > 0.01:
             print("Spectrum is dangerously imaginary")
