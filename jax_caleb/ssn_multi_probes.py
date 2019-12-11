@@ -159,7 +159,7 @@ def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf'):
     return obs_spect, obs_r, params, loss_t
 
         
-def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, res=None)
+def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, res=None):
 
     init_spect, _, _, init_r, init_CONVG = ssn_FP(params_init)
     
