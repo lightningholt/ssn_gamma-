@@ -205,7 +205,10 @@ def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWi
     #find the spatial input for a Gabor 
     InGabor = np.exp(- r_space**2/2/GaborSigma**2);
     #include the contrasts with it
-    StimConds = Contrasts[:,None] * np.vstack((InSr, InGabor))
+    if len(contrasts) > 1:
+        StimConds = Contrasts[ :,None] * np.vstack((InSr, InGabor))
+    else:
+        StimConds = Contrasts[:,None] *InSr
     StimConds = StimConds * In0
     #include the relative drive between E and I cells  -- nixing this cause gE and gI are parametrs
     #InSpace = np.hstack( (StimConds, gI*StimConds)).T #.T makes it neurons by stimcond
