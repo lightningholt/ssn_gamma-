@@ -58,19 +58,21 @@ r_cent = np.array([gridsizedeg/2])
 #contrasts = np.array([0, 25, 50, 100])
 contrasts = np.array([100])
 
+#more spatial constants of the network
 X,Y, deltaD = make_conn.make_neur_distances(gridsizedeg, gridperdeg, hyper_col, PERIODIC = False)
 OMap, _ = make_conn.make_orimap(hyper_col, X, Y, prngKey=22)
 Inp, stimCon, _ = make_conn.makeInputs(OMap, r_cent, contrasts, X, Y, gridperdeg=gridperdeg, gridsizedeg=gridsizedeg)
 Contrasts = stimCon[0,:]
 Radii = stimCon[1,:]
 
-probes = 5
-LFPtarget = trgt + np.array( [ii * gridsize for ii in range(probes)])
-
+#number of neurons and time constants
 Ne, Ni = deltaD.shape
 tau_vec = np.hstack((tauE*np.ones(Ne), tauI*np.ones(Ni)))
 N = Ne + Ni #number of neurons in the grid.
 trgt = int(np.floor(Ne/2))
+
+probes = 5
+LFPtarget = trgt + np.array( [ii * gridsize for ii in range(probes)])
 
 noise_pars = SSN_power_spec.NoisePars(corr_time=10)
 
