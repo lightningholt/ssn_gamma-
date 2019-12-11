@@ -248,16 +248,22 @@ def ssn_FP(pos_params):
     #calculate power spectrum
     for cc in range(cons):
         if cc == 0:
-            spect, fs, _, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], noise_)
+            spect, fs, _, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], noise_pars, freq_range, fnums, con, LFPrange=[LFPtarget[0]])
+        elif cc == 1:
+            spect_2, _, _, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], noise_pars, freq_range, fnums, con, LFPrange=[LFPtarget[0]])
+            spect = np.concatenate((spect[:, None], spect_2[:, None]), axis = 1)
+        else:
+            spect_2, _, _, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], noise_pars, freq_range, fnums, con, LFPrange=[LFPtarget[0]])
+            spect = np.concatenate((spect, spect_2[:, None]), axis = 1)
     
-    if cons == 1:
-        spect, fs, f0, _ = SSN_power_spec.linear_power_spect(ssn, r_fp, noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
+#     if cons == 1:
+#         spect, fs, f0, _ = SSN_power_spec.linear_power_spect(ssn, r_fp, noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
         
-        if np.max(np.abs(np.imag(spect))) > 0.01:
-            print("Spectrum is dangerously imaginary")
+#         if np.max(np.abs(np.imag(spect))) > 0.01:
+#             print("Spectrum is dangerously imaginary")
             
-    else:
-        spect, fs, f0, _ = SSN_power_spec.linear_PS_sameTime(ssn, r_fp[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
+#     else:
+#         spect, fs, f0, _ = SSN_power_spec.linear_PS_sameTime(ssn, r_fp[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
         
         if np.max(np.abs(np.imag(spect))) > 0.01:
             print("Spectrum is dangerously imaginary")
