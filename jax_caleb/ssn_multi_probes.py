@@ -121,7 +121,7 @@ def bfgs_multi_gamma(params_init, fname='new_multi.pdf'):
     print("{} GD steps took {} seconds.".format(gd_iters, time.time()-t0))
     print("fit [Jee, Jei, Jie, Jii, i2e] = ", sigmoid_params(params))
     
-    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp)
+    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=fname, res=res)
     
     return obs_spect, obs_rates, params, loss_t
 
@@ -156,38 +156,37 @@ def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf'):
     else:
         print("fit [Jee, Jei, Jie, Jii, gE, gI, NMDAratio, Plocal, sigR] = ", sigmoid_params(params, MULTI=True))
         
-    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp)
+    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=fname)
     
     return obs_spect, obs_r, params, loss_t
 
         
-def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, res=None):
+def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=None, res=[]):
 
-    init_spect, _, _, init_r, init_CONVG = ssn_FP(params_init)
+    init_spect, fs, _, init_r, init_CONVG = ssn_FP(params_init)
     
     #really just want to track the center neurons (E/I)
     init_r = init_r[(trgt, trgt+Ne),:]
     init_spect = init_spect/np.mean(init_spect)
-
-    init_f0 = SSN_power_spec.find_peak_freq(fs, init_spect, len(Contrasts))
     
     target_PS = np.real(np.array(losses.get_multi_probe_spect(fs, fname ='test_spect.mat')))
     target_PS = target_PS/np.mean(target_PS)
     
 #     ssn_obs, obs_r, CONVG = ssn_FP(params)
-    obs_spect, fs, _, obs_r, CONVG = ssn_FP(params)
+    obs_spect, _, _, obs_r, CONVG = ssn_FP(params)
     
     obs_r = obs_r[(trgt, trgt+Ne), :]
     obs_spect = obs_spect/np.mean(obs_spect)
     
     obs_f0 = SSN_power_spec.find_peak_freq(fs, obs_spect, len(Contrasts))
+    init_f0 = SSN_power_spec.find_peak_freq(fs, init_spect, len(Contrasts))
 
     make_plot.Maun_Con_plots(fs, obs_spect, target_PS, Contrasts[con_inds],obs_r[:, con_inds].T, np.reshape(Inp[:,-1], (gridsize, gridsize)), obs_f0, initial_spect=init_spect, initial_rates=init_r[:, con_inds].T, initial_f0= init_f0, fname=fname)
     
     #save the results in dict for savemat
     Results = {
         'obs_spect':obs_spect,
-        'obs_rates':obs_rates,
+        'obs_rates':obs_r,
         'obs_f0':obs_f0,
         'CONVG':CONVG,
         'init_spect':init_spect,
@@ -203,10 +202,11 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, res=Non
     
     if fname is not None:
         f_out = fname.split('.')[0]+'.mat'
+        print(f_out)
 #         f_out.append('.mat')
         sio.savemat(f_out, Results)
     
-    return obs_spect, obs_rates, Results
+    return obs_spect, obs_r, Results
     
 
     
@@ -268,13 +268,21 @@ def loss(params, probes):
 #     ssn, r_fp, CONVG = ssn_FP(params)
     spect, fs, _, r_fp, CONVG = ssn_FP(params)
     
+    if spect.shape[1] > 1:
+        con_inds = np.arange(spect.shape[1])
+    else:
+        # 0 means Contrast = 0
+        # 4 means Contrast = 100
+        con_inds = 4
+        
+    
     if CONVG:
         spect = spect/np.mean(spect)
         
         fs_loss_inds = np.arange(0 , len(fs))
         fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])
         
-        spect_loss = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:])
+        spect_loss = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:], con_inds)
         return spect_loss
     else:
         return np.inf
