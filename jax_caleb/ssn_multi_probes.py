@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import scipy.io as sio
 import numpy as onp
 import time
+from scipy.optimize import minimize
 
 import SSN_classes
 import SSN_power_spec
@@ -98,12 +99,12 @@ def bfgs_multi_gamma(params_init, fname='new_multi.pdf'):
     # dloss = value_and_grad(loss)
 
     def jac_dloss(params):
-        gradient = onp.asarray(dloss(params))
+        gradient = onp.asarray(dloss(params, probes))
         norm_grad.append(onp.linalg.norm(gradient))
         return gradient
 
     def loss_hist(params):
-        ll = onp.asarray(loss(params))
+        ll = onp.asarray(loss(params, probes))
         loss_t.append(ll)
         return ll
     
@@ -168,10 +169,10 @@ def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf'):
     dloss = value_and_grad(loss)
     
     if platform == 'darwin':
-        gd_iters = 10
+        gd_iters = 1
     else:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-        gd_iters = 10
+        #os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+        gd_iters = 1
         #gd_iters = 3
         
     min_L = []
@@ -215,7 +216,7 @@ def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf'):
 
     obs_f0 = SSN_power_spec.find_peak_freq(fs, obs_spect, len(Contrasts))
 
-    make_plot.Maun_Con_plots(fs, obs_spect, target_PS, Contrasts[con_inds],obs_r[:, con_inds].T, np.reshape(Inp[:,-1], (11,11)), obs_f0, initial_spect=init_spect, initial_rates=init_r[:, con_inds].T, initial_f0= init_f0, fname=fname)
+    make_plot.Maun_Con_plots(fs, obs_spect, target_PS, Contrasts[con_inds],obs_r[:, con_inds].T, np.reshape(Inp[:,-1], (gridsize, gridsize)), obs_f0, initial_spect=init_spect, initial_rates=init_r[:, con_inds].T, initial_f0= init_f0, fname=fname)
     
     Results = {
         'obs_spect':obs_spect,
@@ -223,7 +224,7 @@ def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf'):
         'obs_f0':obs_f0,
         'init_spect':init_spect,
         'init_rates':init_r,
-        'target_spect':target_PS,=
+        'target_spect':target_PS,
         'loss_t':loss_t,
         'params':params,
     }
@@ -283,24 +284,24 @@ def loss(params, probes):
         spect, fs, f0, _ = SSN_power_spec.linear_PS_sameTime(ssn, r_fp[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
         outer_spect = make_outer_spect(ssn, r_fp[:,gabor_inds], probes)
         
-        total_spect = np.concatenate((spect, outer_spect), axis=1)
-        #normalize step
-        total_spect = np.real(total_spect)/np.mean(np.real(total_spect))
-        
         if np.max(np.abs(np.imag(spect))) > 0.01:
             print("Spectrum is dangerously imaginary")
         
-        lower_bound_rates = -5 * np.ones([2, cons-1])
-        upper_bound_rates = np.vstack((70*np.ones(cons-1), 100*np.ones(cons-1)))
-        kink_control = 1 # how quickly log(1 + exp(x)) goes to ~x, where x = target_rates - found_rates    
+        spect = np.concatenate((spect, outer_spect), axis=1)
+        #normalize step
+        spect = np.real(spect)/np.mean(np.real(spect))
+        
+        #lower_bound_rates = -5 * np.ones([2, cons-1])
+        #upper_bound_rates = np.vstack((70*np.ones(cons-1), 100*np.ones(cons-1)))
+        #kink_control = 1 # how quickly log(1 + exp(x)) goes to ~x, where x = target_rates - found_rates    
 
-        prefact_rates = 1
-        prefact_params = 10
+        #prefact_rates = 1
+        #prefact_params = 10
 
         fs_loss_inds = np.arange(0 , len(fs))
         fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])
         
-        spect_loss = losses.loss_MaunCon_spect(fs[fs_loss_inds], total_spect[fs_loss_inds,:])
+        spect_loss = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:])
         return spect_loss
     else:
         return np.inf
