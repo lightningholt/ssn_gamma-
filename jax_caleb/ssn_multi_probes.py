@@ -194,8 +194,8 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, res=Non
         'target_spect':target_PS,
         'loss_t':loss_t,
         'params':params,
-        'params_init':params_init
-        'res':res
+        'params_init':params_init,
+        'res':res,
     }
     
     
