@@ -143,14 +143,14 @@ def find_params_to_sigmoid(params, Jmax = 3, i2e_max = 2, gE_max = 2, gI_max = 1
         if len(params) < 8:
             sig_ready_i2e = -np.log(i2e_max/params[4] - 1)
             sig_plocal = -np.log(plocal_max/params[-2] - 1)
-            sig_sigR = -np.log(sigR_max/(params[-1]-sig_min) -1)
+            sig_sigR = -np.log(sigR_max/(params[-1]-sigR_min) -1)
             return np.hstack((sig_ready_J, sig_ready_i2e, sig_plocal, sig_sigR))
         else:
             sig_gE = -np.log(gE_max/params[4] - 1)
             sig_gI = -np.log(gI_max/(params[5] - gI_min) - 1)
             sig_NMDA = -np.log(NMDA_max/params[6] - 1)
             sig_plocal = -np.log(plocal_max/params[-2] - 1)
-            sig_sigR = -np.log(sigR_max/(params[-1]-sig_min) -1)
+            sig_sigR = -np.log(sigR_max/(params[-1]-sigR_min) -1)
             return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA, sig_plocal, sig_sigR))
         
     
@@ -171,7 +171,7 @@ def sigmoid_params(pos_params, MULTI=False):
     Jii = J_max * logistic_sig(pos_params[3])
     
     if MULTI:
-        if len(params) < 8:
+        if len(pos_params) < 8:
             i2e = i2e_max * logistic_sig(pos_params[4])
             plocal = plocal_max * logistic_sig(pos_params[-2])
             sigR = sigR_max * logistic_sig(pos_params[-1]) + sigR_min
@@ -180,10 +180,12 @@ def sigmoid_params(pos_params, MULTI=False):
         else:
             gE = gE_max * logistic_sig(pos_params[4])
             gI = gI_max * logistic_sig(pos_params[5]) + gI_min
+            NMDAratio = NMDA_max * logistic_sig(pos_params[6])
+            
             plocal = plocal_max * logistic_sig(pos_params[-2])
             sigR = sigR_max * logistic_sig(pos_params[-1]) + sigR_min
             
-            params = np.array([Jee, Jei, Jie, Jii, gE, gI, plocal, sigR])
+            params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio, plocal, sigR])
     else:
         if len(pos_params) < 6:
             i2e = i2e_max * logistic_sig(pos_params[4])
