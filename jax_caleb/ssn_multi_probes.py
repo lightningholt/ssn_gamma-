@@ -53,10 +53,11 @@ hyper_col = 8/magnFactor
 
 
 #define stimulus conditions r_cent = Radius of the stim, contrasts = contrasts. 
-r_cent = np.arange(dradius, round(gridsizedeg/2)+dradius, dradius)
+#r_cent = np.arange(dradius, round(gridsizedeg/2)+dradius, dradius)
+r_cent = np.array([gridsizedeg/2])
 # r_cent = np.array([0.9750])
-contrasts = np.array([0, 25, 50, 100])
-
+#contrasts = np.array([0, 25, 50, 100])
+contrasts = np.array([100])
 
 X,Y, deltaD = make_conn.make_neur_distances(gridsizedeg, gridperdeg, hyper_col, PERIODIC = False)
 OMap, _= make_conn.make_orimap(hyper_col, X, Y, prngKey=22)
@@ -320,3 +321,18 @@ def make_outer_spect(ssn, rs, probes):
             outer_spect = np.concatenate((outer_spect, spect_2[:, None]), axis = 1)
         
     return outer_spect
+
+if __name__ == "__main__":
+    
+    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
+    from util import find_params_to_sigmoid
+    factor_I_hate = 0.774 * np.pi
+    #these are the modelo parameters that worked, but I didn't multiply J0 * 0.774 *pi in matlab
+    #ideal parameters: [1.95, 1.25, 2.45, 1.5, 1, 1.25, 0.1, 1, any] = [Jee, Jei, Jie, Jii, gE, gI, NMDAratio, Plocal, sigR]
+    params_init = np.array([1.95/factor_I_hate, 1.25/factor_I_hate, 2.45/factor_I_hate, 1.5/factor_I_hate, 1.25, 1, 1])
+    params_init = find_params_to_sigmoid(params_init, MULTI=True)
+    eta = 0.0001
+
+    gd_multi_gamma(params_init, eta)
+    # ssn_multi_probes.bfgs_multi_gamma(params_init)
