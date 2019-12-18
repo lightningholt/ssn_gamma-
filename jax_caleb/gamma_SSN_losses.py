@@ -107,6 +107,27 @@ def loss_rates_contrasts(r_fp, lower_bound, upper_bound, kink_control, slope = 1
 
 #     return np.mean(((target_rates - r_fp)/half_width)**power)
 
+def loss_rates_SurrSupp(r_fp, SI=False, A=10):
+    if len(r_fp.shape) > 1:
+        trgt = np.round(np.sqrt(r_fp.shape[0]/2))
+        r_fp = r_fp[trgt, :]
+    
+    if SI:
+        max_SI = 0.2
+        suppression_index = 1 - (r_fp[-1]/r_fp[2])
+        
+        return A/2 * (np.abs(max_SI - suppression_index) + (max_SI - suppression_index))
+        
+    else:
+        target_r = np.array([0.5, 1, 0.8, 0.6])
+        target_r = target_r/np.mean(target_r)
+        
+        obs_r = r_fp/np.mean(r_fp)
+        
+        #return MSE 
+        return np.mean(np.sum(obs_r - target_r)**2)
+        
+
 def loss_params(params):
     '''
     Returns zero when params are in appropriate regimes, and some high value when they're not. 
