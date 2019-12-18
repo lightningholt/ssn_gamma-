@@ -22,7 +22,7 @@ from util import sigmoid_params
 
 #fixed point algorithm:
 dt = 1
-xtol = 1e-5
+xtol = 1e-4
 Tmax = 500
 
 #power spectrum resolution and range
@@ -93,7 +93,7 @@ def bfgs_multi_gamma(params_init, fname='new_multi.pdf'):
     else:
         os.environ["CUDA_VISIBLE_DEVICES"] = "0"
         os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
-        gd_iters = 10
+        gd_iters = 100
     
     ## minimize instead
     dloss = grad(loss)
@@ -123,7 +123,7 @@ def bfgs_multi_gamma(params_init, fname='new_multi.pdf'):
     
     obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=fname, res=res)
     
-    return obs_spect, obs_rates, params, loss_t
+    return obs_spect, obs_r, params, loss_t
 
 def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf'):
     
@@ -248,13 +248,15 @@ def ssn_FP(pos_params):
     #calculate power spectrum
     for cc in range(cons):
         if cc == 0:
-            spect, fs, _, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], noise_pars, freq_range, fnums, con, LFPrange=[LFPtarget[0]])
+            spect, fs, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], noise_pars, freq_range, fnums, LFPrange=[LFPtarget[0]])
         elif cc == 1:
-            spect_2, _, _, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], noise_pars, freq_range, fnums, con, LFPrange=[LFPtarget[0]])
+            spect_2, _, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], noise_pars, freq_range, fnums, LFPrange=[LFPtarget[0]])
             spect = np.concatenate((spect[:, None], spect_2[:, None]), axis = 1)
         else:
-            spect_2, _, _, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], noise_pars, freq_range, fnums, con, LFPrange=[LFPtarget[0]])
+            spect_2, _, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], noise_pars, freq_range, fnums, LFPrange=[LFPtarget[0]])
             spect = np.concatenate((spect, spect_2[:, None]), axis = 1)
+        
+    print(spect.shape)
     
 #     if cons == 1:
 #         spect, fs, f0, _ = SSN_power_spec.linear_power_spect(ssn, r_fp, noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
@@ -265,11 +267,12 @@ def ssn_FP(pos_params):
 #     else:
 #         spect, fs, f0, _ = SSN_power_spec.linear_PS_sameTime(ssn, r_fp[:, con_inds], noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
         
-        if np.max(np.abs(np.imag(spect))) > 0.01:
-            print("Spectrum is dangerously imaginary")
+    if np.max(np.abs(np.imag(spect))) > 0.01:
+        print("Spectrum is dangerously imaginary")
         
-        outer_spect = make_outer_spect(ssn, r_fp[:,gabor_inds], probes)
-        spect = np.real(np.concatenate((spect, outer_spect), axis=1))
+    outer_spect = make_outer_spect(ssn, r_fp[:,gabor_inds], probes)
+    spect = np.real(np.concatenate((spect, outer_spect), axis=1))
+    f0 = 0
     
     return spect, fs, f0, r_fp, CONVG
 
@@ -284,6 +287,8 @@ def loss(params, probes):
         # 0 means Contrast = 0
         # 4 means Contrast = 100
         con_inds = 4
+    
+    suppression_index_loss = losses.loss_rates_SurrSupp(r_fp[trgt, rad_inds[:-1]]) # the -1 is to not include the gabor
         
     
     if CONVG:
@@ -293,7 +298,7 @@ def loss(params, probes):
         fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])
         
         spect_loss = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:], con_inds)
-        return spect_loss
+        return spect_loss + suppression_index_loss
     else:
         return np.inf
 
