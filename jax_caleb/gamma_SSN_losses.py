@@ -125,7 +125,7 @@ def loss_rates_SurrSupp(r_fp, SI=False, A=10):
         obs_r = r_fp/np.mean(r_fp)
         
         #return MSE 
-        return np.mean(np.sum(obs_r - target_r)**2)
+        return np.mean((obs_r - target_r)**2)
         
 
 def loss_params(params):
