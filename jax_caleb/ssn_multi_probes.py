@@ -276,7 +276,7 @@ def ssn_FP(pos_params):
     
     return spect, fs, f0, r_fp, CONVG
 
-def loss(params, probes):
+def loss(params, probes, lamSS = 10):
     
 #     ssn, r_fp, CONVG = ssn_FP(params)
     spect, fs, _, r_fp, CONVG = ssn_FP(params)
@@ -288,7 +288,7 @@ def loss(params, probes):
         # 4 means Contrast = 100
         con_inds = 4
     
-    suppression_index_loss = losses.loss_rates_SurrSupp(r_fp[trgt, rad_inds[:-1]]) # the -1 is to not include the gabor
+    suppression_index_loss = losses.loss_rates_SurrSupp(r_fp[trgt, rad_inds[:-1]], SI = True) # the -1 is to not include the gabor
         
     
     if CONVG:
@@ -298,7 +298,7 @@ def loss(params, probes):
         fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])
         
         spect_loss = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:], con_inds)
-        return spect_loss + suppression_index_loss
+        return spect_loss + lamSS * suppression_index_loss
     else:
         return np.inf
 
