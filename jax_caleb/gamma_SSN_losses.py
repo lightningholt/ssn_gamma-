@@ -107,14 +107,14 @@ def loss_rates_contrasts(r_fp, lower_bound, upper_bound, kink_control, slope = 1
 
 #     return np.mean(((target_rates - r_fp)/half_width)**power)
 
-def loss_rates_SurrSupp(r_fp, SI=False, A=10):
+def loss_rates_SurrSupp(r_fp, SI=False, A=10, max_SI = 0.2, comparison_ind=2):
     if len(r_fp.shape) > 1:
         trgt = np.round(np.sqrt(r_fp.shape[0]/2))
         r_fp = r_fp[trgt, :]
     
     if SI:
-        max_SI = 0.2
-        suppression_index = 1 - (r_fp[-1]/r_fp[2])
+        #max_SI = 0.2
+        suppression_index = 1 - (r_fp[-1]/r_fp[comparison_ind])
         
         return A/2 * (np.abs(max_SI - suppression_index) + (max_SI - suppression_index))
         
