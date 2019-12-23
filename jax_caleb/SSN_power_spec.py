@@ -217,7 +217,7 @@ def linear_PS_sameTime(ssn, rs, noise_pars, freq_range, fnums, cons, LFPrange=No
 
     return AnalPowSpecE, fs, f0, GammaPower, #, JacobLams, Jacob
 
-def find_peak_freq(fs, spect, cons):
+def find_peak_freq(fs, spect, start_ind=4):
     '''
     Find's the peak frequency a la Ray and Maunsell. Subtracts the background spect (BS) 
     when contrast = 0, from each spect and 
@@ -228,6 +228,6 @@ def find_peak_freq(fs, spect, cons):
     
     BS = spect[:, 0] #spectrum with no stimulus present; BS = Background Spectrum
     
-    d_spect = spect[:, 1:cons] - BS[:, None] #difference between stimulus present and background spectrum
+    d_spect = spect[:, 1:] - BS[:, None] #difference between stimulus present and background spectrum
     
-    return fs[np.argmax(d_spect, axis=0)]
+    return fs[np.argmax(d_spect[start_ind:, :], axis=0) + start_ind]
