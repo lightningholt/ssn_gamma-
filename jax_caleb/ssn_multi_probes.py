@@ -181,8 +181,9 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
     obs_f0 = SSN_power_spec.find_peak_freq(fs, obs_spect, len(Contrasts))
     init_f0 = SSN_power_spec.find_peak_freq(fs, init_spect, len(Contrasts))
 
-    make_plot.Maun_Con_plots(fs, obs_spect, target_PS, Contrasts[con_inds],obs_r[:, con_inds].T, np.reshape(Inp[:,-1], (gridsize, gridsize)), obs_f0, initial_spect=init_spect, initial_rates=init_r[:, con_inds].T, initial_f0= init_f0, fname=fname)
+#     make_plot.Maun_Con_plots(fs, obs_spect, target_PS, Contrasts[con_inds],obs_r[:, con_inds].T, np.reshape(Inp[:,-1], (gridsize, gridsize)), obs_f0, initial_spect=init_spect, initial_rates=init_r[:, con_inds].T, initial_f0= init_f0, fname=fname)
     
+    make_plot.Maun_Con_SS(fs, obs_spect, target_PS, obs_rates.T, obs_f0, contrasts, r_cent, probes=probes, fname=fname)
     #save the results in dict for savemat
     Results = {
         'obs_spect':obs_spect,
@@ -276,7 +277,7 @@ def ssn_FP(pos_params):
     
     return spect, fs, f0, r_fp, CONVG
 
-def loss(params, probes, lamSS = 10):
+def loss(params, probes, lamSS = 2):
     
 #     ssn, r_fp, CONVG = ssn_FP(params)
     spect, fs, _, r_fp, CONVG = ssn_FP(params)
