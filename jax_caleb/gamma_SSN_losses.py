@@ -57,9 +57,23 @@ def loss_spect_nonzero_contrasts(fs, spect, MULTI = False):
     spect_loss = np.mean((target_spect - spect) ** 2) #MSE
     return spect_loss
 
-def loss_MaunCon_spect(fs, spect, con_inds = np.arange(9)):
+def loss_MaunCon_spect(fs, spect, con_inds = np.arange(9), ground_truth = True):
     
-    target_spect = np.array(get_multi_probe_spect(fs, fname='test_spect.mat'))
+    if ground_truth:
+        target_spect = np.array(get_multi_probe_spect(fs, fname='test_spect.mat'))
+    else:
+        contrasts = numpy.array([0, 25, 50, 100, 100])
+        target_spect = numpy.zeros((len(fs), len(con_inds)))
+        ind = 0
+        for cc in con_inds:
+            if cc < len(contrasts):
+                if cc == 0:
+                    target_spect[:, cc] = con_spect(fs, contrasts[cc]) - 10
+                else:
+                    target_spect[:, cc] = con_spect(fs, contrasts[cc])
+            else:
+                print(cc - (len(contrasts)-1))
+                target_spect[:, cc] = maun_spect(fs, cc - (len(contrasts)-1))
     
     target_spect = np.real(target_spect[:, con_inds]/np.mean(target_spect[:, con_inds]))
     
@@ -67,7 +81,7 @@ def loss_MaunCon_spect(fs, spect, con_inds = np.arange(9)):
     
     outer_loss = np.mean((target_spect - spect) ** 2) #MSE
     
-    return outer_loss
+    return outer_loss, target_spect
 
 def loss_peak_freq(fs, obs_f0):
     '''
@@ -493,6 +507,48 @@ def ray_spect(fs, contrast):
         #lzian = 0.001*contrast*a/(r**2 + (fs - shift)**2)
         spect = spect + gaussian #lzian 
     
+    return spect
+
+def con_spect(fs, contrast):
+#     spect = (10**3)*np.exp(-fs/5)
+    
+    a = 1e5
+    r = 10
+    
+    spect = a/(r**2 + fs**2)
+    
+    if contrast != 0:
+        sig = 10
+        #shift = 4 * (contrast)**(3/5) + 20
+        shift = 4 *np.sqrt(contrast)+ 30
+        gaussian = 100 * np.exp(-(fs - shift)**2/(np.sqrt(2) * sig)**2)
+        #lzian = 0.001*contrast*a/(r**2 + (fs - shift)**2)
+        spect = spect + gaussian #lzian 
+    
+    return spect
+
+def maun_spect(fs, probe):
+    
+    a = 1e5
+    r = 10
+    contrast = 100
+    
+    spect = a/(r**2 + fs **2)
+    
+    if probe <= 1:
+        sig = 10
+        #shift = 4 * (contrast)**(3/5) + 20
+        shift = 4 *np.sqrt(contrast)+ 30
+        gaussian = 100 * np.exp(-(fs - shift)**2/(np.sqrt(2) * sig)**2)
+        #lzian = 0.001*contrast*a/(r**2 + (fs - shift)**2)
+        spect = spect + gaussian #lzian
+    else:
+        sig = 10
+        #shift = 4 * (contrast)**(3/5) + 20
+        shift = 4 * np.sqrt(contrast)+ 30 - 1*probe
+        gaussian = (100 - 20*(probe-1)) * np.exp(-(fs - shift)**2/(np.sqrt(2) * sig)**2)
+        #lzian = 0.001*contrast*a/(r**2 + (fs - shift)**2)
+        spect = spect + gaussian #lzian
     return spect
 
 def acceptable_rates_ranges(r_fp, test_contrasts, half_width_rates, kink_control):
