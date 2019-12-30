@@ -60,20 +60,9 @@ def loss_spect_nonzero_contrasts(fs, spect, MULTI = False):
 def loss_MaunCon_spect(fs, spect, con_inds = np.arange(9), ground_truth = True):
     
     if ground_truth:
-        target_spect = np.array(get_multi_probe_spect(fs, fname='test_spect.mat'))
+        target_spect = np.array(get_multi_probe_spect(fs, fname='test_spect.mat', ground_truth = ground_truth))
     else:
-        contrasts = numpy.array([0, 25, 50, 100, 100])
-        target_spect = numpy.zeros((len(fs), len(con_inds)))
-        ind = 0
-        for cc in con_inds:
-            if cc < len(contrasts):
-                if cc == 0:
-                    target_spect[:, cc] = con_spect(fs, contrasts[cc]) - 10
-                else:
-                    target_spect[:, cc] = con_spect(fs, contrasts[cc])
-            else:
-                print(cc - (len(contrasts)-1))
-                target_spect[:, cc] = maun_spect(fs, cc - (len(contrasts)-1))
+        target_spect = np.array(get_multi_probe_spect(fs, ground_truth = ground_truth))
     
     target_spect = np.real(target_spect[:, con_inds]/np.mean(target_spect[:, con_inds]))
     
@@ -431,22 +420,36 @@ def get_target_spect(fs, ground_truth = False, fname='standJ19-09-20-BestSpect.m
     target_PS = np.array([numpy.interp(fs, fs_ideal, idl_ps) for idl_ps in ideal_spect.T]).T
     return target_PS/numpy.mean(target_PS)
 
-def get_multi_probe_spect(fs, fname ='test_spect.mat'):
+def get_multi_probe_spect(fs, fname ='test_spect.mat', ground_truth = True):
     
     fs = numpy.array(fs)
-    
-    aa = sio.loadmat(fname)
-    ideal_spect = np.real(aa['spect'])
-    fs_ideal = numpy.linspace(0, 101, numpy.max(ideal_spect.shape))
-    
-#     if probe_loc != 0:
-#         key_str = 'spect_'+str(probe_loc)
-#         ideal_spect = aa[key_str]
-#     else:
-#         key_str = 'spect'
-#         ideal_spect = aa[key_str][:, gabor_inds]
-    
-    target_PS = np.array([numpy.interp(fs, fs_ideal, idl_ps) for idl_ps in ideal_spect.T]).T
+    if ground_truth:
+        aa = sio.loadmat(fname)
+        ideal_spect = np.real(aa['spect'])
+        fs_ideal = numpy.linspace(0, 101, numpy.max(ideal_spect.shape))
+
+    #     if probe_loc != 0:
+    #         key_str = 'spect_'+str(probe_loc)
+    #         ideal_spect = aa[key_str]
+    #     else:
+    #         key_str = 'spect'
+    #         ideal_spect = aa[key_str][:, gabor_inds]
+
+        target_PS = np.array([numpy.interp(fs, fs_ideal, idl_ps) for idl_ps in ideal_spect.T]).T
+    else:
+        con_inds = numpy.arange(9)
+        contrasts = numpy.array([0, 25, 50, 100, 100])
+        target_PS = numpy.zeros((len(fs), len(con_inds)))
+        ind = 0
+        for cc in con_inds:
+            if cc < len(contrasts):
+                if cc == 0:
+                    target_PS[:, cc] = con_spect(fs, contrasts[cc]) - 10
+                else:
+                    target_PS[:, cc] = con_spect(fs, contrasts[cc])
+            else:
+                target_PS[:, cc] = maun_spect(fs, cc - (len(contrasts)-1))
+                
     return target_PS
         
 
