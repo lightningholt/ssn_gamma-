@@ -222,12 +222,13 @@ def find_peak_freq(fs, spect, start_ind=4):
     Find's the peak frequency a la Ray and Maunsell. Subtracts the background spect (BS) 
     when contrast = 0, from each spect and 
     '''
+    import numpy as onp
     
-    if np.mean(np.real(spect)) > 1:
-        spect = np.real(spect)/np.mean(np.real(spect))
+    if onp.mean(onp.real(spect)) > 1:
+        spect = onp.real(spect)/onp.mean(onp.real(spect))
     
     BS = spect[:, 0] #spectrum with no stimulus present; BS = Background Spectrum
     
     d_spect = spect[:, 1:] - BS[:, None] #difference between stimulus present and background spectrum
     
-    return fs[np.argmax(d_spect[start_ind:, :], axis=0) + start_ind]
+    return fs[onp.argmax(d_spect[start_ind:, :], axis=0) + start_ind]
