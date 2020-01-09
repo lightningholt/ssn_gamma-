@@ -183,7 +183,7 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
 
 #     make_plot.Maun_Con_plots(fs, obs_spect, target_PS, Contrasts[con_inds],obs_r[:, con_inds].T, np.reshape(Inp[:,-1], (gridsize, gridsize)), obs_f0, initial_spect=init_spect, initial_rates=init_r[:, con_inds].T, initial_f0= init_f0, fname=fname)
     
-    make_plot.Maun_Con_SS(fs, obs_spect, target_PS, obs_rates.T, obs_f0, contrasts, r_cent, probes=probes, fname=fname)
+    make_plot.Maun_Con_SS(fs, obs_spect, target_PS, obs_r.T, obs_f0, contrasts, r_cent, probes=probes, fname=fname)
     #save the results in dict for savemat
     Results = {
         'obs_spect':obs_spect,
@@ -298,7 +298,7 @@ def loss(params, probes, lamSS = 2):
         fs_loss_inds = np.arange(0 , len(fs))
         fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])
         
-        spect_loss = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:], con_inds)
+        spect_loss, _ = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:], con_inds, diffPS=True)
         return spect_loss + lamSS * suppression_index_loss
     else:
         return np.inf
