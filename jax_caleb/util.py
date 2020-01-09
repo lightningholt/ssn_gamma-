@@ -157,7 +157,7 @@ def find_params_to_sigmoid(params, Jmax = 3, i2e_max = 2, gE_max = 2, gI_max = 1
 def sigmoid_params(pos_params, MULTI=False):
     J_max = 3
     i2e_max = 2
-    gE_max = 2
+    gE_max = 10
     #gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
     #gI_min = 0.5
     gI_max = 10 #because I do not want gI_min = 0, so I will offset the sigmoid
