@@ -57,7 +57,7 @@ def loss_spect_nonzero_contrasts(fs, spect, MULTI = False):
     spect_loss = np.mean((target_spect - spect) ** 2) #MSE
     return spect_loss
 
-def loss_MaunCon_spect(fs, spect, con_inds = np.arange(9), ground_truth = True, diffPS = False, epsilon=0.15):
+def loss_MaunCon_spect(fs, spect, con_inds = np.arange(9), ground_truth = True, diffPS = False, epsilon=0.0015):
     
     if ground_truth:
         target_spect = np.array(get_multi_probe_spect(fs, fname='test_spect.mat', ground_truth = ground_truth))
