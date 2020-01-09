@@ -154,18 +154,29 @@ def find_params_to_sigmoid(params, Jmax = 3, i2e_max = 2, gE_max = 2, gI_max = 1
             return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA, sig_plocal, sig_sigR))
         
     
-def sigmoid_params(pos_params, MULTI=False):
-    J_max = 3
-    i2e_max = 2
-    gE_max = 10
-    #gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
-    #gI_min = 0.5
-    gI_max = 10 #because I do not want gI_min = 0, so I will offset the sigmoid
-    gI_min = 0.1
-    NMDA_max = 1
-    plocal_max = 1
-    sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
-    sigR_min = 0.7 # so the max of sigR = sigR_max + sigR_min = 1.5
+def sigmoid_params(pos_params, MULTI=False, OLDSTYLE=False):
+    if OLDSTYLE:    
+        J_max = 3
+        i2e_max = 2
+        gE_max = 2
+        gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
+        gI_min = 0.5
+        NMDA_max = 1
+        plocal_max = 1
+        sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
+        sigR_min = 0.7 # so the max of sigR = sigR_max + sigR_min = 1.5
+    else:
+        J_max = 3
+        i2e_max = 2
+        gE_max = 10
+        #gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
+        #gI_min = 0.5
+        gI_max = 10 #because I do not want gI_min = 0, so I will offset the sigmoid
+        gI_min = 0.1
+        NMDA_max = 1
+        plocal_max = 1
+        sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
+        sigR_min = 0.7 # so the max of sigR = sigR_max + sigR_min = 1.5
     
     Jee = J_max * logistic_sig(pos_params[0])
     Jei = J_max * logistic_sig(pos_params[1])
