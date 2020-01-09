@@ -169,7 +169,7 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
     init_r = init_r[(trgt, trgt+Ne),:]
     init_spect = init_spect/np.mean(init_spect)
     
-    target_PS = np.real(np.array(losses.get_multi_probe_spect(fs, fname ='test_spect.mat')))
+    target_PS = np.real(np.array(losses.get_multi_probe_spect(fs, fname ='test_spect.mat'), ground_truth = False))
     target_PS = target_PS/np.mean(target_PS)
     
 #     ssn_obs, obs_r, CONVG = ssn_FP(params)
@@ -298,7 +298,7 @@ def loss(params, probes, lamSS = 2, diffPS = False):
         fs_loss_inds = np.arange(0 , len(fs))
         fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])
         
-        spect_loss, _ = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:], con_inds, diffPS= diffPS)
+        spect_loss, _ = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:], con_inds, ground_truth = False, diffPS= diffPS)
         return spect_loss + lamSS * suppression_index_loss
     else:
         return np.inf
