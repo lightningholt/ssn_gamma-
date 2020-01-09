@@ -169,7 +169,7 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
     init_r = init_r[(trgt, trgt+Ne),:]
     init_spect = init_spect/np.mean(init_spect)
     
-    target_PS = np.real(np.array(losses.get_multi_probe_spect(fs, fname ='test_spect.mat'), ground_truth = False))
+    target_PS = np.real(np.array(losses.get_multi_probe_spect(fs, fname ='test_spect.mat', ground_truth = False)))
     target_PS = target_PS/np.mean(target_PS)
     
 #     ssn_obs, obs_r, CONVG = ssn_FP(params)
