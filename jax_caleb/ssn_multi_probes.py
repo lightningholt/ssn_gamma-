@@ -86,7 +86,13 @@ gabor_inds = -1 #the last index is always the gabor at max contrast and max radi
 
 cons = len(con_inds)
 
-def bfgs_multi_gamma(params_init, fname='new_multi.pdf', diffPS = False):
+def bfgs_multi_gamma(params_init, hyper_params):
+    
+    diffPS = hyper_params['diffPS']
+    ground_truth = hyper_params['ground_truth']
+    OLDSTYLE = hyper_params['OLDSTYLE']
+    lamSS = hyper_params['lamSS']
+    SI = hyper_params['SI']
     
     if platform == 'darwin':
         gd_iters = 10
@@ -100,12 +106,12 @@ def bfgs_multi_gamma(params_init, fname='new_multi.pdf', diffPS = False):
     # dloss = value_and_grad(loss)
 
     def jac_dloss(params):
-        gradient = onp.asarray(dloss(params, probes, diffPS = diffPS))
+        gradient = onp.asarray(dloss(params, probes, lamSS = lamSS, SI = SI, ground_truth = ground_truth, diffPS = diffPS, OLDSTYLE = OLDSTYLE))
         norm_grad.append(onp.linalg.norm(gradient))
         return gradient
 
     def loss_hist(params):
-        ll = onp.asarray(loss(params, probes, diffPS = diffPS))
+        ll = onp.asarray(loss(params, probes, lamSS = lamSS, SI = SI, ground_truth = ground_truth, diffPS = diffPS, OLDSTYLE = OLDSTYLE))
         loss_t.append(ll)
         return ll
     
@@ -119,7 +125,7 @@ def bfgs_multi_gamma(params_init, fname='new_multi.pdf', diffPS = False):
     params = res.x
 
     print("{} GD steps took {} seconds.".format(gd_iters, time.time()-t0))
-    print("fit [Jee, Jei, Jie, Jii, i2e] = ", sigmoid_params(params))
+    print("fit [Jee, Jei, Jie, Jii, i2e] = ", sigmoid_params(params, MULTI=True, OLDSTYLE = OLDSTYLE))
     
     obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=fname, res=res)
     
@@ -161,7 +167,7 @@ def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf', diffPS = Fa
     return obs_spect, obs_r, params, loss_t
 
         
-def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=None, res=[]):
+def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=None, res=[], ground_truth = False):
 
     init_spect, fs, _, init_r, init_CONVG = ssn_FP(params_init)
     
@@ -169,7 +175,7 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
     init_r = init_r[(trgt, trgt+Ne),:]
     init_spect = init_spect/np.mean(init_spect)
     
-    target_PS = np.real(np.array(losses.get_multi_probe_spect(fs, fname ='test_spect.mat', ground_truth = False)))
+    target_PS = np.real(np.array(losses.get_multi_probe_spect(fs, fname ='test_spect.mat', ground_truth = ground_truth)))
     target_PS = target_PS/np.mean(target_PS)
     
 #     ssn_obs, obs_r, CONVG = ssn_FP(params)
@@ -212,8 +218,8 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
 
     
     
-def ssn_FP(pos_params):
-    params = sigmoid_params(pos_params, MULTI=True, OLDSTYLE = False)
+def ssn_FP(pos_params, OLDSTYLE):
+    params = sigmoid_params(pos_params, MULTI=True, OLDSTYLE = OLDSTYLE)
     
     #unpack parameters
     Jee = params[0] * np.pi * psi
@@ -277,10 +283,10 @@ def ssn_FP(pos_params):
     
     return spect, fs, f0, r_fp, CONVG
 
-def loss(params, probes, lamSS = 2, diffPS = False):
+def loss(params, probes, lamSS = 2, SI = True, ground_truth = True, diffPS = False, OLDSTYLE = False):
     
 #     ssn, r_fp, CONVG = ssn_FP(params)
-    spect, fs, _, r_fp, CONVG = ssn_FP(params)
+    spect, fs, _, r_fp, CONVG = ssn_FP(params, OLDSTYLE = OLDSTYLE)
     
     if spect.shape[1] > 1:
         con_inds = np.arange(spect.shape[1])
@@ -289,7 +295,7 @@ def loss(params, probes, lamSS = 2, diffPS = False):
         # 4 means Contrast = 100
         con_inds = 4
     
-    suppression_index_loss = losses.loss_rates_SurrSupp(r_fp[trgt, rad_inds[:-1]], SI = True) # the -1 is to not include the gabor
+    suppression_index_loss = losses.loss_rates_SurrSupp(r_fp[trgt, rad_inds[:-1]], SI = SI) # the -1 is to not include the gabor
         
     
     if CONVG:
@@ -298,7 +304,7 @@ def loss(params, probes, lamSS = 2, diffPS = False):
         fs_loss_inds = np.arange(0 , len(fs))
         fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])
         
-        spect_loss, _ = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:], con_inds, ground_truth = False, diffPS= diffPS)
+        spect_loss, _ = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:], con_inds, ground_truth = ground_truth, diffPS= diffPS)
         return spect_loss + lamSS * suppression_index_loss
     else:
         return np.inf
