@@ -93,6 +93,7 @@ def bfgs_multi_gamma(params_init, hyper_params):
     OLDSTYLE = hyper_params['OLDSTYLE']
     lamSS = hyper_params['lamSS']
     SI = hyper_params['SI']
+    fname = hyper_params['fname']
     
     if platform == 'darwin':
         gd_iters = 10
@@ -131,7 +132,15 @@ def bfgs_multi_gamma(params_init, hyper_params):
     
     return obs_spect, obs_r, params, loss_t
 
-def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf', diffPS = False):
+def gd_multi_gamma(params_init, hyper_params):
+    
+    diffPS = hyper_params['diffPS']
+    ground_truth = hyper_params['ground_truth']
+    OLDSTYLE = hyper_params['OLDSTYLE']
+    lamSS = hyper_params['lamSS']
+    SI = hyper_params['SI']
+    fname = hyper_params['fname']
+    eta = hyper_params['eta']
     
     dloss = value_and_grad(loss)
     
@@ -152,15 +161,15 @@ def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf', diffPS = Fa
     
     for ii in range(gd_iters):
         print("G.D. step ", ii+1)
-        L, dL = dloss(params, probes, diffPS = diffPS)
+        L, dL = dloss(params, probes,  lamSS = lamSS, SI = SI, ground_truth = ground_truth, diffPS = diffPS, OLDSTYLE = OLDSTYLE)
         params = params - eta * dL #dloss(params)
         loss_t.append(L)
 
     print("{} GD steps took {} seconds.".format(gd_iters, time.time()-t0))
     if len(params) < 8:
-        print("fit [Jee, Jei, Jie, Jii, i2e, Plocal, sigR] = ", sigmoid_params(params, MULTI=True))
+        print("fit [Jee, Jei, Jie, Jii, i2e, Plocal, sigR] = ", sigmoid_params(params, MULTI=True, OLDSTYLE=OLDSTYLE))
     else:
-        print("fit [Jee, Jei, Jie, Jii, gE, gI, NMDAratio, Plocal, sigR] = ", sigmoid_params(params, MULTI=True))
+        print("fit [Jee, Jei, Jie, Jii, gE, gI, NMDAratio, Plocal, sigR] = ", sigmoid_params(params, MULTI=True, OLDSTYLE=OLDSTYLE))
         
     obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=fname)
     
