@@ -120,16 +120,38 @@ def toeplitz(c, r=None):
     return vals[indx]
 
 
-def find_params_to_sigmoid(params, Jmax = 3, i2e_max = 2, gE_max = 2, gI_max = 1.5, gI_min = 0.5, NMDA_max = 1, plocal_max = 1, sigR_max = 0.8, sigR_min = 0.7, MULTI=False):
+def find_params_to_sigmoid(params, MULTI=False, OLDSTYLE = False):
     '''
     Takes the params I was using without sigmoids and finds what would produce the same values in the sigmoid 
     params = unsigmoided parameters
     the max inputs are the upper bounds for the sigmoid
     '''
+    if OLDSTYLE:    
+        J_max = 3
+        i2e_max = 2
+        gE_max = 2
+        gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
+        gI_min = 0.5
+        NMDA_max = 1
+        plocal_max = 1
+        sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
+        sigR_min = 0.7 # so the max of sigR = sigR_max + sigR_min = 1.5
+    else:
+        J_max = 3
+        i2e_max = 2
+        gE_max = 10
+        #gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
+        #gI_min = 0.5
+        gI_max = 10 #because I do not want gI_min = 0, so I will offset the sigmoid
+        gI_min = 0.1
+        NMDA_max = 1
+        plocal_max = 1
+        sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
+        sigR_min = 0.7 # so the max of sigR = sigR_max + sigR_min = 1.5
     
     #print('Jmax ', Jmax, ' i2e_max ', i2e_max, ' gE_max ', gE_max, ' gI_max ', gI_max, ' gI_min ', gI_min ' NMDA_max ', NMDA_max)
     
-    sig_ready_J = -np.log(Jmax/params[:4] - 1)
+    sig_ready_J = -np.log(J_max/params[:4] - 1)
     if not MULTI:
         if len(params) < 6:
             sig_ready_i2e = -np.log(i2e_max/params[4] - 1)
