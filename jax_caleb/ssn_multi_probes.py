@@ -86,7 +86,7 @@ gabor_inds = -1 #the last index is always the gabor at max contrast and max radi
 
 cons = len(con_inds)
 
-def bfgs_multi_gamma(params_init, fname='new_multi.pdf'):
+def bfgs_multi_gamma(params_init, fname='new_multi.pdf', diffPS = False):
     
     if platform == 'darwin':
         gd_iters = 10
@@ -100,12 +100,12 @@ def bfgs_multi_gamma(params_init, fname='new_multi.pdf'):
     # dloss = value_and_grad(loss)
 
     def jac_dloss(params):
-        gradient = onp.asarray(dloss(params, probes))
+        gradient = onp.asarray(dloss(params, probes, diffPS = diffPS))
         norm_grad.append(onp.linalg.norm(gradient))
         return gradient
 
     def loss_hist(params):
-        ll = onp.asarray(loss(params, probes))
+        ll = onp.asarray(loss(params, probes, diffPS = diffPS))
         loss_t.append(ll)
         return ll
     
@@ -125,7 +125,7 @@ def bfgs_multi_gamma(params_init, fname='new_multi.pdf'):
     
     return obs_spect, obs_r, params, loss_t
 
-def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf'):
+def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf', diffPS = False):
     
     dloss = value_and_grad(loss)
     
@@ -146,7 +146,7 @@ def gd_multi_gamma(params_init, eta=0.001, fname='new_gd_multi.pdf'):
     
     for ii in range(gd_iters):
         print("G.D. step ", ii+1)
-        L, dL = dloss(params, probes)
+        L, dL = dloss(params, probes, diffPS = diffPS)
         params = params - eta * dL #dloss(params)
         loss_t.append(L)
 
@@ -213,7 +213,7 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
     
     
 def ssn_FP(pos_params):
-    params = sigmoid_params(pos_params, MULTI=True)
+    params = sigmoid_params(pos_params, MULTI=True, OLDSTYLE = False)
     
     #unpack parameters
     Jee = params[0] * np.pi * psi
@@ -277,7 +277,7 @@ def ssn_FP(pos_params):
     
     return spect, fs, f0, r_fp, CONVG
 
-def loss(params, probes, lamSS = 2):
+def loss(params, probes, lamSS = 2, diffPS = False):
     
 #     ssn, r_fp, CONVG = ssn_FP(params)
     spect, fs, _, r_fp, CONVG = ssn_FP(params)
@@ -293,12 +293,12 @@ def loss(params, probes, lamSS = 2):
         
     
     if CONVG:
-        spect = spect/np.mean(spect)
+        #spect = spect/np.mean(spect)
         
         fs_loss_inds = np.arange(0 , len(fs))
         fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])
         
-        spect_loss, _ = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:], con_inds, diffPS=True)
+        spect_loss, _ = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:], con_inds, diffPS= diffPS)
         return spect_loss + lamSS * suppression_index_loss
     else:
         return np.inf
