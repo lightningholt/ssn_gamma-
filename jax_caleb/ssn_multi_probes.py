@@ -128,7 +128,7 @@ def bfgs_multi_gamma(params_init, hyper_params):
     print("{} GD steps took {} seconds.".format(gd_iters, time.time()-t0))
     print("fit [Jee, Jei, Jie, Jii, i2e] = ", sigmoid_params(params, MULTI=True, OLDSTYLE = OLDSTYLE))
     
-    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=fname, res=res)
+    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=fname, res=res, ground_truth=ground_truth, OLDSTYLE = OLDSTYLE)
     
     return obs_spect, obs_r, params, loss_t
 
@@ -176,7 +176,7 @@ def gd_multi_gamma(params_init, hyper_params):
     return obs_spect, obs_r, params, loss_t
 
         
-def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=None, res=[], ground_truth = False):
+def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=None, res=[], ground_truth = False, OLDSTYLE=False):
 
     init_spect, fs, _, init_r, init_CONVG = ssn_FP(params_init)
     
@@ -188,7 +188,7 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
     target_PS = target_PS/np.mean(target_PS)
     
 #     ssn_obs, obs_r, CONVG = ssn_FP(params)
-    obs_spect, _, _, obs_r, CONVG = ssn_FP(params)
+    obs_spect, _, _, obs_r, CONVG = ssn_FP(params, OLDSTYLE=OLDSTYLE)
     
     obs_r = obs_r[(trgt, trgt+Ne), :]
     obs_spect = obs_spect/np.mean(obs_spect)
