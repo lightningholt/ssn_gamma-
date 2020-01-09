@@ -57,17 +57,28 @@ def loss_spect_nonzero_contrasts(fs, spect, MULTI = False):
     spect_loss = np.mean((target_spect - spect) ** 2) #MSE
     return spect_loss
 
-def loss_MaunCon_spect(fs, spect, con_inds = np.arange(9), ground_truth = True):
+def loss_MaunCon_spect(fs, spect, con_inds = np.arange(9), ground_truth = True, diffPS = False, epsilon=0.15):
     
     if ground_truth:
         target_spect = np.array(get_multi_probe_spect(fs, fname='test_spect.mat', ground_truth = ground_truth))
     else:
         target_spect = np.array(get_multi_probe_spect(fs, ground_truth = ground_truth))
     
-    target_spect = np.real(target_spect[:, con_inds]/np.mean(target_spect[:, con_inds]))
+    if diffPS:
+        BS = target_spect[:, 0]
+        target_spect = target_spect[:,1:] - BS[:, None]
+        target_spect = target_spect/np.mean(target_spect)
+        
+        BS = spect[:, 0]
+        spect = np.real(spect[:, 1:] - BS[:, None])
+        spect = spect/(np.mean(spect) + epsilon)
+        
+    else: 
+        target_spect = np.real(target_spect[:, con_inds]/np.mean(target_spect[:, con_inds]))
     
-    spect = np.real(spect)/np.mean(np.real(spect))
+        spect = np.real(spect)/np.mean(np.real(spect) + epsilon)
     
+
     outer_loss = np.mean((target_spect - spect) ** 2) #MSE
     
     return outer_loss, target_spect
@@ -112,7 +123,7 @@ def loss_rates_contrasts(r_fp, lower_bound, upper_bound, kink_control, slope = 1
 
 def loss_rates_SurrSupp(r_fp, SI=False, A=10, max_SI = 0.2, comparison_ind=2):
     if len(r_fp.shape) > 1:
-        trgt = np.round(np.sqrt(r_fp.shape[0]/2))
+        trgt = int(np.round(np.sqrt(r_fp.shape[0]/2)))
         r_fp = r_fp[trgt, :]
     
     if SI:
