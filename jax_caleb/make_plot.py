@@ -260,7 +260,7 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     #rates plots
     ax_EI = fig_combined.add_subplot(gs[0, 2])
     ax_EI.set_prop_cycle('color', rates_color)
-    ax_EI.plot(contrasts[:cons-1], obs_rates[con_inds, :])
+    ax_EI.plot(contrasts[:cons], obs_rates[con_inds, :])
     ax_EI.set_prop_cycle('color', rates_color)
     ax_EI.plot(contrasts[-1], obs_rates[gabor_inds,0], '^')
     ax_EI.plot(contrasts[-1], obs_rates[gabor_inds,1], '^')
