@@ -1,5 +1,6 @@
 #import numpy as np
 import jax.numpy as np
+from jax.scipy.special import logsumexp
 
 import numpy
 import scipy.io as sio
@@ -121,14 +122,18 @@ def loss_rates_contrasts(r_fp, lower_bound, upper_bound, kink_control, slope = 1
 
 #     return np.mean(((target_rates - r_fp)/half_width)**power)
 
-def loss_rates_SurrSupp(r_fp, SI=False, A=10, max_SI = 0.2, comparison_ind=2):
+def loss_rates_SurrSupp(r_fp, SI=False, A=10, max_SI = 0.2, T = 1e-2):
     if len(r_fp.shape) > 1:
         trgt = int(np.round(np.sqrt(r_fp.shape[0]/2)))
         r_fp = r_fp[trgt, :]
     
     if SI:
         #max_SI = 0.2
-        suppression_index = 1 - (r_fp[-1]/r_fp[comparison_ind])
+        r_fp = r_fp/np.mean(r_fp)
+        
+        softmax_r = T * logsumexp( r_fp / T ) 
+        suppression_index = 1 - (r_fp[-1]/softmax_r)
+#         suppression_index = 1 - (r_fp[-1]/r_fp[comparison_ind])
         
         return A/2 * (np.abs(max_SI - suppression_index) + (max_SI - suppression_index))
         
