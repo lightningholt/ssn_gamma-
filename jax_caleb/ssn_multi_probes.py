@@ -178,7 +178,7 @@ def gd_multi_gamma(params_init, hyper_params):
         
 def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=None, res=[], ground_truth = False, OLDSTYLE=False):
 
-    init_spect, fs, _, init_r, init_CONVG = ssn_FP(params_init)
+    init_spect, fs, _, init_r, init_CONVG = ssn_FP(params_init, OLDSTYLE)
     
     #really just want to track the center neurons (E/I)
     init_r = init_r[(trgt, trgt+Ne),:]
@@ -188,7 +188,7 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
     target_PS = target_PS/np.mean(target_PS)
     
 #     ssn_obs, obs_r, CONVG = ssn_FP(params)
-    obs_spect, _, _, obs_r, CONVG = ssn_FP(params, OLDSTYLE=OLDSTYLE)
+    obs_spect, _, _, obs_r, CONVG = ssn_FP(params, OLDSTYLE)
     
     obs_r = obs_r[(trgt, trgt+Ne), :]
     obs_spect = obs_spect/np.mean(obs_spect)
@@ -238,8 +238,8 @@ def ssn_FP(pos_params, OLDSTYLE):
     
     if len(params) < 8:
         i2e = params[4]
-        Plocal = params[-2]
-        sigR = params[-1]
+        Plocal = params[5]
+        sigR = params[6]
         gE = 1
         gI = 1 * i2e
         NMDAratio = 0.1
@@ -248,8 +248,8 @@ def ssn_FP(pos_params, OLDSTYLE):
         gE = params[4]
         gI = params[5]
         NMDAratio = params[6]
-        Plocal = params[-2]
-        sigR = params[-1]
+        Plocal = params[7]
+        sigR = params[8]
     
     W = make_conn.make_full_W(Plocal, Jee, Jei, Jie, Jii, sigR, deltaD, OMap)
 
