@@ -111,7 +111,7 @@ def make_Wxx_dist(dist, ori_dist, sigma, sigma_ori, from_neuron, MinSyn=1e-4, JN
     
     return W
 
-def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigR, deltaD, OMap, sigXI = 0.02):
+def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigEE, sigIE, deltaD, OMap, sigXI = 0.02):
     '''
     Function that makes the full rank W = [[Wee, Wei], [Wie, Wii]] which obeys Dale's law (meaning Wxi is defined negative)
     
@@ -134,8 +134,8 @@ def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigR, deltaD, OMap, sigXI = 0.02):
     OriDist = np.where( OriDist > 90, 180- OriDist, OriDist)
     sigOri = 45
     
-    sigEE = 0.35*np.sqrt(sigR)
-    sigIE = 0.35/np.sqrt(sigR)
+#     sigEE = 0.35*np.sqrt(sigR)
+#     sigIE = 0.35/np.sqrt(sigR)
     sigEI = sigXI
     sigII = sigXI
     

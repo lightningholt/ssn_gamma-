@@ -120,7 +120,7 @@ def toeplitz(c, r=None):
     return vals[indx]
 
 
-def find_params_to_sigmoid(params, MULTI=False, OLDSTYLE = False):
+def find_params_to_sigmoid(params, MULTI=True, OLDSTYLE = False):
     '''
     Takes the params I was using without sigmoids and finds what would produce the same values in the sigmoid 
     params = unsigmoided parameters
@@ -136,6 +136,10 @@ def find_params_to_sigmoid(params, MULTI=False, OLDSTYLE = False):
         plocal_max = 1
         sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
         sigR_min = 0.7 # so the max of sigR = sigR_max + sigR_min = 1.5
+        sigEE_max = 0.4 # because I do not want sigEE_min = 0 so I will offset the sigmoid
+        sigEE_min = 0.1
+        sigIE_max = 0.4 # because I do not want sigEE_min = 0 so I will offset the sigmoid
+        sigIE_min = 0.1
     else:
         J_max = 3
         i2e_max = 2
@@ -148,6 +152,10 @@ def find_params_to_sigmoid(params, MULTI=False, OLDSTYLE = False):
         plocal_max = 1
         sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
         sigR_min = 0.7 # so the max of sigR = sigR_max + sigR_min = 1.5
+        sigEE_max = 0.4 # because I do not want sigEE_min = 0 so I will offset the sigmoid
+        sigEE_min = 0.1
+        sigIE_max = 0.4 # because I do not want sigEE_min = 0 so I will offset the sigmoid
+        sigIE_min = 0.1
     
     #print('Jmax ', Jmax, ' i2e_max ', i2e_max, ' gE_max ', gE_max, ' gI_max ', gI_max, ' gI_min ', gI_min ' NMDA_max ', NMDA_max)
     
@@ -164,19 +172,27 @@ def find_params_to_sigmoid(params, MULTI=False, OLDSTYLE = False):
     else:
         if len(params) < 8:
             sig_ready_i2e = -np.log(i2e_max/params[4] - 1)
-            sig_plocal = -np.log(plocal_max/params[-2] - 1)
-            sig_sigR = -np.log(sigR_max/(params[-1]-sigR_min) -1)
+            sig_plocal = -np.log(plocal_max/params[5] - 1)
+            sig_sigR = -np.log(sigR_max/(params[6]-sigR_min) -1)
             return np.hstack((sig_ready_J, sig_ready_i2e, sig_plocal, sig_sigR))
+        elif len(params) == 9:
+            sig_gE = -np.log(gE_max/params[4] - 1)
+            sig_gI = -np.log(gI_max/(params[5] - gI_min) - 1)
+            sig_NMDA = -np.log(NMDA_max/params[6] - 1)
+            sig_plocal = -np.log(plocal_max/params[7] - 1)
+            sig_sigR = -np.log(sigR_max/(params[8]-sigR_min) -1)
+            return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA, sig_plocal, sig_sigR))
         else:
             sig_gE = -np.log(gE_max/params[4] - 1)
             sig_gI = -np.log(gI_max/(params[5] - gI_min) - 1)
             sig_NMDA = -np.log(NMDA_max/params[6] - 1)
-            sig_plocal = -np.log(plocal_max/params[-2] - 1)
-            sig_sigR = -np.log(sigR_max/(params[-1]-sigR_min) -1)
-            return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA, sig_plocal, sig_sigR))
+            sig_plocal = -np.log(plocal_max/params[7] - 1)
+            sig_sigEE = -np.log(sigEE_max/(params[8]-sigEE_min) -1)
+            sig_sigIE = -np.log(sigIE_max/(params[9]-sigIE_min) -1)
+            return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA, sig_plocal, sig_sigEE, sig_sigIE))
         
     
-def sigmoid_params(pos_params, MULTI=False, OLDSTYLE=False):
+def sigmoid_params(pos_params, MULTI=True, OLDSTYLE=False):
     if OLDSTYLE:    
         J_max = 3
         i2e_max = 2
@@ -187,6 +203,10 @@ def sigmoid_params(pos_params, MULTI=False, OLDSTYLE=False):
         plocal_max = 1
         sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
         sigR_min = 0.7 # so the max of sigR = sigR_max + sigR_min = 1.5
+        sigEE_max = 0.4 # because I do not want sigEE_min = 0 so I will offset the sigmoid
+        sigEE_min = 0.1
+        sigIE_max = 0.4 # because I do not want sigEE_min = 0 so I will offset the sigmoid
+        sigIE_min = 0.1
     else:
         J_max = 3
         i2e_max = 2
@@ -199,6 +219,10 @@ def sigmoid_params(pos_params, MULTI=False, OLDSTYLE=False):
         plocal_max = 1
         sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
         sigR_min = 0.7 # so the max of sigR = sigR_max + sigR_min = 1.5
+        sigEE_max = 0.4 # because I do not want sigEE_min = 0 so I will offset the sigmoid
+        sigEE_min = 0.1
+        sigIE_max = 0.4 # because I do not want sigEE_min = 0 so I will offset the sigmoid
+        sigIE_min = 0.1
     
     Jee = J_max * logistic_sig(pos_params[0])
     Jei = J_max * logistic_sig(pos_params[1])
@@ -212,15 +236,25 @@ def sigmoid_params(pos_params, MULTI=False, OLDSTYLE=False):
             sigR = sigR_max * logistic_sig(pos_params[-1]) + sigR_min
             
             params = np.array([Jee, Jei, Jie, Jii, i2e, plocal, sigR])
+        elif len(pos_params) == 9:
+            gE = gE_max * logistic_sig(pos_params[4])
+            gI = gI_max * logistic_sig(pos_params[5]) + gI_min
+            NMDAratio = NMDA_max * logistic_sig(pos_params[6])
+            
+            plocal = plocal_max * logistic_sig(pos_params[7])
+            sigR = sigR_max * logistic_sig(pos_params[8]) + sigR_min
+            
+            params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio, plocal, sigR])
         else:
             gE = gE_max * logistic_sig(pos_params[4])
             gI = gI_max * logistic_sig(pos_params[5]) + gI_min
             NMDAratio = NMDA_max * logistic_sig(pos_params[6])
             
-            plocal = plocal_max * logistic_sig(pos_params[-2])
-            sigR = sigR_max * logistic_sig(pos_params[-1]) + sigR_min
+            plocal = plocal_max * logistic_sig(pos_params[7])
+            sigEE = sigEE_max * logistic_sig(pos_params[8]) + sigEE_min
+            sigIE = sigIE_max * logistic_sig(pos_params[9]) + sigIE_min
             
-            params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio, plocal, sigR])
+            params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio, plocal, sigEE, sigIE])
     else:
         if len(pos_params) < 6:
             i2e = i2e_max * logistic_sig(pos_params[4])
