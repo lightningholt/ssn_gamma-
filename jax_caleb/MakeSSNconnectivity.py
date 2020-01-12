@@ -78,9 +78,9 @@ def make_orimap(hyper_col, X, Y, nn=30, prngKey=4):
 def make_Wxx_dist(dist, ori_dist, sigma, sigma_ori, from_neuron, MinSyn=1e-4, JNoise=0, JNoise_Normal=False, CellWiseNormalized=True, prngKey=0):
     '''
     Makes the connection from neuron y to neuron x  if that connection only depended on their spatial position and their preferred orientation difference.
-    dist = distances between neurons (deltaD)
+    dist = distances between neurons (deltaD <- in degrees)
     ori_distance = differences between preferred orientations
-    sigma = sets the length scales (should be sigEE, sigEI, sigIE, or sigII)
+    sigma = sets the length scales (should be sigEE, sigEI, sigIE, or sigII) <- degree units
     sigma_ori = length scale of ori differences (MATLAB used 45)
     from_neuron = string denoting either E or I neurons 
     
