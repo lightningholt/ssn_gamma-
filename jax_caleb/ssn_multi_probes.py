@@ -283,7 +283,7 @@ def ssn_FP(pos_params, OLDSTYLE):
             spect_2, _, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], noise_pars, freq_range, fnums, LFPrange=[LFPtarget[0]])
             spect = np.concatenate((spect, spect_2[:, None]), axis = 1)
         
-    print(spect.shape)
+    
     
 #     if cons == 1:
 #         spect, fs, f0, _ = SSN_power_spec.linear_power_spect(ssn, r_fp, noise_pars, freq_range, fnums, cons, LFPrange=[LFPtarget[0]])
@@ -300,6 +300,7 @@ def ssn_FP(pos_params, OLDSTYLE):
     outer_spect = make_outer_spect(ssn, r_fp[:,gabor_inds], probes)
     spect = np.real(np.concatenate((spect, outer_spect), axis=1))
     f0 = 0
+    print(spect.shape)
     
     return spect, fs, f0, r_fp, CONVG
 
@@ -315,7 +316,7 @@ def loss(params, probes, lamSS = 2, SI = True, ground_truth = True, diffPS = Fal
         # 4 means Contrast = 100
         con_inds = 4
     
-    suppression_index_loss = losses.loss_rates_SurrSupp(r_fp[trgt, rad_inds[:-1]], SI = SI) # the -1 is to not include the gabor
+    suppression_index_loss = losses.loss_rates_SurrSupp(r_fp[trgt, rad_inds[:-1]], lamSS = lamSS,  SI = SI) # the -1 is to not include the gabor
         
     
     if CONVG:
