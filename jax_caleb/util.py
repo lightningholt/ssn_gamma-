@@ -1,5 +1,6 @@
 #import numpy as np
 import jax.numpy as np
+import numpy as onp
 
 def Euler2fixedpt(dxdt, x_initial, Tmax, dt, xtol=1e-5, xmin=1e-0, PLOT=False, inds=None):
     """
@@ -143,11 +144,11 @@ def find_params_to_sigmoid(params, MULTI=True, OLDSTYLE = False):
     else:
         J_max = 3
         i2e_max = 2
-        gE_max = 10
+        gE_max = onp.sqrt(10)
         #gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
         #gI_min = 0.5
-        gI_max = 10 #because I do not want gI_min = 0, so I will offset the sigmoid
-        gI_min = 0.1
+        gI_min = onp.sqrt(0.1)
+        gI_max = onp.sqrt(10) - gI_min #because I do not want gI_min = 0, so I will offset the sigmoid
         NMDA_max = 1
         plocal_max = 1
         sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
@@ -210,11 +211,11 @@ def sigmoid_params(pos_params, MULTI=True, OLDSTYLE=False):
     else:
         J_max = 3
         i2e_max = 2
-        gE_max = 10
+        gE_max = onp.sqrt(10)
         #gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
         #gI_min = 0.5
-        gI_max = 10 #because I do not want gI_min = 0, so I will offset the sigmoid
-        gI_min = 0.1
+        gI_min = onp.sqrt(0.1)
+        gI_max = onp.sqrt(10) - gI_min #because I do not want gI_min = 0, so I will offset the sigmoid
         NMDA_max = 1
         plocal_max = 1
         sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
