@@ -59,6 +59,17 @@ def loss_spect_nonzero_contrasts(fs, spect, MULTI = False):
     return spect_loss
 
 def loss_MaunCon_spect(fs, spect, con_inds = np.arange(9), ground_truth = True, diffPS = False, epsilon=0.0015):
+    '''
+    finds the MSE of the observed spect (spect) and target spect 
+    inputs:
+    fs - frequencies to find MSE over
+    spect = observed spect
+    con_inds = indices to compare PS between (could be used to limit to just Contrast Effect for instance)
+    ground_truth = True uses PS found from MATLAB ssn, False uses idealized by hand PS from Ray Maunsell paper
+    diffPS = True uses differences in PS with background spectra (BS), = False just tries to find the un-subtracted spectra
+        -- should help with peak fitting when set to true
+    epsilon = normalizing factor 0.0015 is 1/1000 of the mean of the ground_truth=True PS. 
+    '''
     
     if ground_truth:
         target_spect = np.array(get_multi_probe_spect(fs, fname='test_spect.mat', ground_truth = ground_truth))
@@ -77,12 +88,12 @@ def loss_MaunCon_spect(fs, spect, con_inds = np.arange(9), ground_truth = True, 
     else: 
         target_spect = np.real(target_spect[:, con_inds]/np.mean(target_spect[:, con_inds]))
     
-        spect = np.real(spect)/np.mean(np.real(spect) + epsilon)
+        spect = np.real(spect)/(np.mean(np.real(spect)) + epsilon)
     
 
-    outer_loss = np.mean((target_spect - spect) ** 2) #MSE
+    spect_loss = np.mean((target_spect - spect) ** 2) #MSE
     
-    return outer_loss, target_spect
+    return spect_loss, target_spect
 
 def loss_peak_freq(fs, obs_f0):
     '''
@@ -123,6 +134,18 @@ def loss_rates_contrasts(r_fp, lower_bound, upper_bound, kink_control, slope = 1
 #     return np.mean(((target_rates - r_fp)/half_width)**power)
 
 def loss_rates_SurrSupp(r_fp, SI=False, A=10, max_SI = 0.2, T = 1e-2):
+    '''
+    SI = False
+    finds the MSE of observed rates (r_fp) and handmade target rates
+    or 
+    SI = True
+    finds the reLU error if SI < 0.2 using the softmax of the r_fp and the r_fp[-1] --effectively stim rad = infty
+    
+    inputs:
+    A = scale of loss when SI is true
+    max_SI = upper bound of acceptable SI 
+    T = "temperature" measure for softmax
+    '''
     if len(r_fp.shape) > 1:
         trgt = int(np.round(np.sqrt(r_fp.shape[0]/2)))
         r_fp = r_fp[trgt, :]
