@@ -63,7 +63,7 @@ contrasts = np.array([0, 25, 50, 100])
 #X, Y meshgrids of x (y)-position, deltaD = matrix of differencs between network neurons
 X,Y, deltaD = make_conn.make_neur_distances(gridsizedeg, gridperdeg, hyper_col, PERIODIC = False)
 # OMap = orientation map
-OMap, _ = make_conn.make_orimap(hyper_col, X, Y, prngKey=22)
+OMap, _ = make_conn.make_orimap(hyper_col, X, Y, prngKey=4)
 
 #number of neurons and time constants
 Ne, Ni = deltaD.shape
@@ -241,11 +241,24 @@ def loss(params, probes, lamSS = 2, SI = True, ground_truth = True, diffPS = Fal
     if CONVG:
         #spect = spect/np.mean(spect)
         
+        #find spect_loss
         fs_loss_inds = np.arange(0 , len(fs))
         fs_loss_inds = np.array([freq for freq in fs_loss_inds if fs[freq] >20])
         
         spect_loss, _ = losses.loss_MaunCon_spect(fs[fs_loss_inds], spect[fs_loss_inds,:], PS_inds, ground_truth = ground_truth, diffPS= diffPS)
-        return spect_loss + lamSS * suppression_index_loss
+        
+        #find rates bounding loss -- rates_loss
+        #cause I don't fit the contrast = 0 case
+        stimuli = len(Contrasts)-1
+        lower_bound_rates = -5 * np.ones([N, stimuli])
+        upper_bound_rates = np.vstack((70*np.ones((Ne, stimuli)), 100*np.ones((Ni, stimuli))))
+        kink_control = 1 # how quickly log(1 + exp(x)) goes to ~x, where x = target_rates - found_rates    
+
+        prefact_rates = 1
+        #do not fit the contrast = 0 case -- which is 0 by definition
+        rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp[:,1:], lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
+        
+        return spect_loss + lamSS * suppression_index_loss + rates_loss
     else:
         return np.inf
     
