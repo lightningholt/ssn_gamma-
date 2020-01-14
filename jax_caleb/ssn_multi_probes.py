@@ -293,6 +293,9 @@ def ssn_FP(pos_params, OLDSTYLE):
         sigEE = params[8]
         sigIE = params[9]
     
+    sigEE = sigEE / magnFactor # sigEE now in degress 
+    sigIE = sigIE / magnFactor  # sigIE now in degrees
+    
     W = make_conn.make_full_W(Plocal, Jee, Jei, Jie, Jii, sigEE, sigIE, deltaD, OMap)
 
     ssn = SSN_classes._SSN_AMPAGABA(tau_s, NMDAratio, n, k, Ne, Ni, tau_vec, W)
