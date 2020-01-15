@@ -314,8 +314,8 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
         label_params = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA/AMPA','Plocal', 'sigEE', 'sigIE']    
     
     #Normalize parameters by their max. 
-    params = params./params_max
-    init_params = init_params./params_max
+    params = params/params_max
+    init_params = init_params/params_max
     bar_pos = np.arange(len(params))
     width = 0.35
     
