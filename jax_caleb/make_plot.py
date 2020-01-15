@@ -216,7 +216,7 @@ def Maun_Con_plots(fs, obs_spect, target_spect, contrasts, obs_rates, stim, obs_
     if fname is not None:
         plt.savefig(fname)
         
-def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii, con_inds=(0,1,2,6), rad_inds=(3,4,5,6), probes=5, gabor_inds = -1, fname=None):
+def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii, params, init_params, con_inds=(0,1,2,6), rad_inds=(3,4,5,6), probes=5, gabor_inds = -1, fname=None):
     
     cons = len(contrasts)
     fig_combined = plt.figure(16, constrained_layout=True)
@@ -225,7 +225,7 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     rates_color = ['red', 'blue']
 #     if loss_t is None:
     
-    gs = gridspec.GridSpec(2,4, figure=fig_combined)
+    gs = gridspec.GridSpec(3,4, figure=fig_combined)
     
     #spect plots - Contrast effect
     ax_spect_con = fig_combined.add_subplot(gs[0,0:2])
@@ -290,6 +290,42 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
         ax_maun_f0.plot(RR[pp], obs_f0[-probes+pp],'o')
     ax_maun_f0.set_xlabel('Probe Location')
     ax_maun_f0.set_ylabel('Peak Frequency')
+    
+    
+    ## Params Bars
+    J_max = 3
+    i2e_max = 2
+    gE_max = onp.sqrt(10)
+    gI_max = onp.sqrt(10)
+    NMDA_max = 1
+    plocal_max = 1
+    sigR_max = 1.5 #because I do not want sigR_min = 0, so I will offset the sigmoid
+    sigEE_max = 0.5 # because I do not want sigEE_min = 0 so I will offset the sigmoid
+    sigIE_max = 0.5 # because I do not want sigEE_min = 0 so I will offset the sigmoid
+    
+    if len(params) < 9:
+        params_max = np.array([J_max, J_max, J_max, J_max, i2e_max, plocal_max, sigR_max])
+        label_params = ['Jee', 'Jei', 'Jie', 'Jii', 'I/E', 'Plocal', 'sigR']
+    elif len(params) == 9:
+        params_max = np.array([J_max, J_max, J_max, J_max, gE_max, gI_max, NMDA_max, plocal_max, sigR_max])
+        label_params = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA/AMPA','Plocal', 'sigR']
+    else:
+        params_max = np.array([J_max, J_max, J_max, J_max, gE_max, gI_max, NMDA_max, plocal_max, sigEE_max, sigIE_max])
+        label_params = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA/AMPA','Plocal', 'sigEE', 'sigIE']    
+    
+    #Normalize parameters by their max. 
+    params = params./params_max
+    init_params = init_params./params_max
+    bar_pos = np.arange(len(params))
+    width = 0.35
+    
+    ax_params = fig_combined.add_subplot(gs[2,:])
+    ax_params.bar(bar_pos-width/2, params, width, label='Found Parameters')
+    ax_params.bar(bar_pos+width/2, init_params, width, label='Initial Parameters')
+    ax_params.set_ylabel('Normalized Parameters')
+    ax_params.set_xticks(bar_pos)
+    ax_params.set_xticklabels(label_params)
+    ax_params.legend()
     
     if fname is not None:
         plt.savefig(fname)
