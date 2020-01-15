@@ -273,11 +273,12 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_SS.plot(radii, obs_rates[rad_inds, 0])
     ax_SS.set_xlabel('Stim Radii')
     ax_SS.set_title('Suppression Curve')
+    ax_SS.ylim(bottom=0)
     
     #peak freq plots
     ax_con_f0 = fig_combined.add_subplot(gs[0, -1])
     ax_con_f0.set_prop_cycle('color', con_color[1:])
-    for cc in range(1, cons-1):
+    for cc in range(1, cons):
         ind = con_inds[cc] -1 #removed BS from f0 calculations
         ax_con_f0.plot(contrasts[cc], obs_f0[cc - 1],'o')
     ax_con_f0.set_xlabel('Contrasts')
@@ -326,6 +327,7 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_params.set_xticks(bar_pos)
     ax_params.set_xticklabels(label_params)
     ax_params.legend()
+    ax_params.ylim(top=1)
     
     if fname is not None:
         plt.savefig(fname)
