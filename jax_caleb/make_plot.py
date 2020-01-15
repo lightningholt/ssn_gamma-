@@ -295,8 +295,8 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ## Params Bars
     J_max = 3
     i2e_max = 2
-    gE_max = onp.sqrt(10)
-    gI_max = onp.sqrt(10)
+    gE_max = np.sqrt(10)
+    gI_max = np.sqrt(10)
     NMDA_max = 1
     plocal_max = 1
     sigR_max = 1.5 #because I do not want sigR_min = 0, so I will offset the sigmoid
