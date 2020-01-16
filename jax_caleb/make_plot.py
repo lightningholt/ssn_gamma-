@@ -216,19 +216,24 @@ def Maun_Con_plots(fs, obs_spect, target_spect, contrasts, obs_rates, stim, obs_
     if fname is not None:
         plt.savefig(fname)
         
-def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii, params, init_params, con_inds=(0,1,2,6), rad_inds=(3,4,5,6), probes=5, gabor_inds = -1, fname=None):
+def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii, params, init_params, con_inds=(0,1,2,6), rad_inds=(3,4,5,6), probes=5, gabor_inds = -1, fname=None, fignumber = 16):
     
     cons = len(contrasts)
-    fig_combined = plt.figure(16, constrained_layout=True)
+    fig_combined = plt.figure(fignumber, figsize=(8,8), constrained_layout=True)
     con_color =  ['black', 'blue', 'green', 'red','gold']
     maun_color = ['gold', 'purple', 'green', 'maroon', 'xkcd:sky blue']
     rates_color = ['red', 'blue']
 #     if loss_t is None:
     
-    gs = gridspec.GridSpec(3,4, figure=fig_combined)
+    gs = gridspec.GridSpec(5,4, figure=fig_combined)
+    
+    if fignumber == 16:
+        titletag = '- Post GD'
+    else:
+        titletag = '- Pre GD'
     
     #spect plots - Contrast effect
-    ax_spect_con = fig_combined.add_subplot(gs[0,0:2])
+    ax_spect_con = fig_combined.add_subplot(gs[0:2,0:2])
     ax_spect_con.set_prop_cycle('color', con_color)
     ax_spect_con.plot(fs, target_spect[:, :cons-1], "--")
     ax_spect_con.plot(fs, target_spect[:, cons-1], '--')
@@ -238,12 +243,13 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_spect_con.plot(fs, obs_spect[:, :cons])
 #     ax_spect_con.plot(fs, obs_spect[:, cons-1], 'o')
     
-    ax_spect_con.set_title('Contrast Effect - Post GD')
+    contitle = 'Contrast Effect ' + titletag
+    ax_spect_con.set_title(contitle)
     ax_spect_con.set_ylabel('Power Spectrum (a.u.)')
     ax_spect_con.set_xlabel('frequency (Hz)')
     
     #spect plots - Maun Effect
-    ax_spect_maun = fig_combined.add_subplot(gs[1,0:2])
+    ax_spect_maun = fig_combined.add_subplot(gs[2:4,0:2])
     ax_spect_maun.set_prop_cycle('color', maun_color)
     ax_spect_maun.plot(fs, target_spect[:, -probes:], '--', label='_nolegend_')
     ax_spect_maun.set_prop_cycle('color', maun_color)
@@ -252,13 +258,14 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     for pp in range(1, probes):
         lstr.append('R = '+str(pp))
     ax_spect_maun.legend(lstr, loc='upper left', ncol=2)
-
-    ax_spect_maun.set_title('Maun Effect - Post GD')
+    
+    mauntitle = 'Maun Effect - ' + titletag
+    ax_spect_maun.set_title(mauntitle)
     ax_spect_maun.set_xlabel('frequency (Hz)')
     ax_spect_maun.set_ylabel('Power Spectrum (a.u.)')
     
     #rates plots
-    ax_EI = fig_combined.add_subplot(gs[0, 2])
+    ax_EI = fig_combined.add_subplot(gs[0:2, 2])
     ax_EI.set_prop_cycle('color', rates_color)
     ax_EI.plot(contrasts[:cons], obs_rates[con_inds, :])
     ax_EI.set_prop_cycle('color', rates_color)
@@ -269,14 +276,14 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_EI.set_title('Firing Rates')
     ax_EI.legend(['E', 'I'])
     
-    ax_SS = fig_combined.add_subplot(gs[1, 2])
+    ax_SS = fig_combined.add_subplot(gs[2:4, 2])
     ax_SS.plot(radii, obs_rates[rad_inds, 0])
     ax_SS.set_xlabel('Stim Radii')
     ax_SS.set_title('Suppression Curve')
     ax_SS.set_ylim(bottom=0, top = 1 +np.max(obs_rates[rad_inds, 0]))
     
     #peak freq plots
-    ax_con_f0 = fig_combined.add_subplot(gs[0, -1])
+    ax_con_f0 = fig_combined.add_subplot(gs[0:2, -1])
     ax_con_f0.set_prop_cycle('color', con_color[1:])
     for cc in range(1, cons):
         ind = con_inds[cc] -1 #removed BS from f0 calculations
@@ -284,7 +291,7 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_con_f0.set_xlabel('Contrasts')
     ax_con_f0.set_ylabel('Peak Frequency')
     
-    ax_maun_f0 = fig_combined.add_subplot(gs[1, -1])
+    ax_maun_f0 = fig_combined.add_subplot(gs[2:4, -1])
     RR = np.arange(probes)
     ax_maun_f0.set_prop_cycle('color', maun_color)
     for pp in range(0, probes):
@@ -320,16 +327,16 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     bar_pos = np.arange(len(params))
     width = 0.35
     
-    ax_params = fig_combined.add_subplot(gs[2,:])
+    ax_params = fig_combined.add_subplot(gs[4,:])
     ax_params.bar(bar_pos-width/2, params, width, label='Found Parameters')
     ax_params.bar(bar_pos+width/2, init_params, width, label='Initial Parameters')
     ax_params.set_ylabel('Normalized Parameters')
     ax_params.set_xticks(bar_pos)
     ax_params.set_xticklabels(label_params)
-    ax_params.legend()
+    ax_params.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left', ncol=2, mode="expand", borderaxespad=0.)
     ax_params.set_ylim(top=1)
     
     if fname is not None:
         plt.savefig(fname)
     
-    
+    return fig_combined
