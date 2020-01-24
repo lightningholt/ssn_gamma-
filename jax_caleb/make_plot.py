@@ -280,11 +280,13 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_SS.set_prop_cycle('color', rates_color)
     ax_SS.plot(radii, obs_rates[rad_inds, :])
     ax_SS.set_xlabel('Stim Radii')
-    ax_SS.set_title('Suppression Curve')
-    ax_SS.set_ylim(bottom=0)
     if SI is not None:
-        lstr = 'SI = '+SI
-        ax_SS.legend(lstr)
+        tstr = 'Suppression Curve, SI = '+'{:.2f}'.format(SI)
+    else:
+        tstr = 'Suppression Curve'
+    ax_SS.set_title(tstr)
+    ax_SS.set_ylim(bottom=0)
+    
         
 #     ax_SS.legend(['E', 'I'])
     
@@ -329,7 +331,8 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     
     #Normalize parameters by their max. 
     params = params/params_max
-    init_params = init_params/params_max
+    if init_params is not None:
+        init_params = init_params/params_max
     bar_pos = np.arange(len(params))
     width = 0.35
     
