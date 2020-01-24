@@ -216,7 +216,7 @@ def Maun_Con_plots(fs, obs_spect, target_spect, contrasts, obs_rates, stim, obs_
     if fname is not None:
         plt.savefig(fname)
         
-def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii, params, init_params, con_inds=(0,1,2,6), rad_inds=(3,4,5,6), probes=5, gabor_inds = -1, fname=None, fignumber = 16):
+def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii, params, init_params = None, con_inds=(0,1,2,6), rad_inds=(3,4,5,6), probes=5, gabor_inds = -1, SI = None, fname=None, fignumber = 16):
     
     cons = len(contrasts)
     fig_combined = plt.figure(fignumber, figsize=(8,8), constrained_layout=True)
@@ -282,6 +282,10 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_SS.set_xlabel('Stim Radii')
     ax_SS.set_title('Suppression Curve')
     ax_SS.set_ylim(bottom=0)
+    if SI is not None:
+        lstr = 'SI = '+SI
+        ax_SS.legend(lstr)
+        
 #     ax_SS.legend(['E', 'I'])
     
     #peak freq plots
@@ -330,8 +334,11 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     width = 0.35
     
     ax_params = fig_combined.add_subplot(gs[4,:])
-    ax_params.bar(bar_pos-width/2, params, width, label='Found Parameters')
-    ax_params.bar(bar_pos+width/2, init_params, width, label='Initial Parameters')
+    if init_params is None:
+        ax_params.bar(bar_pos, params, label='MATLAB Parameters')
+    else:
+        ax_params.bar(bar_pos-width/2, params, width, label='Found Parameters')
+        ax_params.bar(bar_pos+width/2, init_params, width, label='Initial Parameters')
     ax_params.set_ylabel('Normalized Parameters')
     ax_params.set_xticks(bar_pos)
     ax_params.set_xticklabels(label_params)
