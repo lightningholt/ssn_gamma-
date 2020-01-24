@@ -225,7 +225,7 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     rates_color = ['red', 'blue']
 #     if loss_t is None:
     
-    gs = gridspec.GridSpec(5,4, figure=fig_combined)
+    gs = gridspec.GridSpec(5,3, figure=fig_combined)
     
     if fignumber == 16:
         titletag = '- Post GD'
@@ -265,7 +265,7 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_spect_maun.set_ylabel('Power Spectrum (a.u.)')
     
     #rates plots
-    ax_EI = fig_combined.add_subplot(gs[0:2, 2])
+    ax_EI = fig_combined.add_subplot(gs[0, 2:])
     ax_EI.set_prop_cycle('color', rates_color)
     ax_EI.plot(contrasts[:cons], obs_rates[con_inds, :])
     ax_EI.set_prop_cycle('color', rates_color)
@@ -276,14 +276,16 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_EI.set_title('Firing Rates')
     ax_EI.legend(['E', 'I'])
     
-    ax_SS = fig_combined.add_subplot(gs[2:4, 2])
-    ax_SS.plot(radii, obs_rates[rad_inds, 0])
+    ax_SS = fig_combined.add_subplot(gs[1, 2:])
+    ax_SS.set_prop_cycle('color', rates_color)
+    ax_SS.plot(radii, obs_rates[rad_inds, :])
     ax_SS.set_xlabel('Stim Radii')
     ax_SS.set_title('Suppression Curve')
-    ax_SS.set_ylim(bottom=0, top = 1 +np.max(obs_rates[rad_inds, 0]))
+    ax_SS.set_ylim(bottom=0)
+#     ax_SS.legend(['E', 'I'])
     
     #peak freq plots
-    ax_con_f0 = fig_combined.add_subplot(gs[0:2, -1])
+    ax_con_f0 = fig_combined.add_subplot(gs[2, 2:])
     ax_con_f0.set_prop_cycle('color', con_color[1:])
     for cc in range(1, cons):
         ind = con_inds[cc] -1 #removed BS from f0 calculations
@@ -291,7 +293,7 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_con_f0.set_xlabel('Contrasts')
     ax_con_f0.set_ylabel('Peak Frequency')
     
-    ax_maun_f0 = fig_combined.add_subplot(gs[2:4, -1])
+    ax_maun_f0 = fig_combined.add_subplot(gs[3, 2:])
     RR = np.arange(probes)
     ax_maun_f0.set_prop_cycle('color', maun_color)
     for pp in range(0, probes):
