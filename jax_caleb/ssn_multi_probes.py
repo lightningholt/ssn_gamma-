@@ -9,6 +9,7 @@ import scipy.io as sio
 import numpy as onp
 import time
 from scipy.optimize import minimize
+from matplotlib.backends.backend_pdf import PdfPages
 
 import SSN_classes
 import SSN_power_spec
@@ -16,7 +17,7 @@ import gamma_SSN_losses as losses
 import make_plot
 import MakeSSNconnectivity as make_conn
 from util import sigmoid_params
- 
+
 
 #the constant (non-optimized) parameters:
 #defined here such that they're global (available to all function calls).
@@ -48,7 +49,7 @@ gridsize = round(gridsizedeg*gridperdeg) + 1
 magnFactor = 2 #mm/deg
 #biological hyper_col length is ~750 um, magFactor is typically 2 mm/deg in macaque V1
 # hyper_col = 0.8/magnFactor
-hyper_col = 8/magnFactor
+hyper_col = 8/magnFactor * 10
 
 #define stimulus conditions r_cent = Radius of the stim, contrasts = contrasts. 
 dradius = gridsizedeg/8
@@ -415,7 +416,6 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
 
 #     make_plot.Maun_Con_plots(fs, obs_spect, target_PS, Contrasts[con_inds],obs_r[:, con_inds].T, np.reshape(Inp[:,-1], (gridsize, gridsize)), obs_f0, initial_spect=init_spect, initial_rates=init_r[:, con_inds].T, initial_f0= init_f0, fname=fname)
     
-    make_plot.Maun_Con_SS(fs, obs_spect, target_PS, obs_r.T, obs_f0, contrasts, r_cent, probes=probes, fname=fname)
     #save the results in dict for savemat
     Results = {
         'obs_spect':obs_spect,
@@ -437,6 +437,16 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
         print(f_out)
 #         f_out.append('.mat')
         sio.savemat(f_out, Results)
+    
+    obs_fig = make_plot.Maun_Con_SS(fs, obs_spect, target_PS, obs_r.T, obs_f0, contrasts, r_cent, probes=probes, fname=None, fignumber= 16)
+    init_fig = make_plot.Maun_Con_SS(fs, init_spect, target_PS, init_r.T, init_f0, contrasts, r_cent, probes=probes, fname=None, fignumber= 17)
+    
+    #to save multiple page pdf document
+    with PdfPages(fname) as pdf:
+        pdf.savefig(obs_fig)
+        plt.close(obs_fig)
+        pdf.savefig(init_fig)
+        plt.close(init_fig)
     
     return obs_spect, obs_r, Results
 
