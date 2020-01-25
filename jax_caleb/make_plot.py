@@ -216,7 +216,7 @@ def Maun_Con_plots(fs, obs_spect, target_spect, contrasts, obs_rates, stim, obs_
     if fname is not None:
         plt.savefig(fname)
         
-def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii, params, init_params = None, con_inds=(0,1,2,6), rad_inds=(3,4,5,6), probes=5, gabor_inds = -1, SI = None, fname=None, fignumber = 16):
+def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii, params, init_params = None, con_inds=(0,1,2,6), rad_inds=(3,4,5,6), probes=5, gabor_inds = -1, SI = None, dx = None, fname=None, fignumber = 16):
     
     cons = len(contrasts)
     fig_combined = plt.figure(fignumber, figsize=(8,8), constrained_layout=True)
@@ -245,8 +245,8 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     
     contitle = 'Contrast Effect ' + titletag
     ax_spect_con.set_title(contitle)
-    ax_spect_con.set_ylabel('Power Spectrum (a.u.)')
-    ax_spect_con.set_xlabel('frequency (Hz)')
+    ax_spect_con.set_ylabel('Power spectrum (a.u.)')
+    ax_spect_con.set_xlabel('Frequency (Hz)')
     
     #spect plots - Maun Effect
     ax_spect_maun = fig_combined.add_subplot(gs[2:4,0:2])
@@ -259,10 +259,10 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
         lstr.append('R = '+str(pp))
     ax_spect_maun.legend(lstr, loc='upper left', ncol=2)
     
-    mauntitle = 'Maun Effect - ' + titletag
+    mauntitle = 'Ray & Maunsell Effect - ' + titletag
     ax_spect_maun.set_title(mauntitle)
-    ax_spect_maun.set_xlabel('frequency (Hz)')
-    ax_spect_maun.set_ylabel('Power Spectrum (a.u.)')
+    ax_spect_maun.set_xlabel('Frequency (Hz)')
+    ax_spect_maun.set_ylabel('Power spectrum (a.u.)')
     
     #rates plots
     ax_EI = fig_combined.add_subplot(gs[0, 2:])
@@ -271,17 +271,20 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_EI.set_prop_cycle('color', rates_color)
     ax_EI.plot(contrasts[-1], obs_rates[gabor_inds,0], '^')
     ax_EI.plot(contrasts[-1], obs_rates[gabor_inds,1], '^')
-    ax_EI.set_xlabel('Contrasts')
-    ax_EI.set_ylabel('Rates (Hz)')
-    ax_EI.set_title('Firing Rates')
+    ax_EI.set_xlabel('Contrast')
+    ax_EI.set_ylabel('Firing rate (Hz)')
+    ax_EI.set_xticklabels(contrasts)
+#     ax_EI.set_title('Firing Rates')
     ax_EI.legend(['E', 'I'])
     
     ax_SS = fig_combined.add_subplot(gs[1, 2:])
     ax_SS.set_prop_cycle('color', rates_color)
     ax_SS.plot(radii, obs_rates[rad_inds, :])
-    ax_SS.set_xlabel('Stim Radii')
+    ax_SS.set_xlabel('Stimulus Radius (degrees)')
+    ax_SS.set_xticklabels(radii)
+    ax_SS.set_ylabel('Firing rate (Hz)')
     if SI is not None:
-        tstr = 'Suppression Curve, SI = '+'{:.2f}'.format(SI)
+        tstr = 'SI = '+'{:.2f}'.format(SI[0])+', SI_I = '+'{:.2f}'.format(SI[1])
     else:
         tstr = 'Suppression Curve'
     ax_SS.set_title(tstr)
@@ -296,16 +299,29 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     for cc in range(1, cons):
         ind = con_inds[cc] -1 #removed BS from f0 calculations
         ax_con_f0.plot(contrasts[cc], obs_f0[cc - 1],'o')
-    ax_con_f0.set_xlabel('Contrasts')
-    ax_con_f0.set_ylabel('Peak Frequency')
+    ax_con_f0.set_xlabel('Contrast')
+    ax_con_f0.set_ylabel('Peak frequency (Hz)')
+    
+    
     
     ax_maun_f0 = fig_combined.add_subplot(gs[3, 2:])
     RR = np.arange(probes)
     ax_maun_f0.set_prop_cycle('color', maun_color)
     for pp in range(0, probes):
         ax_maun_f0.plot(RR[pp], obs_f0[-probes+pp],'o')
-    ax_maun_f0.set_xlabel('Probe Location')
-    ax_maun_f0.set_ylabel('Peak Frequency')
+    ax_maun_f0.set_xlabel('Probe location')
+    ax_maun_f0.set_ylabel('Peak frequency (Hz)')
+    
+    if dx is not None:
+        probe_dist = dx * np.arange(probes)
+
+        GaborSigma = 0.3*np.max(radii)
+        Gabor_Cons = 100*np.exp(- probe_dist**2/2/GaborSigma**2);
+
+        fit_f0 = np.interp(Gabor_Cons, contrasts[1:], obs_f0[:3])
+        
+        ax_maun_f0.plot(RR, fit_f0[::-1],'gray')
+    
     
     
     ## Params Bars
@@ -325,9 +341,12 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     elif len(params) == 9:
         params_max = np.array([J_max, J_max, J_max, J_max, gE_max, gI_max, NMDA_max, plocal_max, sigR_max])
         label_params = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA/AMPA','Plocal', 'sigR']
-    else:
+    elif len(params) == 10:
         params_max = np.array([J_max, J_max, J_max, J_max, gE_max, gI_max, NMDA_max, plocal_max, sigEE_max, sigIE_max])
-        label_params = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA/AMPA','Plocal', 'sigEE', 'sigIE']    
+        label_params = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA/AMPA','Plocal', 'sigEE', 'sigIE']
+    else:
+        params_max = np.array([J_max, J_max, J_max, J_max, gE_max, gI_max, NMDA_max, plocal_max, plocal_max, sigEE_max, sigIE_max])
+        label_params = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA/AMPA','Plocal_E', 'Plocal_I', 'sigEE', 'sigIE']
     
     #Normalize parameters by their max. 
     params = params/params_max
