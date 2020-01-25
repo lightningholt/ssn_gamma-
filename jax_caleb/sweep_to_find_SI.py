@@ -1,7 +1,11 @@
 import ssn_multi_probes
 import jax.numpy as np
+from jax.scipy.special import logsumexp
+import numpy as onp
+import numpy as onp
 import scipy.io as sio
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 from util import find_params_to_sigmoid
 from util import sigmoid_params
@@ -13,7 +17,7 @@ reload(make_plot)
 
 
 # Load in the .mat file with all the parameters
-aa = sio.loadmat('../../../MATLAB/GammaSharedWithCaleb/ACISS/hand_selected_ConEffect_1_23.mat')
+aa = sio.loadmat('hand_selected_ConEffect_1_23.mat')
 #extract them such that each is a one-dimensional array
 Plocal = aa['Params']['Plocal'][0,0][0]
 Jee = aa['Params']['Jee'][0, 0][:,0]
@@ -29,31 +33,30 @@ gridsizedeg = 2
 gridperdeg = 5
 gridsize = round(gridsizedeg*gridperdeg) + 1
 magnFactor = 2 #mm/deg
-#biological hyper_col length is ~750 um, magFactor is typically 2 mm/deg in macaque V1
-# hyper_col = 0.8/magnFactor
-hyper_col = 8/magnFactor * 10
+dx = 2*gridsizedeg/(gridsize -1) 
 
 #define stimulus conditions r_cent = Radius of the stim, contrasts = contrasts. 
 dradius = gridsizedeg/8
-r_cent = np.arange(dradius, round(gridsizedeg/2)+dradius, dradius)
-# r_cent = np.array([0.3, 0.6, 0.9, 1.2, 1.5])
-#r_cent = np.array([gridsizedeg/2])
-# r_cent = np.array([0.9750])
+r_cent = np.arange(0, round(gridsizedeg/2)+dradius, dradius)
+rad_inds = (0,3,4,5,6) #this makes the SS plot start at 0, and then go up from there (and hopefully back down)
 contrasts = np.array([0, 25, 50, 100])
 
 # didn't conisder pi * 0.774 in MATLAB code 
 psi = 0.774 * np.pi
 #trgt is defined for a 11x11 grid
-trgt = (60, 181)
+Ndim = gridsizedeg * gridperdeg + 1
+Ne = Ndim**2
+trgt = (int(onp.floor(Ne/2)), int(onp.floor(Ne/2) + Ne))
+
 
 #SI = 1 - r_infty / max(r) 
 SI_max = 0
 ind_SI_max = 0
-rad_inds = (3,4,5,6)
+T = 1e-2
 
-for ind in range(Jee.shape[0]):
-    ind += 1
 
+for ind in range(1): #Jee.shape[0]
+    
     # Jee Jei Jie Jii gE gI NMDAratio plocal sigR (or sigEE sigIE)
     params_init = np.array([Jee[ind]/psi, Jei[ind]/psi, Jie[ind]/psi, Jii[ind]/psi, 1, I2E[ind], 0.1, Plocal[ind], sigEE[ind],  sigIE[ind]])
     OLDSTYLE = False
@@ -61,16 +64,45 @@ for ind in range(Jee.shape[0]):
 
     spect, fs, f0, r_fp, CONVG = ssn_multi_probes.ssn_FP(params_init, OLDSTYLE= OLDSTYLE)
     
+    spect = np.real(spect)/np.mean(np.real(spect))
+    
     if CONVG:
-        r_targ = r_fp[trgt[0],rad_inds]/np.mean(r_fp[trgt[0], rad_inds])
+#         r_targ = r_fp[trgt,rad_inds]/np.mean(r_fp[trgt, rad_inds], axis =1)
         
+#         softmax_r = T * logsumexp( r_targ / T ) 
+#         suppression_index = 1 - (r_targ[-1]/softmax_r)
+        #find suppression index for both E/I cells
+        r_targ = r_fp[trgt,:]
+        r_targ = r_targ[:, rad_inds]/np.mean(r_targ[:, rad_inds], axis=1)[:,None]
         softmax_r = T * logsumexp( r_targ / T ) 
-        suppression_index = 1 - (r_targ[-1]/softmax_r)
+        suppression_index = 1 - (r_targ[:,-1]/softmax_r)
         
-        if suppression_index > SI_max:
-            SI_max = suppression_index
+        if suppression_index[0] > SI_max:
+            SI_max = suppression_index[0]
             ind_SI_max = ind
         
-        ssn_multi_probes.save_results_make_plots(...)
-    
-    if np.mod(ind, 20) == 0:
+        f0 = SSN_power_spec.find_peak_freq(fs, spect, 9)
+
+        params = sigmoid_params(params_init, MULTI=True, OLDSTYLE = OLDSTYLE)
+        ff = make_plot.Maun_Con_SS(fs, spect, spect, r_fp[trgt, :].T, f0, contrasts, r_cent, params, rad_inds=rad_inds, SI= suppression_index, dx=dx)
+        fi = make_plot.Maun_Con_SS(fs, spect, spect, r_fp[trgt, :].T, f0, contrasts, r_cent, params, rad_inds=rad_inds, SI= suppression_index, dx=dx, fignumber= 17)
+        
+        fname = 'matlab_'+str(ind)+'.pdf'
+        
+        with PdfPages(fname) as pdf:
+            pdf.savefig(ff)
+            pdf.savefig(fi)
+            plt.close(ff)
+            plt.close(fi)
+        
+        Results = {
+            'obs_spect':spect,
+            'obs_rates':r_fp,
+            'obs_f0':f0,
+            'CONVG':CONVG,
+            'SI':suppression_index,
+            'params':params,
+                    }
+        f_out = fname.split('.')[0]+'.mat'
+#         f_out.append('.mat')
+        sio.savemat(f_out, Results)
