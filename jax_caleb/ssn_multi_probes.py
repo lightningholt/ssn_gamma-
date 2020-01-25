@@ -438,8 +438,8 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
 #         f_out.append('.mat')
         sio.savemat(f_out, Results)
     
-    obs_fig = make_plot.Maun_Con_SS(fs, obs_spect, target_PS, obs_r.T, obs_f0, contrasts, r_cent, probes=probes, fname=None, fignumber= 16)
-    init_fig = make_plot.Maun_Con_SS(fs, init_spect, target_PS, init_r.T, init_f0, contrasts, r_cent, probes=probes, fname=None, fignumber= 17)
+    obs_fig = make_plot.Maun_Con_SS(fs, obs_spect, target_PS, obs_r.T, obs_f0, contrasts, r_cent, params, init_params = params_init, probes=probes, fname=None, fignumber= 16)
+    init_fig = make_plot.Maun_Con_SS(fs, init_spect, target_PS, init_r.T, init_f0, contrasts, r_cent, params,  init_params = params_init, probes=probes, fname=None, fignumber= 17)
     
     #to save multiple page pdf document
     with PdfPages(fname) as pdf:
