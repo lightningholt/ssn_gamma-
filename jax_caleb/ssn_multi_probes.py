@@ -295,10 +295,11 @@ def ssn_FP(pos_params, OLDSTYLE):
         gI = params[5]
         NMDAratio = params[6]
         Plocal = params[7]
+        PlocalIE = Plocal
         sigR = params[8]
         sigEE = 0.35*np.sqrt(sigR)
         sigIE = 0.35/np.sqrt(sigR)
-    else:
+    elif len(params) == 10:
         i2e = 1
         gE = params[4]
         gI = params[5]
@@ -306,11 +307,21 @@ def ssn_FP(pos_params, OLDSTYLE):
         Plocal = params[7]
         sigEE = params[8]
         sigIE = params[9]
+        PlocalIE = Plocal
+    else: 
+        i2e = 1
+        gE = params[4]
+        gI = params[5]
+        NMDAratio = params[6]
+        Plocal = params[7]
+        PlocalIE = params[8]
+        sigEE = params[9]
+        sigIE = params[10]
     
     sigEE = sigEE / magnFactor # sigEE now in degress 
     sigIE = sigIE / magnFactor  # sigIE now in degrees
     
-    W = make_conn.make_full_W(Plocal, Jee, Jei, Jie, Jii, sigEE, sigIE, deltaD, OMap)
+    W = make_conn.make_full_W(Plocal, Jee, Jei, Jie, Jii, sigEE, sigIE, deltaD, OMap, PlocalIE = PlocalIE)
 
     ssn = SSN_classes._SSN_AMPAGABA(tau_s, NMDAratio, n, k, Ne, Ni, tau_vec, W)
     ssn.topos_vec = np.ravel(OMap)
