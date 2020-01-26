@@ -119,6 +119,7 @@ def bfgs_multi_gamma(params_init, hyper_params):
     SI = hyper_params['SI'] # SI = true, SS loss fcn uses Suppression Index; False, SS loss fcn uses idealized rates --- True is better
     fname = hyper_params['fname'] # fname = file name to save .pdf and .mat files
     
+    gd_iters = 10 #I think it needs this defined. 
     # if using my computer, limit gd_iters otherwise not.
 #     if platform == 'darwin':
 #         gd_iters = 10
@@ -153,8 +154,8 @@ def bfgs_multi_gamma(params_init, hyper_params):
     
     t_elapsed = time.time() - t0
     
-    print("{} GD steps took {} seconds.".format(gd_iters, time.time()-t0))
-    print("fit [Jee, Jei, Jie, Jii, gE, gI, NMDAratio, plocal, sigEE, sigIE] = ", sigmoid_params(params, MULTI=True, OLDSTYLE = OLDSTYLE))
+#     print("{} GD steps took {} seconds.".format(gd_iters, time.time()-t0))
+#     print("fit [Jee, Jei, Jie, Jii, gE, gI, NMDAratio, plocal, sigEE, sigIE] = ", sigmoid_params(params, MULTI=True, OLDSTYLE = OLDSTYLE))
     
     #fcn to save results and make plots... probably don't need this comment
     obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=fname, res=res, ground_truth=ground_truth, OLDSTYLE = OLDSTYLE, tf = t_elapsed)
