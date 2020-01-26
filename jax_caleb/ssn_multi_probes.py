@@ -47,6 +47,7 @@ gridsizedeg = 2
 gridperdeg = 5
 gridsize = round(gridsizedeg*gridperdeg) + 1
 magnFactor = 2 #mm/deg
+dx = 2*gridsizedeg/(gridsize -1) 
 #biological hyper_col length is ~750 um, magFactor is typically 2 mm/deg in macaque V1
 # hyper_col = 0.8/magnFactor
 hyper_col = 8/magnFactor * 10
@@ -89,6 +90,7 @@ con_max = (Contrasts == np.max(Contrasts))
 rad_max = (Radii == np.max(Radii))
 
 rad_inds = gen_inds[con_max] #I want to look across radii at max contrasts 
+rad_inds = np.hstack((0, rad_inds)) #adding in the 0 contrast conditions
 con_inds = gen_inds[rad_max] #I want to look across contrasts at max radii
 gabor_inds = -1 #the last index is always the gabor at max contrast and max gabor sigma
 cons = len(con_inds)
@@ -410,6 +412,11 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
     
     #really just want to track the center neurons (E/I)
     init_r = init_r[(trgt, trgt+Ne),:]
+    
+    r_targ = init_r[:, rad_inds]/np.mean(init_r[:, rad_inds], axis=1)[:,None]
+    softmax_r = T * logsumexp( r_targ / T ) 
+    init_SI = 1 - (r_targ[:,-1]/softmax_r)
+    
     init_spect = init_spect/np.mean(init_spect)
     
     #find the target PS
@@ -421,6 +428,10 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
     
     obs_r = obs_r[(trgt, trgt+Ne), :]
     obs_spect = obs_spect/np.mean(obs_spect)
+    
+    r_targ = obs_r[:, rad_inds]/np.mean(obs_r[:, rad_inds], axis=1)[:,None]
+    softmax_r = T * logsumexp( r_targ / T ) 
+    obs_SI = 1 - (r_targ[:,-1]/softmax_r)
     
     obs_f0 = SSN_power_spec.find_peak_freq(fs, obs_spect, len(Contrasts))
     init_f0 = SSN_power_spec.find_peak_freq(fs, init_spect, len(Contrasts))
@@ -449,8 +460,8 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
 #         f_out.append('.mat')
         sio.savemat(f_out, Results)
     
-    obs_fig = make_plot.Maun_Con_SS(fs, obs_spect, target_PS, obs_r.T, obs_f0, contrasts, r_cent, params, init_params = params_init, probes=probes, fname=None, fignumber= 16)
-    init_fig = make_plot.Maun_Con_SS(fs, init_spect, target_PS, init_r.T, init_f0, contrasts, r_cent, params,  init_params = params_init, probes=probes, fname=None, fignumber= 17)
+    obs_fig = make_plot.Maun_Con_SS(fs, obs_spect, target_PS, obs_r.T, obs_f0, contrasts, r_cent, params, init_params = params_init, probes=probes, SI = obs_SI, dx = dx, fname=None, fignumber= 16)
+    init_fig = make_plot.Maun_Con_SS(fs, init_spect, target_PS, init_r.T, init_f0, contrasts, r_cent, params,  init_params = params_init, probes=probes, SI = init_SI, dx = dx, fname=None, fignumber= 17)
     
     #to save multiple page pdf document
     with PdfPages(fname) as pdf:
