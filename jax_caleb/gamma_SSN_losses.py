@@ -161,7 +161,7 @@ def loss_rates_SurrSupp(r_fp, SI=False, A=10, max_SI = 0.2, T = 1e-2):
         return A/2 * (np.abs(max_SI - suppression_index) + (max_SI - suppression_index))
         
     else:
-        target_r = np.array([0.5, 1, 0.8, 0.6])
+        target_r = np.array([0, 0.5, 1, 0.8, 0.6])
         target_r = target_r/np.mean(target_r)
         
         obs_r = r_fp/np.mean(r_fp)
