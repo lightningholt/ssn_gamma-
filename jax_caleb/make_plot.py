@@ -273,7 +273,7 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_EI.plot(contrasts[-1], obs_rates[gabor_inds,1], '^')
     ax_EI.set_xlabel('Contrast')
     ax_EI.set_ylabel('Firing rate (Hz)')
-    ax_EI.set_xticklabels(contrasts)
+    ax_EI.set_xticks(contrasts)
 #     ax_EI.set_title('Firing Rates')
     ax_EI.legend(['E', 'I'])
     
@@ -281,10 +281,10 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_SS.set_prop_cycle('color', rates_color)
     ax_SS.plot(radii, obs_rates[rad_inds, :])
     ax_SS.set_xlabel('Stimulus Radius (degrees)')
-    ax_SS.set_xticklabels(radii)
+    ax_SS.set_xticks(np.hstack((0,radii)))
     ax_SS.set_ylabel('Firing rate (Hz)')
     if SI is not None:
-        tstr = 'SI = '+'{:.2f}'.format(SI[0])+', SI_I = '+'{:.2f}'.format(SI[1])
+        tstr = 'SI = '+'({:.2f}, {:.2f})'.format(SI[0], SI[1]) #+', SI_I = '+'{:.2f}'.format(SI[1])
     else:
         tstr = 'Suppression Curve'
     ax_SS.set_title(tstr)
@@ -346,7 +346,7 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
         label_params = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA/AMPA','Plocal', 'sigEE', 'sigIE']
     else:
         params_max = np.array([J_max, J_max, J_max, J_max, gE_max, gI_max, NMDA_max, plocal_max, plocal_max, sigEE_max, sigIE_max])
-        label_params = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA/AMPA','Plocal_E', 'Plocal_I', 'sigEE', 'sigIE']
+        label_params = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA','Plocal_EE', 'Plocal_IE', 'sigEE', 'sigIE']
     
     #Normalize parameters by their max. 
     params = params/params_max
