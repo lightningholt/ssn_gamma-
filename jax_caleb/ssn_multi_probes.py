@@ -150,12 +150,14 @@ def bfgs_multi_gamma(params_init, hyper_params):
     res = minimize(loss_hist, params_init, method='BFGS', jac=jac_dloss, options={'disp':True})#, 'maxiter':gd_iters})
     
     params = res.x
-
+    
+    t_elapsed = time.time() - t0
+    
     print("{} GD steps took {} seconds.".format(gd_iters, time.time()-t0))
     print("fit [Jee, Jei, Jie, Jii, gE, gI, NMDAratio, plocal, sigEE, sigIE] = ", sigmoid_params(params, MULTI=True, OLDSTYLE = OLDSTYLE))
     
     #fcn to save results and make plots... probably don't need this comment
-    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=fname, res=res, ground_truth=ground_truth, OLDSTYLE = OLDSTYLE)
+    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=fname, res=res, ground_truth=ground_truth, OLDSTYLE = OLDSTYLE, tf = t_elapsed)
     
     return obs_spect, obs_r, params, loss_t
 
@@ -392,7 +394,7 @@ def make_outer_spect(ssn, rs, probes):
         
     return outer_spect
 
-def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=None, res=[], ground_truth = False, OLDSTYLE=False):
+def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=None, res=[], ground_truth = False, OLDSTYLE=False, tf = None):
     '''
     function that saves resulst and make plots. 
     inputs
@@ -452,6 +454,7 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
         'params':params,
         'params_init':params_init,
         'res':res,
+        'time':tf
     }
     
     if fname is not None:
