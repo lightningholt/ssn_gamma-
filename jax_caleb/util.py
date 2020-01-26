@@ -183,7 +183,7 @@ def find_params_to_sigmoid(params, MULTI=True, OLDSTYLE = False):
             sig_plocal = -np.log(plocal_max/params[7] - 1)
             sig_sigR = -np.log(sigR_max/(params[8]-sigR_min) -1)
             return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA, sig_plocal, sig_sigR))
-        else:
+        elif len(params) == 10:
             sig_gE = -np.log(gE_max/params[4] - 1)
             sig_gI = -np.log(gI_max/(params[5] - gI_min) - 1)
             sig_NMDA = -np.log(NMDA_max/params[6] - 1)
@@ -191,6 +191,15 @@ def find_params_to_sigmoid(params, MULTI=True, OLDSTYLE = False):
             sig_sigEE = -np.log(sigEE_max/(params[8]-sigEE_min) -1)
             sig_sigIE = -np.log(sigIE_max/(params[9]-sigIE_min) -1)
             return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA, sig_plocal, sig_sigEE, sig_sigIE))
+        else:
+            sig_gE = -np.log(gE_max/params[4] - 1)
+            sig_gI = -np.log(gI_max/(params[5] - gI_min) - 1)
+            sig_NMDA = -np.log(NMDA_max/params[6] - 1)
+            sig_plocalEE = -np.log(plocal_max/params[7] - 1)
+            sig_plocalIE = -np.log(plocal_max/params[8] - 1)
+            sig_sigEE = -np.log(sigEE_max/(params[9]-sigEE_min) -1)
+            sig_sigIE = -np.log(sigIE_max/(params[10]-sigIE_min) -1)
+            return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA, sig_plocalEE, sig_plocalIE, sig_sigEE, sig_sigIE))
         
     
 def sigmoid_params(pos_params, MULTI=True, OLDSTYLE=False):
@@ -246,7 +255,7 @@ def sigmoid_params(pos_params, MULTI=True, OLDSTYLE=False):
             sigR = sigR_max * logistic_sig(pos_params[8]) + sigR_min
             
             params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio, plocal, sigR])
-        else:
+        elif len(pos_params) == 10:
             gE = gE_max * logistic_sig(pos_params[4])
             gI = gI_max * logistic_sig(pos_params[5]) + gI_min
             NMDAratio = NMDA_max * logistic_sig(pos_params[6])
@@ -256,6 +265,18 @@ def sigmoid_params(pos_params, MULTI=True, OLDSTYLE=False):
             sigIE = sigIE_max * logistic_sig(pos_params[9]) + sigIE_min
             
             params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio, plocal, sigEE, sigIE])
+        else:
+            gE = gE_max * logistic_sig(pos_params[4])
+            gI = gI_max * logistic_sig(pos_params[5]) + gI_min
+            NMDAratio = NMDA_max * logistic_sig(pos_params[6])
+            
+            plocalEE = plocal_max * logistic_sig(pos_params[7])
+            plocalIE = plocal_max * logistic_sig(pos_params[8])
+            sigEE = sigEE_max * logistic_sig(pos_params[9]) + sigEE_min
+            sigIE = sigIE_max * logistic_sig(pos_params[10]) + sigIE_min
+            
+            params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio, plocalEE, plocalIE, sigEE, sigIE])
+                
     else:
         if len(pos_params) < 6:
             i2e = i2e_max * logistic_sig(pos_params[4])
