@@ -111,7 +111,7 @@ def make_Wxx_dist(dist, ori_dist, sigma, sigma_ori, from_neuron, MinSyn=1e-4, JN
     
     return W
 
-def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigEE, sigIE, deltaD, OMap, sigXI = 0.02):
+def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigEE, sigIE, deltaD, OMap, sigXI = 0.02, PlocalIE = None):
     '''
     Function that makes the full rank W = [[Wee, Wei], [Wie, Wii]] which obeys Dale's law (meaning Wxi is defined negative)
     
@@ -126,6 +126,9 @@ def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigEE, sigIE, deltaD, OMap, sigXI = 
     Currently not a sparse array. May want to use sparse arrays later 
     W = [[Wee, Wei], [Wie, Wii]]
     '''
+    
+    if PlocalIE is None:
+        PlocalIE = Plocal
     
     #X, Y, deltaD = make_neur_distances(gridsizedeg, gridperdeg, hyper_col)
     #OMap, Nthetas = make_orimap(hyper_col, X, Y)
@@ -144,7 +147,7 @@ def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigEE, sigIE, deltaD, OMap, sigXI = 
     
     #Wxi = Jxi * gaussian(distance and Ori)
     Wei = -Jei * make_Wxx_dist(deltaD, OriDist, sigEI, sigOri, 'I')
-    Wie = Jie * (Plocal*np.eye(deltaD.shape[0], deltaD.shape[1]) + (1 - Plocal) * make_Wxx_dist(deltaD, OriDist, sigIE, sigOri, 'E'))
+    Wie = Jie * (PlocalIE*np.eye(deltaD.shape[0], deltaD.shape[1]) + (1 - PlocalIE) * make_Wxx_dist(deltaD, OriDist, sigIE, sigOri, 'E'))
     Wii = -Jii * make_Wxx_dist(deltaD, OriDist, sigII, sigOri, 'I')
     
     
