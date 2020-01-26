@@ -58,7 +58,7 @@ T = 1e-2
 for ind in range(1): #Jee.shape[0]
     
     # Jee Jei Jie Jii gE gI NMDAratio plocal sigR (or sigEE sigIE)
-    params_init = np.array([Jee[ind]/psi, Jei[ind]/psi, Jie[ind]/psi, Jii[ind]/psi, 1, I2E[ind], 0.1, Plocal[ind], sigEE[ind],  sigIE[ind]])
+    params_init = np.array([Jee[ind]/psi, Jei[ind]/psi, Jie[ind]/psi, Jii[ind]/psi, 1, I2E[ind], 0.1, Plocal[ind], Plocal[ind], sigEE[ind],  sigIE[ind]])
     OLDSTYLE = False
     params_init = find_params_to_sigmoid(params_init, MULTI=True, OLDSTYLE = OLDSTYLE)
 
@@ -85,15 +85,13 @@ for ind in range(1): #Jee.shape[0]
 
         params = sigmoid_params(params_init, MULTI=True, OLDSTYLE = OLDSTYLE)
         ff = make_plot.Maun_Con_SS(fs, spect, spect, r_fp[trgt, :].T, f0, contrasts, r_cent, params, rad_inds=rad_inds, SI= suppression_index, dx=dx)
-        fi = make_plot.Maun_Con_SS(fs, spect, spect, r_fp[trgt, :].T, f0, contrasts, r_cent, params, rad_inds=rad_inds, SI= suppression_index, dx=dx, fignumber= 17)
+#         fi = make_plot.Maun_Con_SS(fs, spect, spect, r_fp[trgt, :].T, f0, contrasts, r_cent, params, rad_inds=rad_inds, SI= suppression_index, dx=dx, fignumber= 17)
         
         fname = 'matlab_'+str(ind)+'.pdf'
         
         with PdfPages(fname) as pdf:
             pdf.savefig(ff)
-            pdf.savefig(fi)
             plt.close(ff)
-            plt.close(fi)
         
         Results = {
             'obs_spect':spect,
