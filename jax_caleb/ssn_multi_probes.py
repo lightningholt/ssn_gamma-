@@ -118,12 +118,12 @@ def bfgs_multi_gamma(params_init, hyper_params):
     fname = hyper_params['fname'] # fname = file name to save .pdf and .mat files
     
     # if using my computer, limit gd_iters otherwise not.
-    if platform == 'darwin':
-        gd_iters = 10
-    else:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-        os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
-        gd_iters = 100
+#     if platform == 'darwin':
+#         gd_iters = 10
+#     else:
+#         os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+#         os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
+#         gd_iters = 100
     
     ## minimize instead
     dloss = grad(loss) #jax grad to find jac for BFGS
