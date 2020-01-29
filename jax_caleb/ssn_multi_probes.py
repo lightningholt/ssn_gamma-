@@ -158,7 +158,7 @@ def bfgs_multi_gamma(params_init, hyper_params):
 #     print("fit [Jee, Jei, Jie, Jii, gE, gI, NMDAratio, plocal, sigEE, sigIE] = ", sigmoid_params(params, MULTI=True, OLDSTYLE = OLDSTYLE))
     
     #fcn to save results and make plots... probably don't need this comment
-    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=fname, res=res, ground_truth=ground_truth, OLDSTYLE = OLDSTYLE, tf = t_elapsed)
+    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, hyper_params, fname=fname, res=res, ground_truth=ground_truth, OLDSTYLE = OLDSTYLE, tf = t_elapsed)
     
     return obs_spect, obs_r, params, loss_t
 
@@ -217,7 +217,7 @@ def gd_multi_gamma(params_init, hyper_params):
     else:
         print("fit [Jee, Jei, Jie, Jii, gE, gI, NMDAratio, Plocal, sigR] = ", sigmoid_params(params, MULTI=True, OLDSTYLE=OLDSTYLE))
         
-    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=fname)
+    obs_spect, obs_r, _ = save_results_make_plots(params_init, params, loss_t, Contrasts, Inp,  hyper_params, fname=fname)
     
     return obs_spect, obs_r, params, loss_t
 
@@ -395,7 +395,7 @@ def make_outer_spect(ssn, rs, probes):
         
     return outer_spect
 
-def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=None, res=[], ground_truth = False, OLDSTYLE=False, tf = None):
+def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp,  hyper_params, fname=None, res=[], ground_truth = False, OLDSTYLE=False, tf = None):
     '''
     function that saves resulst and make plots. 
     inputs
@@ -455,6 +455,7 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp, fname=N
         'params':params,
         'params_init':params_init,
         'res':res,
+        'hyper_params':hyper_params,
         'time':tf
     }
     
