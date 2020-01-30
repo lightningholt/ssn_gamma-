@@ -2,6 +2,7 @@ import os
 from sys import platform
 import jax.numpy as np
 import jax.random as random
+from jax.scipy.special import logsumexp
 from jax import grad, value_and_grad, jit, ops
 
 import matplotlib.pyplot as plt 
@@ -395,7 +396,7 @@ def make_outer_spect(ssn, rs, probes):
         
     return outer_spect
 
-def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp,  hyper_params, fname=None, res=[], ground_truth = False, OLDSTYLE=False, tf = None):
+def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp,  hyper_params, fname=None, res=[], ground_truth = False, OLDSTYLE=False, tf = None, T=1e-2):
     '''
     function that saves resulst and make plots. 
     inputs
