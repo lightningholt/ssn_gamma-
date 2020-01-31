@@ -413,6 +413,7 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp,  hyper_
     
     #find the initial power spectrum/rates
     init_spect, fs, _, init_r, init_CONVG = ssn_FP(params_init, OLDSTYLE)
+    params_init = sigmoid_params(params_init, MULTI=True, OLDSTYLE = OLDSTYLE)
     
     #really just want to track the center neurons (E/I)
     init_r = init_r[(trgt, trgt+Ne),:]
@@ -429,6 +430,7 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp,  hyper_
     
     #find the observed PS and rates
     obs_spect, _, _, obs_r, CONVG = ssn_FP(params, OLDSTYLE)
+    params = sigmoid_params(params, MULTI=True, OLDSTYLE = OLDSTYLE)
     
     obs_r = obs_r[(trgt, trgt+Ne), :]
     obs_spect = obs_spect/np.mean(obs_spect)
