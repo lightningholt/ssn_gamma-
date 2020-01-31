@@ -371,7 +371,7 @@ def ssn_FP(pos_params, OLDSTYLE):
     
     # I'm keeping f0 in the outputs just for congruency between the topo SSN and 2-D SSN code 
     f0 = 0
-    print(spect.shape)
+    #print(spect.shape)
     
     return spect, fs, f0, r_fp, CONVG
 
