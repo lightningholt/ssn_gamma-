@@ -91,7 +91,7 @@ con_max = (Contrasts == np.max(Contrasts))
 rad_max = (Radii == np.max(Radii))
 
 rad_inds = gen_inds[con_max] #I want to look across radii at max contrasts 
-rad_inds = np.hstack((0, rad_inds)) #adding in the 0 contrast conditions
+rad_inds = np.hstack((0, rad_inds[:-1])) #adding in the 0 contrast conditions, removing the gabor
 con_inds = gen_inds[rad_max] #I want to look across contrasts at max radii
 gabor_inds = -1 #the last index is always the gabor at max contrast and max gabor sigma
 cons = len(con_inds)
@@ -242,7 +242,7 @@ def loss(params, probes, lamSS = 2, SI = True, ground_truth = True, diffPS = Fal
     PS_inds = np.arange(spect.shape[1])
     #PS_inds = np.arange(len(con_inds)) #just Contrast effect
     
-    suppression_index_loss = losses.loss_rates_SurrSupp(r_fp[trgt, rad_inds[:-1]],  SI = SI) # the -1 is to not include the gabor
+    suppression_index_loss = losses.loss_rates_SurrSupp(r_fp[trgt, rad_inds],  SI = SI) # the -1 is to not include the gabor
         
     
     if CONVG:
@@ -470,7 +470,7 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp,  hyper_
     
     plot_rads = np.hstack((0, r_cent))
     
-    obs_fig = make_plot.Maun_Con_SS(fs, obs_spect, target_PS, obs_r.T, obs_f0, contrasts, plot_rads, params, init_params = params_init, probes=probes, SI = obs_SI, dx = dx, fname=None, fignumber= 16)
+    obs_fig = make_plot.Maun_Con_SS(fs, obs_spect, target_PS, obs_r.T, obs_f0, contrasts, plot_rads, params, init_params = params_init, rad_inds=rad_inds, probes=probes, SI = obs_SI, dx = dx, fname=None, fignumber= 16)
     init_fig = make_plot.Maun_Con_SS(fs, init_spect, target_PS, init_r.T, init_f0, contrasts, plot_rads, params,  init_params = params_init, probes=probes, SI = init_SI, dx = dx, fname=None, fignumber= 17)
     
     #to save multiple page pdf document
