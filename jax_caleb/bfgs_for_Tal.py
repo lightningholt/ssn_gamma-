@@ -31,6 +31,8 @@ lamSS = aa['lamSS'][0][ii]
 
 OLDSTYLE = False
 
+params_init = find_params_to_sigmoid(params_init, MULTI=True, OLDSTYLE=OLDSTYLE)
+
 fname='matlab_'+str(ii)+'_diffPS_'+str(aa['diffPS'][0][ii])+'_groundTruth_'+str(aa['ground_truth'][0][ii] )+'_SI_'+str(aa['SI'][0][ii])+'_lamSS_'+str(lamSS)+'.pdf'
 
 hyper_params = {'diffPS':diffPS, 'ground_truth':ground_truth, 'OLDSTYLE':OLDSTYLE, 'SI':SI, 'fname':fname, 'lamSS':lamSS}
