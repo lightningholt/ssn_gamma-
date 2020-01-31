@@ -30,7 +30,7 @@ min_loss = 100
 min_loss_ind = 0
 
 for rgi in real_good_inds:
-    fname = 'matlab_'+str(rgi)+'_diffPS_'str(1)+'_GT_'+str(1)+'_SI_'+str(1)+'_lamSS_'+str(lamSS)+'.pdf'
+    fname = 'matlab_'+str(rgi)+'_diffPS_'+str(1)+'_GT_'+str(1)+'_SI_'+str(1)+'_lamSS_'+str(lamSS)+'.pdf'
     hyper_params = {'diffPS':diffPS, 'ground_truth':ground_truth, 'OLDSTYLE':OLDSTYLE, 'SI':SI, 'fname':fname, 'lamSS':lamSS}
 
     params_init = np.array([Jee[rgi]/psi, Jei[rgi]/psi, Jie[rgi]/psi, Jii[rgi]/psi, 1, I2E[rgi], 0.1, Plocal[rgi], Plocal[rgi], sigEE[rgi], sigIE[rgi]])
