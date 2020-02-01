@@ -471,7 +471,7 @@ def save_results_make_plots(params_init, params, loss_t, Contrasts, Inp,  hyper_
     plot_rads = np.hstack((0, r_cent))
     
     obs_fig = make_plot.Maun_Con_SS(fs, obs_spect, target_PS, obs_r.T, obs_f0, contrasts, plot_rads, params, init_params = params_init, rad_inds=rad_inds, probes=probes, SI = obs_SI, dx = dx, fname=None, fignumber= 16)
-    init_fig = make_plot.Maun_Con_SS(fs, init_spect, target_PS, init_r.T, init_f0, contrasts, plot_rads, params,  init_params = params_init, probes=probes, SI = init_SI, dx = dx, fname=None, fignumber= 17)
+    init_fig = make_plot.Maun_Con_SS(fs, init_spect, target_PS, init_r.T, init_f0, contrasts, plot_rads, params,  init_params = params_init, rad_inds=rad_inds, probes=probes, SI = init_SI, dx = dx, fname=None, fignumber= 17)
     
     #to save multiple page pdf document
     with PdfPages(fname) as pdf:
