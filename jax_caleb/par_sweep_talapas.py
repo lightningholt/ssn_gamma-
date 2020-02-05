@@ -21,7 +21,7 @@ sigIE = aa['Params']['sigIE'][0,0][:,0]
 
 #hyper Params
 diffPS = True
-ground_truth = True
+ground_truth = False
 OLDSTYLE = False
 lamSS = 10
 SI = True
@@ -30,7 +30,7 @@ psi = 0.774 *np.pi
 real_good_inds = np.array([123, 179, 222, 263, 287, 341, 385, 406, 451, 456])
 rgi = real_good_inds[ind_in]
 
-fname = 'matlab_'+str(rgi)+'_diffPS_'+str(1)+'_GT_'+str(1)+'_SI_'+str(1)+'_lamSS_'+str(lamSS)+'.pdf'
+fname = 'matlab_'+str(rgi)+'_diffPS_'+str(1)+'_GT_'+str(0)+'_SI_'+str(1)+'_lamSS_'+str(lamSS)+'.pdf'
 hyper_params = {'diffPS':diffPS, 'ground_truth':ground_truth, 'OLDSTYLE':OLDSTYLE, 'SI':SI, 'fname':fname, 'lamSS':lamSS}
 
 params_init = np.array([Jee[rgi]/psi, Jei[rgi]/psi, Jie[rgi]/psi, Jii[rgi]/psi, 1, I2E[rgi], 0.1, Plocal[rgi], Plocal[rgi], sigEE[rgi], sigIE[rgi]])
