@@ -2,31 +2,54 @@ import ssn_multi_probes
 from util import find_params_to_sigmoid
 
 import jax.numpy as np
-import scipy.io as sio
+# import scipy.io as sio
+import json
 import sys
-
-aa = sio.loadmat('hand_selected_ConEffect_1_23.mat')
 
 ind_in = int(sys.argv[1])
 
-# extract all parameters as 1-dim arrays
-Plocal = aa['Params']['Plocal'][0,0][0]
-Jee = aa['Params']['Jee'][0, 0][:,0]
-Jei = np.abs(aa['Params']['Jei'][0, 0][:,0]) #MATLAB had these defined as negative
-Jie = aa['Params']['Jie'][0, 0][:,0]
-Jii = np.abs(aa['Params']['Jii'][0, 0][:,0]) #MATLAB had these defined as negative
-I2E = aa['Params']['I2E'][0,0][0]
-sigEE = aa['Params']['sigEE'][0,0][:,0]
-sigIE = aa['Params']['sigIE'][0,0][:,0]
+with open("talapas-full-sweep.json", "r") as read_file:
+    parameters = json.load(read_file)
 
-#hyper Params
-diffPS = True
-ground_truth = False
+Jee = parameters['Jee'][ind_in]
+Jei = parameters['Jei'][ind_in]
+Jie = parameters['Jie'][ind_in]
+Jii = parameters['Jii'][ind_in]
+Plocal = parameters['Plocal'][ind_in]
+I2E = parameters['I2E'][ind_in]
+sigEE = parameters['sigEE'][ind_in]
+sigIE = parameters['sigIE'][ind_in]
+diffPS = parameters['diffPS'][ind_in]
+ground_truth = parameters['ground_truth'][ind_in]
+SI = parameters['SI'][ind_in]
+lamSS = parameters['lamSS'][ind_in]
+
+
+real_good_inds = np.array([123, 179, 222, 263, 287, 341, 385, 406, 451, 456])
+rgi = real_good_inds[np.mod(ind_in, len(real_good_inds))]
+
+
+
+# aa = sio.loadmat('hand_selected_ConEffect_1_23.mat')
+
+# # extract all parameters as 1-dim arrays
+# Plocal = aa['Params']['Plocal'][0,0][0]
+# Jee = aa['Params']['Jee'][0, 0][:,0]
+# Jei = np.abs(aa['Params']['Jei'][0, 0][:,0]) #MATLAB had these defined as negative
+# Jie = aa['Params']['Jie'][0, 0][:,0]
+# Jii = np.abs(aa['Params']['Jii'][0, 0][:,0]) #MATLAB had these defined as negative
+# I2E = aa['Params']['I2E'][0,0][0]
+# sigEE = aa['Params']['sigEE'][0,0][:,0]
+# sigIE = aa['Params']['sigIE'][0,0][:,0]
+
+# #hyper Params
+# diffPS = True
+# ground_truth = False
+# lamSS = 10
+# SI = True
+
 OLDSTYLE = False
-lamSS = 10
-SI = True
 psi = 0.774 *np.pi
-
 
 if diffPS:
     dps = str(1)
@@ -43,14 +66,12 @@ if SI:
 else:
     si =str(0)
 
-real_good_inds = np.array([123, 179, 222, 263, 287, 341, 385, 406, 451, 456])
-rgi = real_good_inds[ind_in]
-
 fname = 'matlab_'+str(rgi)+'_diffPS_'+dps+'_GT_'+gt+'_SI_'+si+'_lamSS_'+str(lamSS)+'.pdf'
 
 hyper_params = {'diffPS':diffPS, 'ground_truth':ground_truth, 'OLDSTYLE':OLDSTYLE, 'SI':SI, 'fname':fname, 'lamSS':lamSS}
 
-params_init = np.array([Jee[rgi]/psi, Jei[rgi]/psi, Jie[rgi]/psi, Jii[rgi]/psi, 1, I2E[rgi], 0.1, Plocal[rgi], Plocal[rgi], sigEE[rgi], sigIE[rgi]])
+# params_init = np.array([Jee[rgi]/psi, Jei[rgi]/psi, Jie[rgi]/psi, Jii[rgi]/psi, 1, I2E[rgi], 0.1, Plocal[rgi], Plocal[rgi], sigEE[rgi], sigIE[rgi]])
+params_init = np.array([Jee/psi, Jei/psi, Jie/psi, Jii/psi, 1, I2E, 0.1, Plocal, Plocal, sigEE, sigIE])
 params_init = find_params_to_sigmoid(params_init, MULTI=True, OLDSTYLE=OLDSTYLE)
 
 _, _, _, loss_t = ssn_multi_probes.bfgs_multi_gamma(params_init, hyper_params)
