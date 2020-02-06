@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
+from scipy.interpolate import interp1d
 
 def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, target_rates, initial_spect=None, initial_rates= None, lower_bound = 0, upper_bound = 80, fname = None):
     
@@ -320,9 +321,12 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
         Gabor_Cons = 100*np.exp(- probe_dist**2/2/GaborSigma**2);
         print(Gabor_Cons)
 
-        fit_f0 = np.interp(Gabor_Cons, contrasts[1:], obs_f0[:3]) #contrast[1:] means I'm not looking at 0 contrast, also why I stop at [:3] cause indices greater than 3 are for the Gabor and Maunsell effect.
+#         fit_f0 = np.interp(Gabor_Cons, contrasts[1:], obs_f0[:3]) #contrast[1:] means I'm not looking at 0 contrast, also why I stop at [:3] cause indices greater than 3 are for the Gabor and Maunsell effect.
+#         ax_maun_f0.plot(RR, fit_f0,'gray')
         
-        ax_maun_f0.plot(RR, fit_f0,'gray')
+        fit_f0 = interp1d(contrasts[1:], obs_f0[:3], fill_value='extrapolate')
+        ax_maun_f0.plot(RR, fit_f0(Gabor_Cons),'gray')
+
     
     
     
