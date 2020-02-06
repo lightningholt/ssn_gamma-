@@ -18,11 +18,27 @@ sigIE = aa['Params']['sigIE'][0,0][:,0]
 
 #hyper Params
 diffPS = True
-ground_truth = True
+ground_truth = False
 OLDSTYLE = False
 lamSS = 10
 SI = True
 psi = 0.774 *np.pi
+
+
+if diffPS:
+    dps = str(1)
+else:
+    dps = str(0)
+
+if ground_truth:
+    gt = str(1)
+else:
+    gt = str(0)
+
+if SI:
+    si = str(1)
+else:
+    si =str(0)
 
 real_good_inds = np.array([123, 179, 222, 263, 287, 341, 385, 406, 451, 456])
 
@@ -30,7 +46,7 @@ min_loss = 100
 min_loss_ind = 0
 
 for rgi in real_good_inds:
-    fname = 'matlab_'+str(rgi)+'_diffPS_'+str(1)+'_GT_'+str(1)+'_SI_'+str(1)+'_lamSS_'+str(lamSS)+'.pdf'
+    fname = 'matlab_'+str(rgi)+'_diffPS_'+dps+'_GT_'+gt+'_SI_'+si+'_lamSS_'+str(lamSS)+'.pdf'
     hyper_params = {'diffPS':diffPS, 'ground_truth':ground_truth, 'OLDSTYLE':OLDSTYLE, 'SI':SI, 'fname':fname, 'lamSS':lamSS}
 
     params_init = np.array([Jee[rgi]/psi, Jei[rgi]/psi, Jie[rgi]/psi, Jii[rgi]/psi, 1, I2E[rgi], 0.1, Plocal[rgi], Plocal[rgi], sigEE[rgi], sigIE[rgi]])
@@ -38,8 +54,8 @@ for rgi in real_good_inds:
 
     _, _, _, loss_t = ssn_multi_probes.bfgs_multi_gamma(params_init, hyper_params)
 
-    if np.minimum(loss_t) < min_loss:
-        min_loss = np.minimum(loss_t)
+    if np.min(loss_t) < min_loss:
+        min_loss = np.min(loss_t)
         min_loss_ind = rgi
 
 Results = {'min_loss':min_loss, 'min_loss_ind':min_loss_ind}
