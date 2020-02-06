@@ -133,7 +133,7 @@ def loss_rates_contrasts(r_fp, lower_bound, upper_bound, kink_control, slope = 1
 
 #     return np.mean(((target_rates - r_fp)/half_width)**power)
 
-def loss_rates_SurrSupp(r_fp, SI=False, A=10, max_SI = 0.2, T = 1e-2):
+def loss_rates_SurrSupp(r_fp, SI=False, A=10, min_SI = 0.3, T = 1e-2):
     '''
     SI = False
     finds the MSE of observed rates (r_fp) and handmade target rates
@@ -143,7 +143,7 @@ def loss_rates_SurrSupp(r_fp, SI=False, A=10, max_SI = 0.2, T = 1e-2):
     
     inputs:
     A = scale of loss when SI is true
-    max_SI = upper bound of acceptable SI 
+    min_SI = lower bound of acceptable SI 
     T = "temperature" measure for softmax
     '''
     if len(r_fp.shape) > 1:
@@ -151,14 +151,14 @@ def loss_rates_SurrSupp(r_fp, SI=False, A=10, max_SI = 0.2, T = 1e-2):
         r_fp = r_fp[trgt, :]
     
     if SI:
-        #max_SI = 0.2
+        #min_SI = 0.2
         r_fp = r_fp/np.mean(r_fp)
         
         softmax_r = T * logsumexp( r_fp / T ) 
         suppression_index = 1 - (r_fp[-1]/softmax_r)
 #         suppression_index = 1 - (r_fp[-1]/r_fp[comparison_ind])
         
-        return A/2 * (np.abs(max_SI - suppression_index) + (max_SI - suppression_index))
+        return A/2 * (np.abs(min_SI - suppression_index) + (min_SI - suppression_index))
         
     else:
         target_r = np.array([0, 0.5, 1, 0.8, 0.6])
