@@ -213,7 +213,8 @@ def linear_PS_sameTime(ssn, rs, noise_pars, freq_range, fnums, cons, LFPrange=No
     df = fs[1]-fs[0]
     GammaPower = np.sum(AnalPowSpecE[(fs>GammaRange[0]) & (fs<GammaRange[1])]) *df # E gamma power
     
-    f0 = find_peak_freq(fs, AnalPowSpecE, cons)
+#     f0 = find_peak_freq(fs, AnalPowSpecE, cons)
+    f0 = 0
 
     return AnalPowSpecE, fs, f0, GammaPower, #, JacobLams, Jacob
 
