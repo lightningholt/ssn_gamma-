@@ -82,7 +82,7 @@ def bfgs_gamma(params_init, fname='new_fig.pdf'):
     params = res.x
 
     print("{} GD steps took {} seconds.".format(gd_iters, time.time()-t0))
-    print("fit [Jee, Jei, Jie, Jii, i2e] = ", sigmoid_params(params))
+    print("fit [Jee, Jei, Jie, Jii, i2e] = ", sigmoid_params(params, MULTI=False))
     
     init_spect, fs, _, init_r, _ = ssn_PS(params_init, contrasts)
     init_spect = np.real(init_spect/np.mean(np.real(init_spect)))
@@ -94,9 +94,6 @@ def bfgs_gamma(params_init, fname='new_fig.pdf'):
     obs_spect = np.real(obs_spect/np.mean(np.real(obs_spect)))
     
     #fname = 'Lzian_Higher_Freqs_Wider_Peaks_GD.pdf'
-    
-    make_plot.power_spect_rates_plot(fs, obs_spect, target_PS, contrasts, obs_rates.T, target_rates.T, init_spect, init_r.T, lower_bound_rates, upper_bound_rates, fname)
-    
     Results = {
         'obs_spect':obs_spect,
         'obs_rates':obs_rates,
@@ -117,10 +114,12 @@ def bfgs_gamma(params_init, fname='new_fig.pdf'):
 #         f_out.append('.mat')
         sio.savemat(f_out, Results)
     
+    make_plot.power_spect_rates_plot(fs, obs_spect, target_PS, contrasts, obs_rates.T, target_rates.T, init_spect, init_r.T, lower_bound_rates, upper_bound_rates, fname)
+    
     return obs_spect, obs_rates, params, loss_t
 
 def ssn_PS(pos_params, contrasts):
-    params = sigmoid_params(pos_params)
+    params = sigmoid_params(pos_params, MULTI=False)
     
     #unpack parameters
     Jee = params[0] * np.pi * psi
@@ -178,8 +177,8 @@ def loss(params):
         spect_loss = losses.loss_spect_nonzero_contrasts(fs[fs_loss_inds], spect[fs_loss_inds,:])
 
 #         spect_loss = losses.loss_spect_contrasts(fs, np.real(spect))
-        #rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp[:,1:], lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
+        rates_loss = prefact_rates * losses.loss_rates_contrasts(r_fp[:,1:], lower_bound_rates, upper_bound_rates, kink_control) #fourth arg is slope which is set to 1 normally
         #param_loss = prefact_params * losses.loss_params(params)
-        return spect_loss #+ rates_loss + param_loss
+        return spect_loss + rates_loss# + param_loss
     else:
         return np.inf
