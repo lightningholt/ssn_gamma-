@@ -89,6 +89,60 @@ def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, ta
     # ax_I.set_xlabel('Contrasts')
     # ax_I.set_ylabel('Firing Rates (Hz)')
 
+
+def PS_2D(fs, obs_spect, contrasts, obs_rates, obs_f0, fname = None):
+    
+    cons = len(contrasts)
+    con_inds = np.array([0,1,2,3])
+    gabor_inds = -1
+    
+    fig_combined = plt.figure(17, constrained_layout=True)
+    con_color =  ['black', 'blue', 'green', 'red','gold']
+    maun_color = ['gold', 'purple', 'green', 'maroon', 'xkcd:sky blue']
+    rates_color = ['red', 'blue']
+    
+    gs = gridspec.GridSpec(2,3, figure=fig_combined)
+    
+    ax_spect = fig_combined.add_subplot(gs[0:2,0:2])
+    ax_spect.set_prop_cycle('color', con_color)
+    ax_spect.plot(fs, obs_spect)
+    
+    ax_spect.set_title('Constrast Effect')
+    ax_spect.set_ylabel('Power spectrum (a.u.)')
+    ax_spect.set_xlabel('Frequency (Hz)')
+    lstr = []
+    for pp in contrasts:
+        lstr.append('C = '+str(pp))
+    ax_spect.legend(lstr, loc='upper left', ncol=2)
+    
+    ax_EI = fig_combined.add_subplot(gs[0, 2:])
+    ax_EI.set_prop_cycle('color', rates_color)
+    ax_EI.plot(contrasts[:cons], obs_rates[con_inds, :])
+    ax_EI.set_prop_cycle('color', rates_color)
+    if cons > len(con_inds):
+        ax_EI.plot(contrasts[-1], obs_rates[gabor_inds,0], '^')
+        ax_EI.plot(contrasts[-1], obs_rates[gabor_inds,1], '^')
+    ax_EI.set_xlabel('Contrast')
+    ax_EI.set_ylabel('Firing rate (Hz)')
+    ax_EI.set_xticks(contrasts)
+#     ax_EI.set_title('Firing Rates')
+    ax_EI.legend(['E', 'I'])
+    
+    #peak freq plots
+    ax_con_f0 = fig_combined.add_subplot(gs[1, 2:])
+    ax_con_f0.set_prop_cycle('color', con_color[1:])
+    for cc in range(1, cons):
+        ax_con_f0.plot(contrasts[cc], obs_f0[cc - 1],'o')
+    ax_con_f0.set_xlabel('Contrast')
+    ax_con_f0.set_xticks(contrasts)
+    ax_con_f0.set_ylabel('Peak frequency (Hz)')
+    
+    if fname is not None:
+        plt.savefig(fname)
+    
+    return fig_combined
+    
+    
 def Maun_Con_plots(fs, obs_spect, target_spect, contrasts, obs_rates, stim, obs_f0, initial_spect=None, initial_rates= None, initial_f0 = None, probes=5, fname=None):
     
     cons = len(contrasts)
