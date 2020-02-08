@@ -7,7 +7,7 @@ from util import toeplitz
 #corr_time = 5 originally
 
 class NoisePars(object):
-	def __init__(self, stdevE=1.5, stdevI=1.5, corr_time=1, corr_length=0, NMDAratio=0):
+	def __init__(self, stdevE=1.5, stdevI=1.5, corr_time=10, corr_length=0, NMDAratio=0):
         #NMDAratio is Inp.NoiseNMDAratio = 0 in the MATLAB code
         # in other words, its how much NMDA contributes to noise in network, not the actual amount of NMDA receptors in the network
 		self.stdevE = stdevE
@@ -24,6 +24,7 @@ def make_eE_noiseCov(ssn, noise_pars, LFPrange):
 	# index_update(eE, LFPrange, 1/len(LFPrange))
 	# eI = np.zeros(ssn.N)
 	# eI[ssn.Ne + LFPrange] =1/len(LFPrange)
+    
 	eE = np.hstack((
 		np.array([i in LFPrange for i in range(ssn.Ne)], dtype=np.float32),
 		np.zeros(ssn.Ni)))
@@ -213,8 +214,9 @@ def linear_PS_sameTime(ssn, rs, noise_pars, freq_range, fnums, cons, LFPrange=No
     df = fs[1]-fs[0]
     GammaPower = np.sum(AnalPowSpecE[(fs>GammaRange[0]) & (fs<GammaRange[1])]) *df # E gamma power
     
-#     f0 = find_peak_freq(fs, AnalPowSpecE, cons)
+#     f0 = find_peak_freq(fs, AnalPowSpecE, 0)
     f0 = 0
+    
 
     return AnalPowSpecE, fs, f0, GammaPower, #, JacobLams, Jacob
 
@@ -224,7 +226,7 @@ def find_peak_freq(fs, spect, start_ind=4):
     when contrast = 0, from each spect and 
     '''
     import numpy as onp
-    
+    spect = onp.asarray(spect)
     if onp.mean(onp.real(spect)) > 1:
         spect = onp.real(spect)/onp.mean(onp.real(spect))
     
@@ -233,3 +235,64 @@ def find_peak_freq(fs, spect, start_ind=4):
     d_spect = spect[:, 1:] - BS[:, None] #difference between stimulus present and background spectrum
     
     return fs[onp.argmax(d_spect[start_ind:, :], axis=0) + start_ind]
+
+def infl_find_peak_freq(fs, spect):
+    '''
+    function that finds the peak frequency using the inflectin point method. The peak frequency (f0) is assumed to be in the middle of two inflection pts.
+    The half width is the distance in frequency between the two inflection points/2. 
+    
+    inputs
+    fs = array of frequency
+    spect = array of power spectra, dims are usually freq x contrasts(+probes)
+    
+    returns
+    f0_out = greatest frequency with peak
+    '''
+    import numpy as onp
+    
+    nps = 6 # max number of inflection pts 
+    nmaxpeaks = int(onp.floor(nps/2))
+    cons = spect.shape[1]-1
+    
+    spect = onp.real(spect[:, 1:])
+    Dspect = onp.diff(spect, axis=0, n=2)
+
+    pos_curvature = onp.where(Dspect > 0, 1, 0)
+    Inf_inds = onp.where(onp.diff(pos_curvature, axis=0) !=0, 1, 0)
+    
+    cc, ff = onp.nonzero(Inf_inds.T)
+    ff += 1
+    
+    f0 = onp.empty((cons, nmaxpeaks))
+    hw = onp.empty((cons, nmaxpeaks))
+    f0[:] = onp.nan
+    hw[:] = onp.nan
+
+    jj = 0
+
+    for c in onp.arange(len(cc)-1):
+        if cc[c+1] == cc[c]:
+            end_ind = ff[c+1]
+            start_ind = ff[c]
+            if onp.all(pos_curvature[c, start_ind:end_ind] == 0):
+                f0[cc[c], jj] = (fs[end_ind] + fs[start_ind])/2
+                hw[cc[c], jj] = (fs[end_ind] - fs[start_ind])/2
+                
+                jj+=1 
+        else:
+            jj = 0
+    
+        
+    f0_out = onp.empty(cons)
+    hw_out = onp.empty(cons)
+
+    for c in onp.arange(cons):
+        if onp.all(onp.isnan(f0[c])):
+            f0_out[c] = onp.nan
+            hw_out[c] = onp.nan
+        else:
+            f0_out[c] = onp.nanmax(f0[c])
+            peak_ind = onp.nanargmax(f0[c])
+            hw_out[c] = hw[c][peak_ind]
+    
+    return f0_out, hw_out
