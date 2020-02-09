@@ -26,34 +26,35 @@ if IDEAL:
         param_min = np.hstack((param_min[:4], 1, param_min[4:]))
         param_max = np.hstack((param_max[:4], 0, param_max[4:]))
     
-    Jee_min = param_min[0]
-    Jei_min = param_min[1]
-    Jie_min = param_min[2]
-    Jii_min = param_min[3]
+#     Jee_min = param_min[0]
+#     Jei_min = param_min[1]
+#     Jie_min = param_min[2]
+#     Jii_min = param_min[3]
     
-    Jee_max = param_max[0] - Jee_min
-    Jei_max = param_max[1] - Jei_min
-    Jie_max = param_max[2] - Jie_min
-    Jii_max = param_max[3] - Jii_min
+#     Jee_max = param_max[0] - Jee_min
+#     Jei_max = param_max[1] - Jei_min
+#     Jie_max = param_max[2] - Jie_min
+#     Jii_max = param_max[3] - Jii_min
         
-    if len(param_min) > 6:
-        gE_min = param_min[4]
-        gI_min = param_min[5]
-        NMDA_min = param_min[6]
+#     if len(param_min) > 6:
+#         gE_min = param_min[4]
+#         gI_min = param_min[5]
+#         NMDA_min = param_min[6]
         
-        gE_max = param_max[4] - gE_min
-        gI_max = param_max[5] - gI_min
-        NMDA_max = param_max[6] - NMDA_min   
-    else:
-        i2e_min = param_min[4]
-        gE_min = 1
-        gI_min = i2e_min
-        NMDA_min = param_min[5]
+#         gE_max = param_max[4] - gE_min
+#         gI_max = param_max[5] - gI_min
+#         NMDA_max = param_max[6] - NMDA_min   
+#     else:
+#         i2e_min = param_min[4]
+#         gE_min = 1
+#         gI_min = i2e_min
+#         NMDA_min = param_min[5]
         
-        i2e_max = param_max[4] - i2e_min
-        gE_max = 1 - gE_min
-        gI_max = i2e_max - gI_min
-        NMDA_max = param_max[5] - NMDA_min   
+#         i2e_max = param_max[4] - i2e_min
+#         gE_max = 1 - gE_min
+#         gI_max = i2e_max - gI_min
+#         NMDA_max = param_max[5] - NMDA_min
+
 else:
     J_min = 0
 #     Jee_min = J_min
@@ -86,6 +87,10 @@ for nn in range(num_perms):
     
     params = param_min + param_max * random.uniform(key, shape=(7,))
     
+    Jee = params[0]
+    Jei = params[1]
+    Jie = params[2]
+    Jii = params[3]
     gE = params[4]
     gI = params[5]
     NMDAratio = params[6]
@@ -93,28 +98,33 @@ for nn in range(num_perms):
     key, jkey = random.split(key)
     # the next line corresponds  to 
     # Jee*Jii > Jie * Jei  <- not what we want
-    while params[0]*params[3] > params[1]*params[2]:
-        params[:4] = param_min[:4] + param_max[:4] * random.uniform(jk)
-        
-    
-    Jee = Jee_min + Jee_max*rand_params[0]
-    Jei = Jei_min + Jei_max*rand_params[1]
-    Jie = Jie_min + Jie_max*rand_params[2]
-    Jii = Jii_min + Jii_max*rand_params[3]
-    
-    key, jkey = random.split(key)
     while Jee*Jii > Jei*Jie:
+        new_params = param_min[:4] + param_max[:4] * random.uniform(jkey, shape=(4,))
         _, jkey = random.split(jkey)
-        new_rand = random.uniform(jkey, shape=(4,))
-        Jee = Jee_min + Jee_max*new_rand[0]
-        Jei = Jei_min + Jei_max*new_rand[1]
-        Jie = Jie_min + Jie_max*new_rand[2]
-        Jii = Jii_min + Jii_max*new_rand[3]
-        #Jee, Jei, Jie, Jii = J_max*random.uniform(jkey, shape=(4,))
+        
+        Jee = new_params[0]
+        Jei = new_params[1]
+        Jie = new_params[2]
+        Jii = new_params[3]
     
-    gE = gE_min + gE_max * rand_params[4]
-    gI = gI_min + gI_max * rand_params[5]
-    NMDAratio = NMDA_min + NMDA_max + rand_params[6]
+#     Jee = Jee_min + Jee_max*rand_params[0]
+#     Jei = Jei_min + Jei_max*rand_params[1]
+#     Jie = Jie_min + Jie_max*rand_params[2]
+#     Jii = Jii_min + Jii_max*rand_params[3]
+    
+#     key, jkey = random.split(key)
+#     while Jee*Jii > Jei*Jie:
+#         _, jkey = random.split(jkey)
+#         new_rand = random.uniform(jkey, shape=(4,))
+#         Jee = Jee_min + Jee_max*new_rand[0]
+#         Jei = Jei_min + Jei_max*new_rand[1]
+#         Jie = Jie_min + Jie_max*new_rand[2]
+#         Jii = Jii_min + Jii_max*new_rand[3]
+#         #Jee, Jei, Jie, Jii = J_max*random.uniform(jkey, shape=(4,))
+    
+#     gE = gE_min + gE_max * rand_params[4]
+#     gI = gI_min + gI_max * rand_params[5]
+#     NMDAratio = NMDA_min + NMDA_max + rand_params[6]
     
     params = np.hstack((Jee, Jei, Jie, Jii, gE, gI, NMDAratio))
     params = find_params_to_sigmoid(params, MULTI=False)
@@ -126,7 +136,7 @@ for nn in range(num_perms):
 
     f0, hw = SSN_power_spec.infl_find_peak_freq(fs, spect)
     
-    params = sigmoid_params(params)
+    params = sigmoid_params(params,  MULTI=False)
     
     if IDEAL:
         fname = 'targeted_2neuron-'+str(nn)
