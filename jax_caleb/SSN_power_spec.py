@@ -275,10 +275,11 @@ def infl_find_peak_freq(fs, spect):
             end_ind = ff[c+1]
             start_ind = ff[c]
             if onp.all(pos_curvature[c, start_ind:end_ind] == 0):
-                f0[cc[c], jj] = (fs[end_ind] + fs[start_ind])/2
-                hw[cc[c], jj] = (fs[end_ind] - fs[start_ind])/2
-                
-                jj+=1 
+                while jj < 3:
+                    f0[cc[c], jj] = (fs[end_ind] + fs[start_ind])/2
+                    hw[cc[c], jj] = (fs[end_ind] - fs[start_ind])/2
+                    jj+=1
+        elif cc[]
         else:
             jj = 0
     
