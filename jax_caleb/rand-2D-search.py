@@ -11,14 +11,71 @@ import scipy.io as sio
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
+#switch variable between targeted random search around ideal found parameters, and purely random parameters. 
+IDEAL = True
+print('Ideal = ',IDEAL)
 
 # max and min values of parameters
-J_max = 3
-i2e_max = 2
-gE_max = np.sqrt(10)
-gI_min = np.sqrt(0.1)
-gI_max = np.sqrt(10) - gI_min #because I do not want gI_min = 0, so I will offset the sigmoid
-NMDA_max = 1
+if IDEAL: 
+    # ideal modelo from previous run
+    aa = sio.loadmat('Two_neuron_Results/Gaussian_Slower_learning_rate.mat')
+    param_min = 0.9*aa['params'][0]
+    param_max = 1.1*aa['params'][0] -  param_min
+    
+    if len(param_min) < 6:
+        param_min = np.hstack((param_min[:4], 1, param_min[4:]))
+        param_max = np.hstack((param_max[:4], 0, param_max[4:]))
+    
+    Jee_min = param_min[0]
+    Jei_min = param_min[1]
+    Jie_min = param_min[2]
+    Jii_min = param_min[3]
+    
+    Jee_max = param_max[0] - Jee_min
+    Jei_max = param_max[1] - Jei_min
+    Jie_max = param_max[2] - Jie_min
+    Jii_max = param_max[3] - Jii_min
+        
+    if len(param_min) > 6:
+        gE_min = param_min[4]
+        gI_min = param_min[5]
+        NMDA_min = param_min[6]
+        
+        gE_max = param_max[4] - gE_min
+        gI_max = param_max[5] - gI_min
+        NMDA_max = param_max[6] - NMDA_min   
+    else:
+        i2e_min = param_min[4]
+        gE_min = 1
+        gI_min = i2e_min
+        NMDA_min = param_min[5]
+        
+        i2e_max = param_max[4] - i2e_min
+        gE_max = 1 - gE_min
+        gI_max = i2e_max - gI_min
+        NMDA_max = param_max[5] - NMDA_min   
+else:
+    J_min = 0
+#     Jee_min = J_min
+#     Jei_min = J_min
+#     Jie_min = J_min
+#     Jii_min = J_min
+    i2e_min = 0
+    gE_min = 0
+    gI_min = np.sqrt(0.1)
+    NMDA_min = 0
+    param_min = np.array([J_min, J_min, J_min, J_min, gE_min, gI_min, NMDA_min])
+    
+    J_max = 3
+    Jee_max = J_max - J_min
+    Jei_max = J_max - J_min
+    Jie_max = J_max - J_min
+    Jii_max = J_max - J_min
+    i2e_max = 2 - i2e_min
+    gE_max = np.sqrt(10) - gE_min
+    gI_max = np.sqrt(10) - gI_min #because I do not want gI_min = 0, so I will offset the sigmoid
+    NMDA_max = 1 - NMDA_min
+    param_max = np.array([J_max, J_max, J_max, J_max, gE_max, gI_max, NMDA_max])
 
 contrasts = np.array([0, 25, 50, 100])
 
@@ -26,15 +83,38 @@ num_perms = 1000
 
 for nn in range(num_perms):
     key = random.PRNGKey(nn)
-    jkey, gkey, nmdakey = random.split(key, 3)
     
-    Jee, Jei, Jie, Jii = J_max*random.uniform(jkey, shape=(4,))
+    params = param_min + param_max * random.uniform(key, shape=(7,))
+    
+    gE = params[4]
+    gI = params[5]
+    NMDAratio = params[6]
+    
+    key, jkey = random.split(key)
+    # the next line corresponds  to 
+    # Jee*Jii > Jie * Jei  <- not what we want
+    while params[0]*params[3] > params[1]*params[2]:
+        params[:4] = param_min[:4] + param_max[:4] * random.uniform(jk)
+        
+    
+    Jee = Jee_min + Jee_max*rand_params[0]
+    Jei = Jei_min + Jei_max*rand_params[1]
+    Jie = Jie_min + Jie_max*rand_params[2]
+    Jii = Jii_min + Jii_max*rand_params[3]
+    
+    key, jkey = random.split(key)
     while Jee*Jii > Jei*Jie:
         _, jkey = random.split(jkey)
-        Jee, Jei, Jie, Jii = J_max*random.uniform(jkey, shape=(4,))
+        new_rand = random.uniform(jkey, shape=(4,))
+        Jee = Jee_min + Jee_max*new_rand[0]
+        Jei = Jei_min + Jei_max*new_rand[1]
+        Jie = Jie_min + Jie_max*new_rand[2]
+        Jii = Jii_min + Jii_max*new_rand[3]
+        #Jee, Jei, Jie, Jii = J_max*random.uniform(jkey, shape=(4,))
     
-    gE, gI = gI_min + gI_max*random.uniform(gkey, shape=(2,))
-    NMDAratio = NMDA_max*random.uniform(nmdakey, shape=(1,))
+    gE = gE_min + gE_max * rand_params[4]
+    gI = gI_min + gI_max * rand_params[5]
+    NMDAratio = NMDA_min + NMDA_max + rand_params[6]
     
     params = np.hstack((Jee, Jei, Jie, Jii, gE, gI, NMDAratio))
     params = find_params_to_sigmoid(params, MULTI=False)
@@ -48,7 +128,10 @@ for nn in range(num_perms):
     
     params = sigmoid_params(params)
     
-    fname = 'rand_2neuron-'+str(nn)
+    if IDEAL:
+        fname = 'targeted_2neuron-'+str(nn)
+    else:
+        fname = 'rand_2neuron-'+str(nn)
     fsave = fname+'.mat'
     f_fig = fname+'.pdf'
     
