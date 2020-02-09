@@ -7,7 +7,7 @@ from util import toeplitz
 #corr_time = 5 originally
 
 class NoisePars(object):
-	def __init__(self, stdevE=1.5, stdevI=1.5, corr_time=10, corr_length=0, NMDAratio=0):
+	def __init__(self, stdevE=1.5, stdevI=1.5, corr_time=1, corr_length=0, NMDAratio=0):
         #NMDAratio is Inp.NoiseNMDAratio = 0 in the MATLAB code
         # in other words, its how much NMDA contributes to noise in network, not the actual amount of NMDA receptors in the network
 		self.stdevE = stdevE
