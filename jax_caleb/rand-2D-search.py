@@ -33,7 +33,7 @@ for nn in range(num_perms):
         _, jkey = random.split(jkey)
         Jee, Jei, Jie, Jii = J_max*random.uniform(jkey, shape=(4,))
     
-    gE, gI = gI_min + (gI_max- gI_min)*random.uniform(gkey, shape=(2,))
+    gE, gI = gI_min + gI_max*random.uniform(gkey, shape=(2,))
     NMDAratio = NMDA_max*random.uniform(nmdakey, shape=(1,))
     
     params = np.hstack((Jee, Jei, Jie, Jii, gE, gI, NMDAratio))
