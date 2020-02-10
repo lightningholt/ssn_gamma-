@@ -90,7 +90,7 @@ def bfgs_gamma(params_init, fname='new_fig.pdf'):
     target_PS = losses.get_target_spect(fs, ground_truth=True)
     target_rates = losses.get_target_rates()
     
-    obs_spect, fs, obs_f0, obs_rates, _ = ssn_PS(params, contrasts)
+    obs_spect, fs, obs_f0, obs_rates, _, _ = ssn_PS(params, contrasts)
     obs_spect = np.real(obs_spect/np.mean(np.real(obs_spect)))
     
     #fname = 'Lzian_Higher_Freqs_Wider_Peaks_GD.pdf'
@@ -151,13 +151,13 @@ def ssn_PS(pos_params, contrasts):
     
     r_fp, CONVG = ssn.fixed_point_r(inp_vec, r_init=r_init, Tmax=Tmax, dt=dt, xtol=xtol)
     
-    spect, fs, f0, _ = SSN_power_spec.linear_PS_sameTime(ssn, r_fp, SSN_power_spec.NoisePars(), freq_range, fnums, cons)
+    spect, fs, f0, Jacob = SSN_power_spec.linear_PS_sameTime(ssn, r_fp, SSN_power_spec.NoisePars(), freq_range, fnums, cons)
     
-    return spect, fs, f0, r_fp, CONVG
+    return spect, fs, f0, r_fp, CONVG, Jacob
 
 def loss(params):
     contrasts = np.array([0, 25, 50, 100])
-    spect, fs, f0, r_fp, CONVG = ssn_PS(params, contrasts)
+    spect, fs, f0, r_fp, CONVG, _ = ssn_PS(params, contrasts)
     
     if CONVG:
     
