@@ -14,7 +14,7 @@ from datetime import date
 import os
 
 #switch variable between targeted random search around ideal found parameters, and purely random parameters. 
-IDEAL = True
+IDEAL = False
 print('Ideal =',IDEAL)
 
 if IDEAL:
@@ -26,7 +26,7 @@ dobj = date.today()
 dir_ender = dobj.strftime("%y-%m-%d")
 
 dirname = dir_beg+dir_ender
-os.mkdir(dirname)
+#os.mkdir(dirname)
 
 # max and min values of parameters
 if IDEAL: 
@@ -95,7 +95,7 @@ contrasts = np.array([0, 25, 50, 100])
 
 num_perms = 1000
 
-for nn in range(num_perms):
+for nn in range(587, num_perms):
     key = random.PRNGKey(nn)
     
     params = param_min + param_max * random.uniform(key, shape=(7,))
