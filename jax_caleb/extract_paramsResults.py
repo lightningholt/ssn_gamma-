@@ -1,6 +1,7 @@
 import scipy.io as sio
 import numpy as np
 
+
 def extract(dir_name, numperm=1000):
     cons = 4
     bb = dir_name.split('_')
@@ -11,30 +12,31 @@ def extract(dir_name, numperm=1000):
         f_header = dir_name+'/targeted_2neuron-'
     
     f0 = np.empty((numperm, 3))
-    hw = f0
+    hw = np.empty((numperm, 3))
     err = np.empty(numperm)
     CONVG = np.zeros(numperm)
     eigvals = np.empty((numperm, cons, 6))
-    Jee = np.empty(numperm)
-    Jei = Jee
-    Jie = Jee
-    Jii = Jee
-    gE = Jee
-    gI = Jee
-    NMDAratio = Jee
+    params = np.empty((numperm, 7))
+#     Jee = np.empty(numperm)
+#     Jei = Jee
+#     Jie = Jee
+#     Jii = Jee
+#     gE = Jee
+#     gI = Jee
+#     NMDAratio = Jee
     
     for pp in range(numperm):
         fname = f_header+str(pp)+'.mat'
         aa = sio.loadmat(fname)
-        params = aa['params'][0]
+        params[pp, :] = aa['params'][0]
         
-        Jee[pp] = params[0]
-        Jei[pp] = params[1]
-        Jie[pp] = params[2]
-        Jii[pp] = params[3]
-        gE[pp] = params[4]
-        gI[pp] = params[5]
-        NMDAratio[pp] = params[6]
+#         Jee[pp] = params[0]
+#         Jei[pp] = params[1]
+#         Jie[pp] = params[2]
+#         Jii[pp] = params[3]
+#         gE[pp] = params[4]
+#         gI[pp] = params[5]
+#         NMDAratio[pp] = params[6]
         
         CC = aa['CONVG']
         ee = aa['err'][0]
@@ -57,18 +59,41 @@ def extract(dir_name, numperm=1000):
               'CONVG':CONVG,
                'err':err,
               'eigvals':eigvals,
-               'Jee':Jee,
-               'Jei':Jei,
-               'Jie':Jie,
-               'Jii':Jii,
-               'gE':gE,
-               'gI':gI,
-               'NMDAratio':NMDAratio
-              }
+               'params':params}
+#                'Jee':Jee,
+#                'Jei':Jei,
+#                'Jie':Jie,
+#                'Jii':Jii,
+#                'gE':gE,
+#                'gI':gI,
+#                'NMDAratio':NMDAratio
+#               }
     
     fout = dir_name+'/extractedResults.mat'
     sio.savemat(fout, Results)
     
     return Results
         
-        
+def peak_histograms_correlations(Results):
+    f0 = Results['f0']
+    hw = Results['hw']
+    params = Results['params']
+    Jee = params[:, 0]
+    Jei = params[:, 1]
+    Jie = params[:, 2]
+    Jii = params[:, 3]
+    gE = params[:, 4]
+    gI = params[:, 5]
+    NMDAratio = params[:, 6]
+    
+    df0 = np.diff(f0, axis=1)
+    dhw = np.diff(hw, axis=1)
+    
+    df0_50_25 = df0[:,0]
+    df0_100_50 = df0[:,1]
+    df0_mean = np.mean(df0, axis=1)
+    
+    dhw_50_25 = dhw[:,0]
+    dhw_100_50 = dhw[:,1]
+    dhw_mean = np.mean(dhw, axis=1)
+    
