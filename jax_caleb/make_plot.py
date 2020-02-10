@@ -431,3 +431,135 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
         plt.savefig(fname)
     
     return fig_combined
+
+def peak_hists(df0, dhw, params=None):
+    
+    fig_combined = plt.figure(23, constrained_layout=True, figsize=(8, 8))
+    
+    gs = gridspec.GridSpec(2,3, figure=fig_combined)
+    
+    numperm = df0.shape[0]
+    
+    df0_50_25 = df0[:,0]
+    df0_100_50 = df0[:,1]
+    df0_mean = np.mean(df0, axis=1)
+    
+    dhw_50_25 = dhw[:,0]
+    dhw_100_50 = dhw[:,1]
+    dhw_mean = np.mean(dhw, axis=1)
+    
+    ax_f0_25 = fig_combined.add_subplot(gs[0,0])
+    ax_f0_25.hist(df0_50_25)
+    ax_f0_25.set_title('50 - 25')
+    lstr ='N = '+str(numperm - np.sum(np.isnan(df0_50_25)))
+    ax_f0_25.legend([lstr])
+#     ax_f0_25.set_xlabel('Peak frequency change (Hz)')
+#     ax_f0_25.set_ylabel('Counts')
+    
+    ax_f0_100 = fig_combined.add_subplot(gs[0,1])
+    ax_f0_100.hist(df0_100_50)
+    ax_f0_100.set_title('100 - 50')
+    lstr ='N = '+str(numperm - np.sum(np.isnan(df0_100_50)))
+    ax_f0_100.legend([lstr])
+#     ax_f0_100.set_xlabel('Peak frequency change (Hz)')
+#     ax_f0_100.set_ylabel('Counts')
+    
+    ax_f0_mean = fig_combined.add_subplot(gs[0,2])
+    ax_f0_mean.hist(df0_mean)
+    ax_f0_mean.set_title('Mean')
+    lstr ='N = '+str(numperm - np.sum(np.isnan(df0_mean)))
+    ax_f0_mean.legend([lstr])
+#     ax_f0_mean.set_xlabel('Peak frequency change (Hz)')
+#     ax_f0_mean.set_ylabel('Counts')
+    
+    ax_hw_25 = fig_combined.add_subplot(gs[1,0])
+    ax_hw_25.hist(dhw_50_25)
+    ax_hw_25.set_title('50 - 25')
+    lstr ='N = '+str(numperm - np.sum(np.isnan(dhw_50_25)))
+    ax_hw_25.legend([lstr])
+#     ax_hw_25.set_xlabel('Peak frequency width change (Hz)')
+#     ax_hw_25.set_ylabel('Counts')
+    
+    ax_hw_100 = fig_combined.add_subplot(gs[1,1])
+    ax_hw_100.hist(dhw_100_50)
+    ax_hw_100.set_title('100 - 50')
+    lstr ='N = '+str(numperm - np.sum(np.isnan(dhw_100_50)))
+    ax_hw_100.legend([lstr])
+#     ax_hw_100.set_xlabel('Peak frequency width change (Hz)')
+#     ax_hw_100.set_ylabel('Counts')
+    
+    ax_hw_mean = fig_combined.add_subplot(gs[1,2])
+    ax_hw_mean.hist(dhw_mean)
+    ax_hw_mean.set_title('Mean')
+    lstr ='N = '+str(numperm - np.sum(np.isnan(dhw_mean)))
+    ax_hw_mean.legend([lstr])
+#     ax_hw_mean.set_xlabel('Peak frequency width change (Hz)')
+#     ax_hw_mean.set_ylabel('Counts')
+    
+    df0_50_25 = df0[:,0]
+    df0_100_50 = df0[:,1]
+    df0_mean = np.mean(df0, axis=1)
+    
+    dhw_50_25 = dhw[:,0]
+    dhw_100_50 = dhw[:,1]
+    dhw_mean = np.mean(dhw, axis=1)
+    
+    #Make correlation plots
+    if params is not None:
+        #indices without nans
+        nums_df_25 = ~np.isnan(df0_50_25)
+        nums_df_100 = ~np.isnan(df0_100_50)
+        nums_df_mean = ~np.isnan(df0_mean)
+        
+        if params.shape[1] != df0_50_25.shape[0]:
+            params = params.T
+        
+        #corrcoef returns an 8x8 matrix of correlation coefficients, only care about how df0 correlates with all other params
+        corr_f025 = np.corrcoef(df0_50_25[nums_df_25], params[:, nums_df_25])[0, 1:] 
+        corr_f0100 = np.corrcoef(df0_100_50[nums_df_100], params[:, nums_df_100])[0, 1:]
+        corr_f0mean= np.corrcoef(df0_mean[nums_df_mean], params[:, nums_df_mean])[0, 1:]
+        
+        corr_hw25 = np.corrcoef(dhw_50_25[nums_df_25], params[:, nums_df_25])[0, 1:]
+        corr_hw100 = np.corrcoef(dhw_100_50[nums_df_100], params[:, nums_df_100])[0, 1:]
+        corr_hwmean= np.corrcoef(dhw_mean[nums_df_mean], params[:, nums_df_mean])[0, 1:]
+        
+        bar_pos = np.arange(len(corr_hwmean))
+        param_labels = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA']
+        
+        fig_corr = plt.figure(24, constrained_layout=True, figsize=(8, 8))
+        gs = gridspec.GridSpec(2,3, figure=fig_corr)
+        
+        ax_corrf025 = fig_corr.add_subplot(gs[0,0])
+        ax_corrf025.bar(bar_pos, corr_f025)
+        ax_corrf025.set_xticks(bar_pos)
+        ax_corrf025.set_xticklabels(param_labels)
+        
+        
+        ax_corrf0100 = fig_corr.add_subplot(gs[0,1])
+        ax_corrf0100.bar(bar_pos, corr_f0100)
+        ax_corrf0100.set_xticks(bar_pos)
+        ax_corrf0100.set_xticklabels(param_labels)
+        
+        ax_corrf0mean = fig_corr.add_subplot(gs[0,2])
+        ax_corrf0mean.bar(bar_pos, corr_f0mean)
+        ax_corrf0mean.set_xticks(bar_pos)
+        ax_corrf0mean.set_xticklabels(param_labels)
+
+        ax_corrhw25 = fig_corr.add_subplot(gs[1,0])
+        ax_corrhw25.bar(bar_pos, corr_hw25)
+        ax_corrhw25.set_xticks(bar_pos)
+        ax_corrhw25.set_xticklabels(param_labels)
+        
+        ax_corrhw100 = fig_corr.add_subplot(gs[1,1])
+        ax_corrhw100.bar(bar_pos, corr_hw100)
+        ax_corrhw100.set_xticks(bar_pos)
+        ax_corrhw100.set_xticklabels(param_labels)
+        
+        ax_corrhwmean = fig_corr.add_subplot(gs[1,2])
+        ax_corrhwmean.bar(bar_pos, corr_hwmean)
+        ax_corrhwmean.set_xticks(bar_pos)
+        ax_corrhwmean.set_xticklabels(param_labels)
+        
+        return fig_combined, fig_corr
+    else:
+        return fig_combined
