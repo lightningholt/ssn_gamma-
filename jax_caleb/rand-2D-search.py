@@ -10,10 +10,23 @@ import make_plot
 import scipy.io as sio
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+from datetime import date
+import os
 
 #switch variable between targeted random search around ideal found parameters, and purely random parameters. 
 IDEAL = True
-print('Ideal = ',IDEAL)
+print('Ideal =',IDEAL)
+
+if IDEAL:
+    dir_beg = 'Targ_2Neuron-search-'
+else:
+    dir_beg = 'Rand_2Neuron-search-'
+
+dobj = date.today()
+dir_ender = dobj.strftime("%y-%m-%d")
+
+dirname = dir_beg+dir_ender
+os.mkdir(dirname)
 
 # max and min values of parameters
 if IDEAL: 
@@ -131,10 +144,10 @@ for nn in range(num_perms):
     
 #     params = np.array([ 3.07743762,  1.69581275,  5.69122332,  1.57580456, -1.43662069, -1.9727109 , -5.59829745])
 
-    spect, fs, f0, r_fp, CONVG = ssn_PS(params, contrasts)
+    spect, fs, f0, r_fp, CONVG, Jacobian = ssn_PS(params, contrasts)
     spect = np.real(spect)/np.mean(np.real(spect))
 
-    f0, hw = SSN_power_spec.infl_find_peak_freq(fs, spect)
+    f0, hw, err = SSN_power_spec.infl_find_peak_freq(fs, spect)
     
     params = sigmoid_params(params,  MULTI=False)
     
@@ -142,8 +155,8 @@ for nn in range(num_perms):
         fname = 'targeted_2neuron-'+str(nn)
     else:
         fname = 'rand_2neuron-'+str(nn)
-    fsave = fname+'.mat'
-    f_fig = fname+'.pdf'
+    fsave = dirname+'/'+fname+'.mat'
+    f_fig = dirname+'/'+fname+'.pdf'
     
     spect = onp.asarray(spect)
     r_fp = onp.asarray(r_fp)
@@ -156,10 +169,12 @@ for nn in range(num_perms):
     Results = {'spect':spect,
                'obs_rates':r_fp,
                'CONVG':CONVG,
-              'fs':fs,
-              'f0':f0,
-              'hw':hw,
-              'params':params,
+               'Jacobian':Jacobian,
+               'fs':fs,
+               'f0':f0,
+               'hw':hw,
+               'err':err,
+               'params':params,
               }
     
     sio.savemat(fsave, Results)
