@@ -287,9 +287,12 @@ def infl_find_peak_freq(fs, spect):
                 
             #find f0 and hw when it doens't re-bend before fs = max(fs)
             #there still could be a bump, but not another inflection point cause I ran out of freqs
-            start_ind = ff[c]
-            f0[cc[c], jj] = (fs[-1] + fs[start_ind])/2
-            hw[cc[c], jj] = (fs[-1] - fs[start_ind])/2
+            if jj < nmaxpeaks:
+                start_ind = ff[c]
+                f0[cc[c], jj] = (fs[-1] + fs[start_ind])/2
+                hw[cc[c], jj] = (fs[-1] - fs[start_ind])/2
+            else:
+                err[cc[c]] = 1
             #gotta reset jj
             jj = 0
 
@@ -307,7 +310,7 @@ def infl_find_peak_freq(fs, spect):
             end_ind = ff[c+1]
             start_ind = ff[c]
             #make sure everything is negatively curved, i.e. not positively curved
-            if np.all(pos_curvature[c, start_ind:end_ind-1] == 0):
+            if np.all(pos_curvature[cc[c], start_ind:end_ind-1] == 0):
                 if jj < nmaxpeaks:
                     f0[cc[c], jj] = (fs[end_ind] + fs[start_ind])/2
                     hw[cc[c], jj] = (fs[end_ind] - fs[start_ind])/2
