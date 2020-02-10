@@ -252,7 +252,7 @@ def infl_find_peak_freq(fs, spect):
     
     nps = 6 # max number of inflection pts 
     nmaxpeaks = int(onp.floor(nps/2))
-    cons = spect.shape[1]-1
+    cons = spect.shape[1]
     
     spect = onp.real(spect[:, 1:])
     Dspect = onp.diff(spect, axis=0, n=2)
@@ -261,28 +261,63 @@ def infl_find_peak_freq(fs, spect):
     Inf_inds = onp.where(onp.diff(pos_curvature, axis=0) !=0, 1, 0)
     
     cc, ff = onp.nonzero(Inf_inds.T)
-    ff += 1
+    # cc is a 1D array of contrast indices
+    # ff is a 1D array of freq indices
+    
+    ff += 1 #because diff(spect) loses an index, i.e. if spect has length 30, dspect has length 28, so shift the freq indices up
     
     f0 = onp.empty((cons, nmaxpeaks))
     hw = onp.empty((cons, nmaxpeaks))
+    #err = 1 means that power spectrum was too inflecty, i.e. jagged
+    err = onp.zeros((cons))
+    
     f0[:] = onp.nan
     hw[:] = onp.nan
-
+    
+    #jj indexes number of max peaks
     jj = 0
+    
+    #bunch of if statements to find the peak frequencies, f0, and  half width, hw
+    for c in np.arange(len(cc)):
+        #is there a peak before the end of frequencies
+        if np.all(pos_curvature[ff[c]:, cc[c]] ==0):
+            if cc[c] ==0:
+                # report an error if I get a gamma bump at 0 contrast
+                err[cc[c]] = 1
+                
+            #find f0 and hw when it doens't re-bend before fs = max(fs)
+            #there still could be a bump, but not another inflection point cause I ran out of freqs
+            start_ind = ff[c]
+            f0[cc[c], jj] = (fs[-1] + fs[start_ind])/2
+            hw[cc[c], jj] = (fs[-1] - fs[start_ind])/2
+            #gotta reset jj
+            jj = 0
 
-    for c in onp.arange(len(cc)-1):
-        if cc[c+1] == cc[c]:
+        elif c == len(cc):
+            # if this is the last c, and it's negatively curved, just reset jj.
+            jj = 0
+
+        elif cc[c+1] == cc[c]: 
+            if cc[c] == 0:
+                # report an error if I get a gamma bump at 0 contrast
+                err[cc[c]] = 1
+            
+            #find f0 and hw of gamma peak that re-bends before fs = max(fs)
+            #if statement makes sure the contrasts doesn't change
             end_ind = ff[c+1]
             start_ind = ff[c]
-            if onp.all(pos_curvature[c, start_ind:end_ind] == 0):
-                while jj < 3:
+            #make sure everything is negatively curved, i.e. not positively curved
+            if np.all(pos_curvature[c, start_ind:end_ind-1] == 0):
+                if jj < nmaxpeaks
                     f0[cc[c], jj] = (fs[end_ind] + fs[start_ind])/2
                     hw[cc[c], jj] = (fs[end_ind] - fs[start_ind])/2
+
                     jj+=1
-        elif cc[]
+                else:
+                    err[cc[c]] = 1
         else:
+            #catch all other cases
             jj = 0
-    
         
     f0_out = onp.empty(cons)
     hw_out = onp.empty(cons)
