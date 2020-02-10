@@ -162,7 +162,7 @@ def linear_PS_sameTime(ssn, rs, noise_pars, freq_range, fnums, cons, LFPrange=No
     eE1 = np.kron(np.ones(ssn.num_rcpt), eE) # this tensor product by ones(...) is because of the unweighted sum of currents of different types inside the neuronal nonlinearity
     # eI1 = np.kron(np.ones(ssn.num_rcpt), eI) # this tensor product by ones(...) is because of the unweighted sum of currents of different types inside the neuronal nonlinearity
 
-    # Jacob = ssn.jacobian(J) # np.kron(1/ssn.tau_s, np.ones(ssn.N))[:,None] * J  # equivalent to diag(tau_s) J (math)
+    Jacob = ssn.jacobian(J) # np.kron(1/ssn.tau_s, np.ones(ssn.N))[:,None] * J  # equivalent to diag(tau_s) J (math)
     # JacobLams = np.linalg.eigvals(Jacob)
 
     maxF = freq_range[1]
@@ -218,7 +218,7 @@ def linear_PS_sameTime(ssn, rs, noise_pars, freq_range, fnums, cons, LFPrange=No
     f0 = 0
     
 
-    return AnalPowSpecE, fs, f0, GammaPower, #, JacobLams, Jacob
+    return AnalPowSpecE, fs, f0, Jacob #, GammaPower, JacobLams
 
 def find_peak_freq(fs, spect, start_ind=4):
     '''
@@ -254,7 +254,7 @@ def infl_find_peak_freq(fs, spect):
     nmaxpeaks = int(onp.floor(nps/2))
     cons = spect.shape[1]
     
-    spect = onp.real(spect[:, 1:])
+    spect = onp.real(spect[:, :])
     Dspect = onp.diff(spect, axis=0, n=2)
 
     pos_curvature = onp.where(Dspect > 0, 1, 0)
@@ -300,7 +300,7 @@ def infl_find_peak_freq(fs, spect):
         elif cc[c+1] == cc[c]: 
             if cc[c] == 0:
                 # report an error if I get a gamma bump at 0 contrast
-                err[cc[c]] = 1
+                err[cc[c]] = 1.4
             
             #find f0 and hw of gamma peak that re-bends before fs = max(fs)
             #if statement makes sure the contrasts doesn't change
@@ -331,4 +331,4 @@ def infl_find_peak_freq(fs, spect):
             peak_ind = onp.nanargmax(f0[c])
             hw_out[c] = hw[c][peak_ind]
     
-    return f0_out, hw_out
+    return f0_out, hw_out, err
