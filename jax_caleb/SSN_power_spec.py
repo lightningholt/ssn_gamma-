@@ -308,7 +308,7 @@ def infl_find_peak_freq(fs, spect):
             start_ind = ff[c]
             #make sure everything is negatively curved, i.e. not positively curved
             if np.all(pos_curvature[c, start_ind:end_ind-1] == 0):
-                if jj < nmaxpeaks
+                if jj < nmaxpeaks:
                     f0[cc[c], jj] = (fs[end_ind] + fs[start_ind])/2
                     hw[cc[c], jj] = (fs[end_ind] - fs[start_ind])/2
 
