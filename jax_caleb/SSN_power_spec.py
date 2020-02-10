@@ -293,7 +293,7 @@ def infl_find_peak_freq(fs, spect):
             #gotta reset jj
             jj = 0
 
-        elif c == len(cc):
+        elif c == len(cc)-1:
             # if this is the last c, and it's negatively curved, just reset jj.
             jj = 0
 
