@@ -434,19 +434,27 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
 
 def peak_hists(df0, dhw, params=None):
     
+    #axs[0,ctype].hist(np.log10(rs[:,c,ctype]), nbins, color=colors[c-1], alpha=.5)
+    con_color =  ['blue', 'green', 'red']
     fig_combined = plt.figure(23, constrained_layout=True, figsize=(8, 8))
     
     gs = gridspec.GridSpec(2,3, figure=fig_combined)
     
     numperm = df0.shape[0]
     
+    
     df0_50_25 = df0[:,0]
     df0_100_50 = df0[:,1]
     df0_mean = np.mean(df0, axis=1)
     
+    df0 = np.hstack((df0, df0_mean[:,None]))
+    
     dhw_50_25 = dhw[:,0]
     dhw_100_50 = dhw[:,1]
     dhw_mean = np.mean(dhw, axis=1)
+    dhw = np.hstack((dhw, dhw_mean[:,None]))
+    
+    
     
     ax_f0_25 = fig_combined.add_subplot(gs[0,0])
     ax_f0_25.hist(df0_50_25)
