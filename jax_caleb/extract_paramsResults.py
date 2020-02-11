@@ -50,7 +50,7 @@ def extract(dir_name, numperm=1000):
         if CC > 0 and np.all(ee == 0):
             #condition means no gamma peak at 0, and firing rates converged
             ev = np.linalg.eigvals(aa['Jacobian'])
-            eigvals[pp, :,:] = ev
+            eigvals[pp, :,:] = ev*1000/(2*np.pi)
         else:
             eigvals[pp, :,:] = np.nan
     
