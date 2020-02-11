@@ -436,26 +436,80 @@ def peak_hists(df0, dhw, params=None):
     
     #axs[0,ctype].hist(np.log10(rs[:,c,ctype]), nbins, color=colors[c-1], alpha=.5)
     con_color =  ['blue', 'green', 'red']
+    
     fig_combined = plt.figure(23, constrained_layout=True, figsize=(8, 8))
     
-    gs = gridspec.GridSpec(2,3, figure=fig_combined)
+    gs = gridspec.GridSpec(3,2, figure=fig_combined)
     
     numperm = df0.shape[0]
     
-    
-    df0_50_25 = df0[:,0]
-    df0_100_50 = df0[:,1]
     df0_mean = np.mean(df0, axis=1)
-    
     df0 = np.hstack((df0, df0_mean[:,None]))
     
-    dhw_50_25 = dhw[:,0]
-    dhw_100_50 = dhw[:,1]
     dhw_mean = np.mean(dhw, axis=1)
     dhw = np.hstack((dhw, dhw_mean[:,None]))
     
+    #conditions for hw and f0 to be nan are the same
+    nums_25 = ~np.isnan(df0[:, 0])
+    nums_100 = ~np.isnan(df0[:,1])
+    nums_mean = ~np.isnan(df0[:,2])
+    
+    ax_df0 = fig_combined.add_subplot(gs[0,0])
+    ax_df0.set_xlabel('Peak frequency shift (Hz)')
+    ax_df0.set_ylabel('Counts')
+    
+    ax_dhw = fig_combined.add_subplot(gs[0, 1])
+    ax_dhw.set_xlabel('Peak bump width shift (Hz)')
+    ax_dhw.set_ylabel('Counts')
+    
+    cc = 0
+    for c in con_color:
+        ax_df0.hist(df0[:,cc], color=c, alpha=0.5)
+        ax_dhw.hist(dhw[:,cc], color=c, alpha=0.5)
+        cc +=1
+    lstr = ['50-25', '100-50', 'Mean shift']
+    ax_df0.legend(lstr)
+    ax_dhw.legend(lstr)
+    
+    #corrcoef returns an 8x8 matrix of correlation coefficients, only care about how df0 correlates with all other params
+    corr_f025 = np.corrcoef(df0[nums_25, 0], params[:, nums_25])[0, 1:] 
+    corr_f0100 = np.corrcoef(df0[nums_100, 1], params[:, nums_100])[0, 1:]
+    corr_f0mean= np.corrcoef(df0[nums_mean, 2], params[:, nums_mean])[0, 1:]
+    corr_f0 =  np.vstack((corr_f025, corr_f0100, corr_f0mean))
+    
+    corr_hw25 = np.corrcoef(dhw[nums_25, 0], params[:, nums_25])[0, 1:]
+    corr_hw100 = np.corrcoef(dhw[nums_100, 1], params[:, nums_100])[0, 1:]
+    corr_hwmean= np.corrcoef(dhw[nums_mean, 2], params[:, nums_mean])[0, 1:]
+    corr_hw =  np.vstack((corr_hw25, corr_hw100, corr_hwmean))
+    
+    print(corr_f0.shape)
+    
+    width = 0.3
+    param_labels = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA']
+    bar_pos = np.arange(len(param_labels))
+    
+    ax_corrf0 = fig_combined.add_subplot(gs[1,:])
+    ax_corrhw = fig_combined.add_subplot(gs[2,:])
+    cc = 0
+    for c in con_color:
+        ax_corrf0.bar(bar_pos -width + cc*width, corr_f0[cc, :], width=width, color=c)
+        ax_corrhw.bar(bar_pos -width + cc*width, corr_hw[cc, :], width=width, color=c)
+        cc +=1
+        
+    ax_corrf0.set_xticks(bar_pos)
+    ax_corrf0.set_ylabel('Coefficient')
+    ax_corrf0.set_xticklabels(param_labels)
+    ax_corrf0.set_title('Correlation coefficient of changes in peak frequency with  parameters')
     
     
+    ax_corrhw.set_xticks(bar_pos)
+    ax_corrhw.set_ylabel('Coefficient')
+    ax_corrhw.set_xticklabels(param_labels)
+    ax_corrhw.set_title('Correlation coefficient of changes in bump width with  parameters')
+        
+    return fig_combined
+    
+    '''
     ax_f0_25 = fig_combined.add_subplot(gs[0,0])
     ax_f0_25.hist(df0_50_25)
     ax_f0_25.set_title('50 - 25')
@@ -571,3 +625,4 @@ def peak_hists(df0, dhw, params=None):
         return fig_combined, fig_corr
     else:
         return fig_combined
+        '''
