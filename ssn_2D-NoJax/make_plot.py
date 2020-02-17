@@ -544,7 +544,7 @@ def dyn_plots(t_range, v_dyn, sim_fs, sim_spect, anal_fs, spect, sim_f0, anal_f0
 #     ax_volts.set_xticks(np.arange(t_range[1]-t_range[0]))
 #     ax_volts.set_xticks(fontsize=ss)
 #     ax_volts.set_yticks(fontsize=ss)
-    ax_volts.set_ylabel('Input voltage (a.u.)', fontsize=fs)
+    ax_volts.set_ylabel('LFP (a.u.)', fontsize=fs)
     ax_volts.legend(['C = 0', 'C = 25', 'C = 50', 'C = 100'], frameon=False, loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=4, fontsize=ls)
     ax_volts.set_ylim(top = 1.2*np.max(vE))
     
