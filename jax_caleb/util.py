@@ -177,8 +177,7 @@ def find_params_to_sigmoid(params, MULTI=True, OLDSTYLE = False):
         sigIE_max = 0.4 # because I do not want sigEE_min = 0 so I will offset the sigmoid
         sigIE_min = 0.1
         
-        
-        sig_ready_J = -np.log(np.array([Jxe_max, Jxi_max, Jxe_max, Jxi_max])/(params[:4] - np.array([Jxe_min, Jxi_min, Jxe_min, Jxi_min])) - 1)
+        sig_ready_J = -np.log(np.array([Jxe_max, Jxi_max, Jxe_max, Jxi_max])/(params[0:4] - np.array([Jxe_min, Jxi_min, Jxe_min, Jxi_min])) - 1)
     #print('Jmax ', Jmax, ' i2e_max ', i2e_max, ' gE_max ', gE_max, ' gI_max ', gI_max, ' gI_min ', gI_min ' NMDA_max ', NMDA_max)
     
     
