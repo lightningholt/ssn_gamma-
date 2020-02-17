@@ -19,13 +19,20 @@ Jxi_max = W0*1.5 * .5 - Jxi_min
 
 # extract all parameters as 1-dim arrays
 Plocal = aa['Params']['Plocal'][0,0][0]
-Jee = np.maximum(aa['Params']['Jee'][0, 0][:,0], Jxe_min * psi)
-Jei = np.maximum(np.abs(aa['Params']['Jei'][0, 0][:,0]), Jxi_min * psi) #MATLAB had these defined as negative
-Jie = np.maximum(aa['Params']['Jie'][0, 0][:,0], Jxe_min * psi)
-Jii = np.maximum(np.abs(aa['Params']['Jii'][0, 0][:,0]), Jxi_min * psi) #MATLAB had these defined as negative
+Jee = aa['Params']['Jee'][0, 0][:,0]
+Jei = np.abs(aa['Params']['Jei'][0, 0][:,0]) #MATLAB had these defined as negative
+Jie = aa['Params']['Jie'][0, 0][:,0]
+Jii = np.abs(aa['Params']['Jii'][0, 0][:,0]) #MATLAB had these defined as negative
 I2E = aa['Params']['I2E'][0,0][0]
 sigEE = aa['Params']['sigEE'][0,0][:,0]
 sigIE = aa['Params']['sigIE'][0,0][:,0]
+
+#convert old ranges to new
+J_max = 3
+Jee = (Jee/psi)*(Jxe_max/J_max) + Jxe_min
+Jei = (Jei/psi)*(Jxi_max/J_max) + Jxi_min
+Jie = (Jie/psi)*(Jxe_max/J_max) + Jxe_min
+Jii = (Jii/psi)*(Jxe_max/J_max) + Jxi_min
 
 #hyper Params
 diffPS = False
