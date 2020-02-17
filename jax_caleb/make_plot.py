@@ -386,6 +386,16 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     
     ## Params Bars
     J_max = 3
+    W0 = 1.8 
+    g0 = 0.44
+    
+    #new ranges
+    Jxe_max = W0*1.5 
+    Jxi_max = W0*1.5 * .5 
+    g_max = g0*1.5
+    g_min = g0*.5
+    
+    #old ranges, to keep things consistent if len(params) < 11,
     i2e_max = 2
     gE_max = np.sqrt(10)
     gI_max = np.sqrt(10)
@@ -405,7 +415,7 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
         params_max = np.array([J_max, J_max, J_max, J_max, gE_max, gI_max, NMDA_max, plocal_max, sigEE_max, sigIE_max])
         label_params = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA/AMPA','Plocal', 'sigEE', 'sigIE']
     else:
-        params_max = np.array([J_max, J_max, J_max, J_max, gE_max, gI_max, NMDA_max, plocal_max, plocal_max, sigEE_max, sigIE_max])
+        params_max = np.array([Jxe_max, Jxi_max, Jxe_max, Jxi_max, g_max, g_max, NMDA_max, plocal_max, plocal_max, sigEE_max, sigIE_max])
         label_params = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA','Plocal_EE', 'Plocal_IE', 'sigEE', 'sigIE']
     
     #Normalize parameters by their max. 
