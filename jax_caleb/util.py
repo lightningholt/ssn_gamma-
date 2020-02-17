@@ -141,14 +141,33 @@ def find_params_to_sigmoid(params, MULTI=True, OLDSTYLE = False):
         sigEE_min = 0.1
         sigIE_max = 0.4 # because I do not want sigEE_min = 0 so I will offset the sigmoid
         sigIE_min = 0.1
+        
+        sig_ready_J = -np.log(J_max/params[:4] - 1)
     else:
+        #biological values of W0 and g0
+        W0 = 1.8 
+        g0 = 0.44
         J_max = 3
+        
+        Jxe_min = W0*.5
+        Jxe_max = W0*1.5 - Jxe_min
+        Jxi_min = W0*.5 * .5
+        Jxi_max = W0*1.5 * .5 - Jxi_min
+
+        g_max = g0*1.5
+        g_min = g0*.5
+        
         i2e_max = 2
-        gE_max = onp.sqrt(10)
+        #gE_max = onp.sqrt(10)
+        gE_max = g_max - g_min
+        gE_min = g_min
         #gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
         #gI_min = 0.5
-        gI_min = onp.sqrt(0.1)
-        gI_max = onp.sqrt(10) - gI_min #because I do not want gI_min = 0, so I will offset the sigmoid
+        #gI_min = onp.sqrt(0.1)
+        #gI_max = onp.sqrt(10) - gI_min #because I do not want gI_min = 0, so I will offset the sigmoid
+        gI_max = g_max - g_min
+        gI_min = g_min
+        
         NMDA_max = 1
         plocal_max = 1
         sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
@@ -157,16 +176,19 @@ def find_params_to_sigmoid(params, MULTI=True, OLDSTYLE = False):
         sigEE_min = 0.1
         sigIE_max = 0.4 # because I do not want sigEE_min = 0 so I will offset the sigmoid
         sigIE_min = 0.1
-    
+        
+        
+        sig_ready_J = -np.log([Jxe_max, Jxi_max, Jxe_max, Jxi_max]/(params[:4] - [Jxe_min, Jxi_min, Jxe_min, Jxi_min]) - 1)
     #print('Jmax ', Jmax, ' i2e_max ', i2e_max, ' gE_max ', gE_max, ' gI_max ', gI_max, ' gI_min ', gI_min ' NMDA_max ', NMDA_max)
     
-    sig_ready_J = -np.log(J_max/params[:4] - 1)
+    
+    
     if not MULTI:
         if len(params) < 6:
             sig_ready_i2e = -np.log(i2e_max/params[4] - 1)
             return np.hstack((sig_ready_J, sig_ready_i2e))
         else:
-            sig_gE = -np.log(gE_max/params[4] - 1)
+            sig_gE = -np.log(gE_max/(params[4] - gE_min) - 1)
             sig_gI = -np.log(gI_max/(params[5] - gI_min) - 1)
             sig_NMDA = -np.log(NMDA_max/params[6] - 1)
             return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA))
@@ -177,14 +199,14 @@ def find_params_to_sigmoid(params, MULTI=True, OLDSTYLE = False):
             sig_sigR = -np.log(sigR_max/(params[6]-sigR_min) -1)
             return np.hstack((sig_ready_J, sig_ready_i2e, sig_plocal, sig_sigR))
         elif len(params) == 9:
-            sig_gE = -np.log(gE_max/params[4] - 1)
+            sig_gE = -np.log(gE_max/(params[4] - gE_min) - 1)
             sig_gI = -np.log(gI_max/(params[5] - gI_min) - 1)
             sig_NMDA = -np.log(NMDA_max/params[6] - 1)
             sig_plocal = -np.log(plocal_max/params[7] - 1)
             sig_sigR = -np.log(sigR_max/(params[8]-sigR_min) -1)
             return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA, sig_plocal, sig_sigR))
         elif len(params) == 10:
-            sig_gE = -np.log(gE_max/params[4] - 1)
+            sig_gE = -np.log(gE_max/(params[4] - gE_min) - 1)
             sig_gI = -np.log(gI_max/(params[5] - gI_min) - 1)
             sig_NMDA = -np.log(NMDA_max/params[6] - 1)
             sig_plocal = -np.log(plocal_max/params[7] - 1)
@@ -192,7 +214,7 @@ def find_params_to_sigmoid(params, MULTI=True, OLDSTYLE = False):
             sig_sigIE = -np.log(sigIE_max/(params[9]-sigIE_min) -1)
             return np.hstack((sig_ready_J, sig_gE, sig_gI, sig_NMDA, sig_plocal, sig_sigEE, sig_sigIE))
         else:
-            sig_gE = -np.log(gE_max/params[4] - 1)
+            sig_gE = -np.log(gE_max/(params[4] - gE_min) - 1)
             sig_gI = -np.log(gI_max/(params[5] - gI_min) - 1)
             sig_NMDA = -np.log(NMDA_max/params[6] - 1)
             sig_plocalEE = -np.log(plocal_max/params[7] - 1)
@@ -217,14 +239,36 @@ def sigmoid_params(pos_params, MULTI=True, OLDSTYLE=False):
         sigEE_min = 0.1
         sigIE_max = 0.4 # because I do not want sigEE_min = 0 so I will offset the sigmoid
         sigIE_min = 0.1
+        
+        Jxe_max = J_max
+        Jxi_max = J_max
+        Jxe_min = 0
+        Jxi_min = 0
+        gE_min = 0
+        
     else:
+        W0 = 1.8 
+        g0 = 0.44
         J_max = 3
+        
+        Jxe_min = W0*.5
+        Jxe_max = W0*1.5 - Jxe_min
+        Jxi_min = W0*.5 * .5
+        Jxi_max = W0*1.5 * .5 - Jxi_min
+
+        g_max = g0*1.5
+        g_min = g0*.5
+        
         i2e_max = 2
-        gE_max = onp.sqrt(10)
+        #gE_max = onp.sqrt(10)
+        gE_max = g_max - g_min
+        gE_min = g_min
         #gI_max = 1.5 #because I do not want gI_min = 0, so I will offset the sigmoid
         #gI_min = 0.5
-        gI_min = onp.sqrt(0.1)
-        gI_max = onp.sqrt(10) - gI_min #because I do not want gI_min = 0, so I will offset the sigmoid
+        #gI_min = onp.sqrt(0.1)
+        #gI_max = onp.sqrt(10) - gI_min #because I do not want gI_min = 0, so I will offset the sigmoid
+        gI_min = g_min
+        gI_max = g_max - gI_min
         NMDA_max = 1
         plocal_max = 1
         sigR_max = 0.8 #because I do not want sigR_min = 0, so I will offset the sigmoid
@@ -234,10 +278,10 @@ def sigmoid_params(pos_params, MULTI=True, OLDSTYLE=False):
         sigIE_max = 0.4 # because I do not want sigEE_min = 0 so I will offset the sigmoid
         sigIE_min = 0.1
     
-    Jee = J_max * logistic_sig(pos_params[0])
-    Jei = J_max * logistic_sig(pos_params[1])
-    Jie = J_max * logistic_sig(pos_params[2])
-    Jii = J_max * logistic_sig(pos_params[3])
+    Jee = Jxe_max * logistic_sig(pos_params[0]) + Jxe_min
+    Jei = Jxi_max * logistic_sig(pos_params[1]) + Jxi_min
+    Jie = Jxe_max * logistic_sig(pos_params[2]) + Jxe_min
+    Jii = Jxi_max * logistic_sig(pos_params[3]) + Jxi_min
     
     if MULTI:
         if len(pos_params) < 8:
@@ -247,7 +291,7 @@ def sigmoid_params(pos_params, MULTI=True, OLDSTYLE=False):
             
             params = np.array([Jee, Jei, Jie, Jii, i2e, plocal, sigR])
         elif len(pos_params) == 9:
-            gE = gE_max * logistic_sig(pos_params[4])
+            gE = gE_max * logistic_sig(pos_params[4]) + gE_min
             gI = gI_max * logistic_sig(pos_params[5]) + gI_min
             NMDAratio = NMDA_max * logistic_sig(pos_params[6])
             
@@ -256,7 +300,7 @@ def sigmoid_params(pos_params, MULTI=True, OLDSTYLE=False):
             
             params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio, plocal, sigR])
         elif len(pos_params) == 10:
-            gE = gE_max * logistic_sig(pos_params[4])
+            gE = gE_max * logistic_sig(pos_params[4]) + gE_min
             gI = gI_max * logistic_sig(pos_params[5]) + gI_min
             NMDAratio = NMDA_max * logistic_sig(pos_params[6])
             
@@ -266,7 +310,7 @@ def sigmoid_params(pos_params, MULTI=True, OLDSTYLE=False):
             
             params = np.array([Jee, Jei, Jie, Jii, gE, gI, NMDAratio, plocal, sigEE, sigIE])
         else:
-            gE = gE_max * logistic_sig(pos_params[4])
+            gE = gE_max * logistic_sig(pos_params[4]) + gE_min
             gI = gI_max * logistic_sig(pos_params[5]) + gI_min
             NMDAratio = NMDA_max * logistic_sig(pos_params[6])
             
@@ -288,7 +332,7 @@ def sigmoid_params(pos_params, MULTI=True, OLDSTYLE=False):
 
         else:
             i2e = 1
-            gE = gE_max * logistic_sig(pos_params[4])
+            gE = gE_max * logistic_sig(pos_params[4]) + gE_min
             gI = gI_max * logistic_sig(pos_params[5]) + gI_min
             NMDAratio = NMDA_max * logistic_sig(pos_params[6])
 
