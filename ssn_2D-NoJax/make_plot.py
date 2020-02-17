@@ -529,7 +529,11 @@ def dyn_plots(t_range, v_dyn, sim_fs, sim_spect, anal_fs, spect, sim_f0, anal_f0
     maun_color = ['gold', 'purple', 'green', 'maroon', 'xkcd:sky blue']
     rates_color = ['xkcd:green', 'xkcd:maroon']
     
-    gs = gridspec.GridSpec(2,2, figure=fig_sim)
+    rE_dyn = 0.04*np.max(np.sum(v_dyn[::2, :], axis=0), 0)**2
+    rI_dyn = 0.04*np.max(np.sum(v_dyn[1::2, :]axis=0), 0)**2
+    rE = np.mean(rE_dyn[0, -2000])
+    
+    gs = gridspec.GridSpec(3,2, figure=fig_sim)
     
     ax_blank = fig_sim.add_subplot(gs[0,0:1])
     ax_blank.set_xticks([])
@@ -537,7 +541,7 @@ def dyn_plots(t_range, v_dyn, sim_fs, sim_spect, anal_fs, spect, sim_f0, anal_f0
     
     vE = np.sum(v_dyn[t_inds[0]:t_inds[1],::2,:], axis=1)
     
-    ax_volts = fig_sim.add_subplot(gs[0,1:])
+    ax_volts = fig_sim.add_subplot(gs[0,1])
     ax_volts.set_prop_cycle('color', con_color)
     ax_volts.plot(tt, vE)
     ax_volts.set_xlabel('Time (ms)',fontsize=fs)
@@ -547,6 +551,8 @@ def dyn_plots(t_range, v_dyn, sim_fs, sim_spect, anal_fs, spect, sim_f0, anal_f0
     ax_volts.set_ylabel('LFP (a.u.)', fontsize=fs)
     ax_volts.legend(['C = 0', 'C = 25', 'C = 50', 'C = 100'], frameon=False, loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=4, fontsize=ls)
     ax_volts.set_ylim(top = 1.2*np.max(vE))
+    
+    ax_rates = fig_sim.add_subplot(gs[0, 2])
     
     f_inds = np.where(sim_fs > np.min(anal_fs), sim_fs, 0)
     f_inds = np.where(sim_fs< np.max(anal_fs), f_inds, 0)
