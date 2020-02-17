@@ -2,6 +2,7 @@ import ssn_multi_probes
 from util import find_params_to_sigmoid
 
 import jax.numpy as np
+import numpy as onp
 import scipy.io as sio
 
 aa = sio.loadmat('hand_selected_ConEffect_1_23.mat')
@@ -19,20 +20,30 @@ Jxi_max = W0*1.5 * .5 - Jxi_min
 
 # extract all parameters as 1-dim arrays
 Plocal = aa['Params']['Plocal'][0,0][0]
-Jee = aa['Params']['Jee'][0, 0][:,0]
-Jei = np.abs(aa['Params']['Jei'][0, 0][:,0]) #MATLAB had these defined as negative
-Jie = aa['Params']['Jie'][0, 0][:,0]
-Jii = np.abs(aa['Params']['Jii'][0, 0][:,0]) #MATLAB had these defined as negative
+Jee = aa['Params']['Jee'][0, 0][:,0]/psi
+Jei = np.abs(aa['Params']['Jei'][0, 0][:,0])/psi #MATLAB had these defined as negative
+Jie = aa['Params']['Jie'][0, 0][:,0]/psi
+Jii = np.abs(aa['Params']['Jii'][0, 0][:,0])/psi #MATLAB had these defined as negative
 I2E = aa['Params']['I2E'][0,0][0]
 sigEE = aa['Params']['sigEE'][0,0][:,0]
 sigIE = aa['Params']['sigIE'][0,0][:,0]
 
 #convert old ranges to new
 J_max = 3
-Jee = (Jee/psi)*(Jxe_max/J_max) + Jxe_min
-Jei = (Jei/psi)*(Jxi_max/J_max) + Jxi_min
-Jie = (Jie/psi)*(Jxe_max/J_max) + Jxe_min
-Jii = (Jii/psi)*(Jxe_max/J_max) + Jxi_min
+
+Jee = onp.asarray(Jee)
+Jei = onp.asarray(Jei)
+Jie = onp.asarray(Jie)
+Jii = onp.asarray(Jii)
+
+Jee = onp.where(Jee > Jxe_max, 0.1 * Jxe_min + 0.9 * Jxe_max, Jee)
+Jee = onp.where(Jee < Jxe_min, 0.9 * Jxe_min + 0.1 * Jxe_max, Jee)
+Jei = onp.where(Jei > Jxi_max, 0.1 * Jxi_min + 0.9 * Jxi_max, Jei)
+Jei = onp.where(Jei < Jxi_min, 0.9 * Jxi_min + 0.1 * Jxi_max, Jei)
+Jie = onp.where(Jie > Jxe_max, 0.1 * Jxe_min + 0.9 * Jxe_max, Jie)
+Jie = onp.where(Jie < Jxe_min, 0.9 * Jxe_min + 0.1 * Jxe_max, Jie)
+Jii = onp.where(Jii > Jxi_max, 0.1 * Jxi_min + 0.9 * Jxi_max, Jii)
+Jii = onp.where(Jii < Jxi_min, 0.9 * Jxi_min + 0.1 * Jxi_max, Jii)
 
 #hyper Params
 diffPS = False
@@ -66,8 +77,8 @@ min_loss_ind = 0
 for rgi in real_good_inds:
     fname = 'newRange_'+str(rgi)+'_diffPS_'+dps+'_GT_'+gt+'_SI_'+si+'_lamSS_'+str(lamSS)+'.pdf'
     hyper_params = {'diffPS':diffPS, 'ground_truth':ground_truth, 'OLDSTYLE':OLDSTYLE, 'SI':SI, 'fname':fname, 'lamSS':lamSS}
-
-    params_init = np.array([Jee[rgi]/psi, Jei[rgi]/psi, Jie[rgi]/psi, Jii[rgi]/psi, g0, g0*I2E[rgi], 0.1, Plocal[rgi], Plocal[rgi], sigEE[rgi], sigIE[rgi]])
+    
+    params_init = np.array([Jee[rgi], Jei[rgi], Jie[rgi], Jii[rgi], g0, g0*I2E[rgi], 0.1, Plocal[rgi], Plocal[rgi], sigEE[rgi], sigIE[rgi]])
     params_init = find_params_to_sigmoid(params_init, MULTI=True, OLDSTYLE=OLDSTYLE)
 
     _, _, _, loss_t = ssn_multi_probes.bfgs_multi_gamma(params_init, hyper_params)
