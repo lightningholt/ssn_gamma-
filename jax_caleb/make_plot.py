@@ -371,7 +371,8 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
         probe_dist = dx * np.arange(probes)
         
 
-        GaborSigma = 0.3*np.max(radii)
+        #GaborSigma = 0.3*np.max(radii)
+        GaborSigma = 0.5
         Gabor_Cons = 100*np.exp(- probe_dist**2/2/GaborSigma**2);
         #print(Gabor_Cons)
 
