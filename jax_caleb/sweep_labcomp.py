@@ -13,9 +13,9 @@ Wconv = 1
 
 W0 = 1.8
 Jxe_min = W0*.5
-Jxe_max = W0*1.5 - Jxe_min
+Jxe_max = W0*1.5 
 Jxi_min = W0*.5 * .5
-Jxi_max = W0*1.5 * .5 - Jxi_min
+Jxi_max = W0*1.5 * .5
 
 
 # extract all parameters as 1-dim arrays
@@ -78,7 +78,7 @@ for rgi in real_good_inds:
     fname = 'newRange_'+str(rgi)+'_diffPS_'+dps+'_GT_'+gt+'_SI_'+si+'_lamSS_'+str(lamSS)+'.pdf'
     hyper_params = {'diffPS':diffPS, 'ground_truth':ground_truth, 'OLDSTYLE':OLDSTYLE, 'SI':SI, 'fname':fname, 'lamSS':lamSS}
     
-    params_init = np.array([Jee[rgi], Jei[rgi], Jie[rgi], Jii[rgi], g0, g0*I2E[rgi], 0.1, Plocal[rgi], Plocal[rgi], sigEE[rgi], sigIE[rgi]])
+    params_init = np.array([Jee[rgi], Jei[rgi], Jie[rgi], Jii[rgi], g0, g0*I2E[rgi], 0.4, Plocal[rgi], Plocal[rgi], sigEE[rgi], sigIE[rgi]])
     params_init = find_params_to_sigmoid(params_init, MULTI=True, OLDSTYLE=OLDSTYLE)
 
     _, _, _, loss_t = ssn_multi_probes.bfgs_multi_gamma(params_init, hyper_params)
