@@ -40,7 +40,7 @@ tauI = 10 # in ms
 psi = 0.774
 
 t_scale = 1
-tau_s = np.array([3, 5, 100])*t_scale #in ms, AMPA, GABA, NMDA current decay time constants
+tau_s = np.array([5, 7, 100])*t_scale #in ms, AMPA, GABA, NMDA current decay time constants
 # NMDAratio = 0.4 #NMDA strength as a fraction of E synapse weight
 
 # define the network spatial parameters. Gridsizedeg is the key that determines everything. MagnFactor is biologically observed to be ~2mm/deg. Gridsizedeg = 2 and gridperdeg = 5 means that the network is 11 x 11 neurons (2*5 + 1 x 2*5 + 1)
