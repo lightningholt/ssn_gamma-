@@ -374,9 +374,10 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
         probe_dist = dx * np.arange(probes)
         
 
-        GaborSigma = 0.3*np.max(radii)
+        #GaborSigma = 0.3*np.max(radii)
+        GaborSigma = 0.5
         Gabor_Cons = 100*np.exp(- probe_dist**2/2/GaborSigma**2);
-        print(Gabor_Cons)
+        #print(Gabor_Cons)
 
 #         fit_f0 = np.interp(Gabor_Cons, contrasts[1:], obs_f0[:3]) #contrast[1:] means I'm not looking at 0 contrast, also why I stop at [:3] cause indices greater than 3 are for the Gabor and Maunsell effect.
 #         ax_maun_f0.plot(RR, fit_f0,'gray')
@@ -530,7 +531,7 @@ def dyn_plots(t_range, v_dyn, sim_fs, sim_spect, anal_fs, spect, sim_f0, anal_f0
     rates_color = ['xkcd:green', 'xkcd:maroon']
     
     rE_dyn = 0.04*np.max(np.sum(v_dyn[::2, :], axis=0), 0)**2
-    rI_dyn = 0.04*np.max(np.sum(v_dyn[1::2, :]axis=0), 0)**2
+    rI_dyn = 0.04*np.max(np.sum(v_dyn[1::2, :], axis=0), 0)**2
     rE = np.mean(rE_dyn[0, -2000])
     
     gs = gridspec.GridSpec(3,2, figure=fig_sim)
