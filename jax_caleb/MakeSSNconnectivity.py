@@ -176,7 +176,7 @@ def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWi
     Contrasts = np.hstack((contrasts, np.ones(len(r_cent))*np.max(contrasts))) # need to add one for Gabor condition, but I would subtract one to not double up the C= 100 R= max condition
     
     gridsize = OMap.shape
-    dx = gridsizedeg/gridsize[0]
+    dx = gridsizedeg/gridsize[0] # dx is degrees between neurons
     
     Mid1 = int(np.floor(gridsize[0]/2))
     Mid2 = int(np.floor(gridsize[1]/2))
@@ -192,8 +192,9 @@ def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWi
     
     RFdecay = 0.8/2 #biologic decay is 0.8 mm, magfactor =2 mm/deg 
     #RFdecay = dx
-    GaborSigma = 0.3*np.max(r_cent) 
-
+    #GaborSigma = 0.3*np.max(r_cent) 
+    GaborSigma = 0.5
+    
     x0 = X[Mid1, Mid2]
     y0 = Y[Mid1, Mid2]
 
