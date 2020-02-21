@@ -243,7 +243,7 @@ def loss(params, probes, lamSS = 2, SI = True, ground_truth = True, diffPS = Fal
     #PS_inds = np.arange(len(con_inds)) #just Contrast effect
     
     suppression_index_loss = losses.loss_rates_SurrSupp(r_fp[trgt, rad_inds],  SI = SI) # the -1 is to not include the gabor
-        
+    print(suppression_index_loss)
     
     if CONVG:
         #spect = spect/np.mean(spect)
