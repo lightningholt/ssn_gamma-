@@ -46,10 +46,10 @@ Jii = onp.where(Jii > Jxi_max, 0.1 * Jxi_min + 0.9 * Jxi_max, Jii)
 Jii = onp.where(Jii < Jxi_min, 0.9 * Jxi_min + 0.1 * Jxi_max, Jii)
 
 #hyper Params
-diffPS = False
+diffPS = True
 ground_truth = False
 OLDSTYLE = False
-lamSS = 10
+lamSS = 100
 SI = True
 psi = 0.774 *np.pi
 
@@ -75,7 +75,8 @@ min_loss = 100
 min_loss_ind = 0
 
 for rgi in real_good_inds:
-    fname = 'newRange_'+str(rgi)+'_diffPS_'+dps+'_GT_'+gt+'_SI_'+si+'_lamSS_'+str(lamSS)+'.pdf'
+#     fname = 'newRange_'+str(rgi)+'_diffPS_'+dps+'_GT_'+gt+'_SI_'+si+'_lamSS_'+str(lamSS)+'.pdf'
+    fname = 'sigRF_shrunk_'+str(rgi)+'_diffPS_'+dps+'_GT_'+gt+'_SI_'+si+'_lamSS_'+str(lamSS)+'.pdf'
     hyper_params = {'diffPS':diffPS, 'ground_truth':ground_truth, 'OLDSTYLE':OLDSTYLE, 'SI':SI, 'fname':fname, 'lamSS':lamSS}
     
     params_init = np.array([Jee[rgi], Jei[rgi], Jie[rgi], Jii[rgi], g0, g0*I2E[rgi], 0.4, Plocal[rgi], Plocal[rgi], sigEE[rgi], sigIE[rgi]])
