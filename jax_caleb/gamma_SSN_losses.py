@@ -91,7 +91,8 @@ def loss_MaunCon_spect(fs, spect, con_inds = np.arange(9), ground_truth = True, 
         spect = np.real(spect)/(np.mean(np.real(spect)) + epsilon)
     
 
-    spect_loss = np.mean((target_spect - spect) ** 2) #MSE
+    #spect_loss = np.mean((target_spect - spect) ** 2) #MSE
+    spect_loss = np.mean(np.abs(target_spect - spect)) #MAE - mean absolute error
     
     return spect_loss, target_spect
 
