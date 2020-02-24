@@ -4,6 +4,7 @@ import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 import numpy as np
 from scipy.interpolate import interp1d
+import SSN_classes
 
 
 def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, target_rates, initial_spect=None, initial_rates= None, lower_bound = 0, upper_bound = 80, fname = None):
@@ -512,7 +513,7 @@ def peak_hists(df0, dhw, params=None):
         
     return fig_combined
     
-def dyn_plots(t_range, v_dyn, sim_fs, sim_spect, anal_fs, spect, sim_f0, anal_f0):
+def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, anal_f0):
     
     fs = 18
     ls = 11
@@ -527,17 +528,33 @@ def dyn_plots(t_range, v_dyn, sim_fs, sim_spect, anal_fs, spect, sim_f0, anal_f0
     fig_sim = plt.figure(8, figsize=(12,8), constrained_layout=True)
     con_color =  ['black', 'blue', 'green', 'red']
     maun_color = ['gold', 'purple', 'green', 'maroon', 'xkcd:sky blue']
-    rates_color = ['xkcd:green', 'xkcd:maroon']
+    #rates_color = ['xkcd:orange', 'tab:cyan']
+    rates_color = ['xkcd:orange', 'darkmagenta']
     
-    rE_dyn = 0.04*np.max(np.sum(v_dyn[::2, :], axis=0), 0)**2
-    rI_dyn = 0.04*np.max(np.sum(v_dyn[1::2, :]axis=0), 0)**2
-    rE = np.mean(rE_dyn[0, -2000])
-    
-    gs = gridspec.GridSpec(3,2, figure=fig_sim)
+    gs = gridspec.GridSpec(2,3, figure=fig_sim)
     
     ax_blank = fig_sim.add_subplot(gs[0,0:1])
     ax_blank.set_xticks([])
     ax_blank.set_yticks([])
+    ax_fcn = ax_blank.inset_axes([0.52, 0.07, 0.43, 0.43])
+    
+    n = 2
+    k = 0.04
+    Ne = 1
+    Ni = 0
+    tau_vec = 1
+    W = 1
+    ssn = SSN_classes._SSN_Base(n, k, Ne, Ni, tau_vec, W)
+    x = np.arange(-1, 3, 0.1)
+
+    ax_fcn.plot(x, ssn.powlaw(x), 'k', lw= 2.25)
+    ax_fcn.set_xlabel('Input')
+    ax_fcn.set_xticks([])
+    ax_fcn.set_ylabel('Response')
+    ax_fcn.set_yticks([])
+    ax_fcn.set_title(r' $f(x) = k \lfloor x \rfloor ^n$ ')
+    
+    
     
     vE = np.sum(v_dyn[t_inds[0]:t_inds[1],::2,:], axis=1)
     
@@ -549,10 +566,15 @@ def dyn_plots(t_range, v_dyn, sim_fs, sim_spect, anal_fs, spect, sim_f0, anal_f0
 #     ax_volts.set_xticks(fontsize=ss)
 #     ax_volts.set_yticks(fontsize=ss)
     ax_volts.set_ylabel('LFP (a.u.)', fontsize=fs)
-    ax_volts.legend(['C = 0', 'C = 25', 'C = 50', 'C = 100'], frameon=False, loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=4, fontsize=ls)
+    ax_volts.legend(['C = 0', 'C = 25', 'C = 50', 'C = 100'], frameon=False, loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=2, fontsize=ls)
     ax_volts.set_ylim(top = 1.2*np.max(vE))
     
     ax_rates = fig_sim.add_subplot(gs[0, 2])
+    ax_rates.set_prop_cycle('color', rates_color)
+    ax_rates.plot(contrasts, r_fp, lw=2.25)
+    ax_rates.legend(['E', 'I'])
+    ax_rates.set_ylabel('Firing rate (Hz)', fontsize=fs)
+    ax_rates.set_xlabel('Contrast', fontsize=fs)
     
     f_inds = np.where(sim_fs > np.min(anal_fs), sim_fs, 0)
     f_inds = np.where(sim_fs< np.max(anal_fs), f_inds, 0)
@@ -561,26 +583,30 @@ def dyn_plots(t_range, v_dyn, sim_fs, sim_spect, anal_fs, spect, sim_f0, anal_f0
     new_fs = sim_fs[f_inds[0]]
     new_sim_spect = sim_spect[f_inds[0], :]/np.mean(sim_spect[f_inds[0], :])
     
-    ax_comp = fig_sim.add_subplot(gs[1, 1:])
+    ax_comp = fig_sim.add_subplot(gs[1, 1])
     ax_comp.set_prop_cycle('color', con_color)
     sim = ax_comp.plot(new_fs, new_sim_spect, 'o')
     anal = ax_comp.plot(anal_fs, spect)
     ax_comp.set_xlabel('Frequency (Hz)', fontsize=fs)
     ax_comp.set_ylabel('Power spectrum (a.u.)', fontsize=fs)
-    ax_comp.set_ylim(top=1.5*np.max(new_sim_spect))
+    ax_comp.set_ylim(top=1.3*np.max(new_sim_spect))
     
     sim = mlines.Line2D([], [], linestyle='none', color='gray', marker='o', label='Simulated')
     anal = mlines.Line2D([], [], color='gray', label='Linear approximation')
     ax_comp.legend(handles=[sim, anal], fontsize=ls, loc='upper left')
     
-    ax_inset = ax_comp.inset_axes([0.7, 0.7, 0.25, 0.25])
+    #ax_inset = ax_comp.inset_axes([0.7, 0.7, 0.25, 0.25])
+    ax_inset = fig_sim.add_subplot(gs[1,2])
     for cc in range(1, cons):
-        ax_inset.plot(contrasts[cc], sim_f0[cc-1],'o', color=con_color[cc])
-        ax_inset.plot(contrasts[cc], anal_f0[cc],'*', color=con_color[cc])
-    ax_inset.set_xlabel('Contrasts')
+        ax_inset.plot(contrasts[cc], sim_f0[cc-1],'o', markersize=10, color=con_color[cc])
+        ax_inset.plot(contrasts[cc], anal_f0[cc],'*', markersize=12, color=con_color[cc])
+    ax_inset.set_xlabel('Contrast')
     ax_inset.set_xticks(contrasts)
     ax_inset.spines['right'].set_visible(False)    
     ax_inset.spines['top'].set_visible(False)
+    sim = mlines.Line2D([], [], linestyle='none', color='gray', marker='o', markersize=10, label='Simulated')
+    anal = mlines.Line2D([], [], linestyle='none', color='gray', marker='*', markersize=12, label='Linear approximation')
+    ax_inset.legend(handles=[sim, anal], fontsize=ls, loc='upper left')
         #ax_inset.set_ylabel('Peak frequency (Hz)')
     
     return fig_sim
