@@ -553,7 +553,8 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     ax_fcn.set_ylabel('Response')
     ax_fcn.set_yticks([])
     ax_fcn.set_title(r' $f(x) = k \lfloor x \rfloor ^n$ ')
-    
+    ax_fcn.spines['right'].set_visible(False)
+    ax_fcn.spines['top'].set_visible(False)
     
     
     vE = np.sum(v_dyn[t_inds[0]:t_inds[1],::2,:], axis=1)
@@ -566,15 +567,17 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
 #     ax_volts.set_xticks(fontsize=ss)
 #     ax_volts.set_yticks(fontsize=ss)
     ax_volts.set_ylabel('LFP (a.u.)', fontsize=fs)
-    ax_volts.legend(['C = 0', 'C = 25', 'C = 50', 'C = 100'], frameon=False, loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=2, fontsize=ls)
+    ax_volts.legend(['C = 0', 'C = 25', 'C = 50', 'C = 100'], frameon=True, loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=2, fontsize=ls)
     ax_volts.set_ylim(top = 1.2*np.max(vE))
     
     ax_rates = fig_sim.add_subplot(gs[0, 2])
     ax_rates.set_prop_cycle('color', rates_color)
     ax_rates.plot(contrasts, r_fp, lw=2.25)
-    ax_rates.legend(['E', 'I'])
+    ax_rates.legend(['Excitatory cell', 'Inhibitory cell'], fontsize=ls)
     ax_rates.set_ylabel('Firing rate (Hz)', fontsize=fs)
     ax_rates.set_xlabel('Contrast', fontsize=fs)
+    ax_rates.spines['right'].set_visible(False)    
+    ax_rates.spines['top'].set_visible(False)
     
     f_inds = np.where(sim_fs > np.min(anal_fs), sim_fs, 0)
     f_inds = np.where(sim_fs< np.max(anal_fs), f_inds, 0)
@@ -593,7 +596,7 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     
     sim = mlines.Line2D([], [], linestyle='none', color='gray', marker='o', label='Simulated')
     anal = mlines.Line2D([], [], color='gray', label='Linear approximation')
-    ax_comp.legend(handles=[sim, anal], fontsize=ls, loc='upper left')
+    ax_comp.legend(handles=[sim, anal], fontsize=ls, loc='upper center')
     
     #ax_inset = ax_comp.inset_axes([0.7, 0.7, 0.25, 0.25])
     ax_inset = fig_sim.add_subplot(gs[1,2])
