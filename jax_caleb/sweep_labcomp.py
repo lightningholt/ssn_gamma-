@@ -4,6 +4,7 @@ from util import find_params_to_sigmoid
 import jax.numpy as np
 import numpy as onp
 import scipy.io as sio
+import time
 
 aa = sio.loadmat('hand_selected_ConEffect_1_23.mat')
 
@@ -49,7 +50,7 @@ Jii = onp.where(Jii < Jxi_min, 0.9 * Jxi_min + 0.1 * Jxi_max, Jii)
 diffPS = True
 ground_truth = False
 OLDSTYLE = False
-lamSS = 100
+lamSS = 10
 SI = True
 psi = 0.774 *np.pi
 
@@ -74,6 +75,8 @@ real_good_inds = np.array([123, 179, 222, 263, 287, 341, 385, 406, 451, 456])
 min_loss = 100
 min_loss_ind = 0
 
+t0 = time.time()
+
 for rgi in real_good_inds:
 #     fname = 'newRange_'+str(rgi)+'_diffPS_'+dps+'_GT_'+gt+'_SI_'+si+'_lamSS_'+str(lamSS)+'.pdf'
     fname = 'sigRF_shrunk_'+str(rgi)+'_diffPS_'+dps+'_GT_'+gt+'_SI_'+si+'_lamSS_'+str(lamSS)+'.pdf'
@@ -90,3 +93,6 @@ for rgi in real_good_inds:
 
 Results = {'min_loss':min_loss, 'min_loss_ind':min_loss_ind}
 sio.savemat('labcompSweep.mat', Results)
+
+tf = time.time - t0
+print(tf)
