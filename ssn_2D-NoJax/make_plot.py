@@ -528,8 +528,8 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     fig_sim = plt.figure(8, figsize=(12,8), constrained_layout=True)
     con_color =  ['black', 'blue', 'green', 'red']
     maun_color = ['gold', 'purple', 'green', 'maroon', 'xkcd:sky blue']
-    #rates_color = ['xkcd:orange', 'tab:cyan']
-    rates_color = ['xkcd:orange', 'darkmagenta']
+    rates_color = ['xkcd:orange', 'tab:cyan']
+    #rates_color = ['xkcd:orange', 'darkmagenta']
     
     gs = gridspec.GridSpec(2,3, figure=fig_sim)
     
