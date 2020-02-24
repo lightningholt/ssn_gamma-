@@ -44,7 +44,7 @@ tau_s = np.array([5, 7, 100])*t_scale #in ms, AMPA, GABA, NMDA current decay tim
 # NMDAratio = 0.4 #NMDA strength as a fraction of E synapse weight
 
 # define the network spatial parameters. Gridsizedeg is the key that determines everything. MagnFactor is biologically observed to be ~2mm/deg. Gridsizedeg = 2 and gridperdeg = 5 means that the network is 11 x 11 neurons (2*5 + 1 x 2*5 + 1)
-gridsizedeg = 2
+gridsizedeg = 3.2
 gridperdeg = 5
 gridsize = round(gridsizedeg*gridperdeg) + 1
 magnFactor = 2 #mm/deg
@@ -54,11 +54,11 @@ dx = 2*gridsizedeg/(gridsize -1)
 hyper_col = 8/magnFactor * 10
 
 #define stimulus conditions r_cent = Radius of the stim, contrasts = contrasts. 
-dradius = gridsizedeg/8
-r_cent = np.arange(dradius, round(gridsizedeg/2)+dradius, dradius)
-# r_cent = np.array([0.3, 0.6, 0.9, 1.2, 1.5])
-#r_cent = np.array([gridsizedeg/2])
-# r_cent = np.array([0.9750])
+# dradius = gridsizedeg/8
+# r_cent = np.arange(dradius, round(gridsizedeg/2)+dradius, dradius)
+dradius = 0.25 #degrees
+r_cent = np.arange(dradius, 1+dradius, dradius) #degrees
+
 contrasts = np.array([0, 25, 50, 100])
 #contrasts = np.array([100])
 
