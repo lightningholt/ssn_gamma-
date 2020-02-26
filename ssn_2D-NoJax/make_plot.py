@@ -5,6 +5,18 @@ import matplotlib.lines as mlines
 import numpy as np
 from scipy.interpolate import interp1d
 import SSN_classes
+import matplotlib as mpl
+
+mpl.rcParams.update({'font.size': 12})
+mpl.rcParams.update({'axes.linewidth': 2.25}) 
+mpl.rcParams['xtick.major.size'] = 5
+mpl.rcParams['xtick.major.width'] = 2
+mpl.rcParams['ytick.major.size'] = 5
+mpl.rcParams['ytick.major.width'] = 2
+mpl.rcParams['axes.spines.right'] = False
+mpl.rcParams['axes.spines.top'] = False
+mpl.rcParams['font.sans-serif'] = "Arial"
+mpl.rcParams['font.family'] = "sans-serif"
 
 
 def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, target_rates, initial_spect=None, initial_rates= None, lower_bound = 0, upper_bound = 80, fname = None):
@@ -537,6 +549,11 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     ax_blank.set_xticks([])
     ax_blank.set_yticks([])
     ax_fcn = ax_blank.inset_axes([0.52, 0.07, 0.43, 0.43])
+    ax_blank.text(-0.1, 1.0, 'A', transform=ax_blank.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_blank.spines['right'].set_visible(False)
+    ax_blank.spines['top'].set_visible(False)
+    ax_blank.spines['left'].set_visible(False)
+    ax_blank.spines['bottom'].set_visible(False)
     
     n = 2
     k = 0.04
@@ -567,17 +584,20 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
 #     ax_volts.set_xticks(fontsize=ss)
 #     ax_volts.set_yticks(fontsize=ss)
     ax_volts.set_ylabel('LFP (a.u.)', fontsize=fs)
-    ax_volts.legend(['C = 0', 'C = 25', 'C = 50', 'C = 100'], frameon=True, loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=2, fontsize=ls)
+    ax_volts.legend(['C = 0', 'C = 25', 'C = 50', 'C = 100'], frameon=True, loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=2, fontsize=ls, shadow=True)
     ax_volts.set_ylim(top = 1.2*np.max(vE))
+    ax_volts.text(-0.1, 1.0, 'B', transform=ax_volts.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     
     ax_rates = fig_sim.add_subplot(gs[0, 2])
     ax_rates.set_prop_cycle('color', rates_color)
     ax_rates.plot(contrasts, r_fp, lw=2.25)
-    ax_rates.legend(['Excitatory cell', 'Inhibitory cell'], fontsize=ls)
+    ax_rates.legend(['Excitatory cell', 'Inhibitory cell'], fontsize=ls, shadow=True)
     ax_rates.set_ylabel('Firing rate (Hz)', fontsize=fs)
+    ax_rates.set_xticks(contrasts)
     ax_rates.set_xlabel('Contrast', fontsize=fs)
     ax_rates.spines['right'].set_visible(False)    
     ax_rates.spines['top'].set_visible(False)
+    ax_rates.text(-0.1, 1.0, 'C', transform=ax_rates.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     
     f_inds = np.where(sim_fs > np.min(anal_fs), sim_fs, 0)
     f_inds = np.where(sim_fs< np.max(anal_fs), f_inds, 0)
@@ -586,6 +606,16 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     new_fs = sim_fs[f_inds[0]]
     new_sim_spect = sim_spect[f_inds[0], :]/np.mean(sim_spect[f_inds[0], :])
     
+    #recreate/repost Maunsell Data
+    ax_recreate = fig_sim.add_subplot(gs[1,0])
+    ax_recreate.text(-0.1, 1.0, 'D', transform=ax_recreate.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_recreate.set_xticks([])
+    ax_recreate.set_yticks([])
+    ax_recreate.spines['right'].set_visible(False)
+    ax_recreate.spines['top'].set_visible(False)
+    ax_recreate.spines['left'].set_visible(False)
+    ax_recreate.spines['bottom'].set_visible(False)
+    
     ax_comp = fig_sim.add_subplot(gs[1, 1])
     ax_comp.set_prop_cycle('color', con_color)
     sim = ax_comp.plot(new_fs, new_sim_spect, 'o')
@@ -593,23 +623,28 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     ax_comp.set_xlabel('Frequency (Hz)', fontsize=fs)
     ax_comp.set_ylabel('Power spectrum (a.u.)', fontsize=fs)
     ax_comp.set_ylim(top=1.3*np.max(new_sim_spect))
+    ax_comp.text(-0.1, 1.0, 'E', transform=ax_comp.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     
     sim = mlines.Line2D([], [], linestyle='none', color='gray', marker='o', label='Simulated')
     anal = mlines.Line2D([], [], color='gray', label='Linear approximation')
-    ax_comp.legend(handles=[sim, anal], fontsize=ls, loc='upper center')
+    ax_comp.legend(handles=[sim, anal], fontsize=ls, loc='upper center',  shadow=True)
     
     #ax_inset = ax_comp.inset_axes([0.7, 0.7, 0.25, 0.25])
     ax_inset = fig_sim.add_subplot(gs[1,2])
     for cc in range(1, cons):
         ax_inset.plot(contrasts[cc], sim_f0[cc-1],'o', markersize=10, color=con_color[cc])
         ax_inset.plot(contrasts[cc], anal_f0[cc],'*', markersize=12, color=con_color[cc])
-    ax_inset.set_xlabel('Contrast')
+    ax_inset.set_xlabel('Contrast', fontsize=fs)
+    ax_inset.set_ylabel('Peak frequency (Hz)', fontsize=fs)
     ax_inset.set_xticks(contrasts)
     ax_inset.spines['right'].set_visible(False)    
     ax_inset.spines['top'].set_visible(False)
     sim = mlines.Line2D([], [], linestyle='none', color='gray', marker='o', markersize=10, label='Simulated')
     anal = mlines.Line2D([], [], linestyle='none', color='gray', marker='*', markersize=12, label='Linear approximation')
-    ax_inset.legend(handles=[sim, anal], fontsize=ls, loc='upper left')
+    ax_inset.legend(handles=[sim, anal], fontsize=ls, loc='upper left',  shadow=True)
+    ax_inset.text(-0.1, 1.0, 'F', transform=ax_inset.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
         #ax_inset.set_ylabel('Peak frequency (Hz)')
+    
+    plt.tight_layout()
     
     return fig_sim
