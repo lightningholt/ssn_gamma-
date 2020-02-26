@@ -70,7 +70,8 @@ if SI:
 else:
     si =str(0)
 
-real_good_inds = np.array([123, 179, 222, 263, 287, 341, 385, 406, 451, 456])
+# real_good_inds = np.array([123, 179, 222, 263, 287, 341, 385, 406, 451, 456])
+real_good_inds = np.array([222, 263, 287, 341, 385, 406, 451, 456])
 
 min_loss = 100
 min_loss_ind = 0
