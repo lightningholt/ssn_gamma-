@@ -30,7 +30,7 @@ tauI = 10 # in ms
 psi = 0.774 
 
 t_scale = 1
-tau_s = np.array([3, 5, 100])*t_scale #in ms, AMPA, GABA, NMDA current decay time constants
+tau_s = np.array([5, 7, 100])*t_scale #in ms, AMPA, GABA, NMDA current decay time constants
 
 contrasts = np.array([0, 25, 50, 100])
 cons = len(contrasts)
@@ -73,22 +73,22 @@ def noise_rates(params):
         rr_t[t_ind, :, :] = ssn.powlaw(v_dyn[t_ind, :, :].reshape((ssn.num_rcpt, ssn.N, -1)).sum(axis=0))
     
     rates_color = ['red', 'blue']
-    fig_rates, ax = plt.subplots(2,2, figsize=(10,10))
+#     fig_rates, ax = plt.subplots(2,2, figsize=(10,10))
 
     t_inds = np.arange(300,Nt)
 
-    for xx in range(2):
-        for yy in range(2):
-            r_ind = 2*xx+yy
-            print(r_ind)
-            ax[xx, yy].set_prop_cycle('color', rates_color)
-            ax[xx, yy].plot(tt[t_inds], rr_t[t_inds, :, r_ind], lw=2.25)
-            ax[xx, yy].plot(tt[t_inds], r_fp[:, r_ind]*np.ones(len(t_inds))[:,None], '--', lw=2.25)
-            tstr = 'C = '+str(contrasts[r_ind])
-            ax[xx,yy].set_title(tstr)
-            ax[xx,yy].set_xlabel('Time (ms)')
-            ax[xx,yy].set_ylabel('Firing rates (Hz)')
-            ax[xx,yy].legend(['E','I'])
+#     for xx in range(2):
+#         for yy in range(2):
+#             r_ind = 2*xx+yy
+#             print(r_ind)
+#             ax[xx, yy].set_prop_cycle('color', rates_color)
+#             ax[xx, yy].plot(tt[t_inds], rr_t[t_inds, :, r_ind], lw=2.25)
+#             ax[xx, yy].plot(tt[t_inds], r_fp[:, r_ind]*np.ones(len(t_inds))[:,None], '--', lw=2.25)
+#             tstr = 'C = '+str(contrasts[r_ind])
+#             ax[xx,yy].set_title(tstr)
+#             ax[xx,yy].set_xlabel('Time (ms)')
+#             ax[xx,yy].set_ylabel('Firing rates (Hz)')
+#             ax[xx,yy].legend(['E','I'])
 
     return r_fp, rr_t, v_dyn
     
@@ -176,3 +176,42 @@ def simulatedPS(r_fp, rr_t, v_dyn, dt, freq_res, windowing='none'):
         sim_power[:, cc] = power
     
     return sim_power, df, fs, M
+
+
+def ssn_PS(params, contrasts):
+    #params = sigmoid_params(pos_params, MULTI=False)
+    
+    #unpack parameters
+    Jee = params[0] * np.pi * psi
+    Jei = params[1] * np.pi * psi
+    Jie = params[2] * np.pi * psi
+    Jii = params[3] * np.pi * psi
+    
+    if len(params) < 6:
+        i2e = params[4]
+        gE = 1
+        gI = 1
+        NMDAratio = 0.4
+    else:
+        i2e = 1
+        gE = params[4]
+        gI = params[5]
+        NMDAratio = params[6]
+    
+    
+    cons = len(contrasts)
+
+    #J2x2 = np.array([[Jee, -Jei], [Jie,  -Jii]]) * np.pi * psi #np.array([[2.5, -1.3], [2.4,  -1.0]]) * np.pi * psi
+    #ssn = SSN_classes.SSN_2D_AMPAGABA(tau_s, NMDAratio, n,k,tauE,tauI, *np.abs(J2x2).ravel())
+
+    ssn = SSN_classes.SSN_2D_AMPAGABA(tau_s, NMDAratio, n,k, tauE, tauI, Jee, Jei, Jie, Jii)
+    
+    r_init = np.zeros([ssn.N, len(contrasts)])
+    spont_input= np.array([1,1]) * 2
+    inp_vec = np.array([[gE],[gI]]) * contrasts + spont_input[:, None]
+    
+    r_fp, CONVG = ssn.fixed_point_r(inp_vec, r_init=r_init, Tmax=Tmax, dt=dt, xtol=xtol)
+    
+    spect, fs, f0, Jacob = SSN_power_spec.linear_PS_sameTime(ssn, r_fp, SSN_power_spec.NoisePars(), freq_range, fnums, cons)
+    
+    return spect, fs, f0, r_fp, 
