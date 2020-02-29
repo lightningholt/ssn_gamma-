@@ -4,7 +4,10 @@ import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 import numpy as np
 from scipy.interpolate import interp1d
+import matplotlib as mpl
 
+mpl.rcParams['axes.spines.right'] = False
+mpl.rcParams['axes.spines.top'] = False
 
 def power_spect_rates_plot(fs, obs_spect, target_spect, contrasts, obs_rates, target_rates, initial_spect=None, initial_rates= None, lower_bound = 0, upper_bound = 80, fname = None):
     
@@ -598,6 +601,7 @@ def hists_fig2(rs, lams, min_freq=10, dfdc=False):
     inds = np.imag(lams).argmax(axis=2) 
     gamma_HW = -np.real(lams)[np.arange(lams.shape[0])[:,None], np.arange(lams.shape[1])[None,:], inds] *1000/2/np.pi
     min_freq = 10 #Hz
+    min_width = 0
     
     con_color = ['black', 'blue','green','red'] #colors for contrasts 0, 25, 50, 100,
     shift_colors = ['tab:cyan', 'gold'] #blue and green make cyan, red and green make yellow
@@ -639,6 +643,7 @@ def hists_fig2(rs, lams, min_freq=10, dfdc=False):
         
         f0 = max_imag_lams[max_imag_lams[:,c]>min_freq,c]
         hw = gamma_HW[max_imag_lams[:,c]>min_freq,c]
+        hw = hw[hw > min_width]
         axf0.hist(f0, nbins, color=con_color[c], **histstyle)
         axf0.hist(f0, nbins, color=con_color[c], **histstyle_nb)
         axhw.hist(hw, nbins, color=con_color[c], **histstyle)
@@ -679,12 +684,12 @@ def hists_fig2(rs, lams, min_freq=10, dfdc=False):
     axErates.set_xlabel('Firing rate (Hz)', fontsize=ss)
     axErates.set_ylabel(y_label, fontsize=ss)
     axErates.set_title('Excitatory cell', fontsize=fs)
-    p25 = mpatches.Rectangle([1,1], 1, 1, facecolor=con_color[1], edgecolor=con_color[1], alpha=0.3, lw=0.1, label='C = 25')
-    p50 = mpatches.Rectangle([1,1], 1, 1, facecolor=con_color[2], edgecolor=con_color[2], alpha=0.3, lw=0.1, label='C = 50')
-    p100 = mpatches.Rectangle([1,1], 1, 1, facecolor=con_color[3], edgecolor=con_color[3], alpha=0.3, lw=0.1, label='C = 100')
-    c25 = mlines.Line2D([], [], color=con_color[1], label='C = 25')
-    c50 = mlines.Line2D([], [], color=con_color[2], label='C = 50')
-    c100 = mlines.Line2D([], [], color=con_color[3], label='C = 100')
+    p25 = mpatches.Rectangle([1,1], 1, 1, facecolor=con_color[1], edgecolor=con_color[1], alpha=0.3, lw=0.1, label=r'$c$ = 25')
+    p50 = mpatches.Rectangle([1,1], 1, 1, facecolor=con_color[2], edgecolor=con_color[2], alpha=0.3, lw=0.1, label=r'$c$ = 50')
+    p100 = mpatches.Rectangle([1,1], 1, 1, facecolor=con_color[3], edgecolor=con_color[3], alpha=0.3, lw=0.1, label=r'$c$ = 100')
+    c25 = mlines.Line2D([], [], color=con_color[1], label=r'$c$ = 25')
+    c50 = mlines.Line2D([], [], color=con_color[2], label=r'$c$ = 50')
+    c100 = mlines.Line2D([], [], color=con_color[3], label=r'$c$ = 100')
     axErates.legend(handles=[p25, p50, p100], frameon=False, ncol=1, fontsize=ls)
     axErates.text(x_text, y_text, 'A', transform=axErates.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     #axErates.legend(['C = 25', 'C = 50', 'C = 100'], frameon=False, loc='upper left', ncol=1, fontsize=ls)
@@ -708,10 +713,10 @@ def hists_fig2(rs, lams, min_freq=10, dfdc=False):
     
     axf0shifts.set_xlabel('$\Delta$Peak frequency (Hz)', fontsize=ss)
     axf0shifts.set_ylabel(y_label, fontsize=fs)
-    cdelta50 = mlines.Line2D([], [], color=shift_colors[0], label='$\Delta C =$50-25')
-    cdelta100 = mlines.Line2D([], [], color=shift_colors[1], label='$\Delta C =$100-50')
-    pdelta50 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[0], edgecolor=shift_colors[0], alpha=0.3, lw=0.1, label='$\Delta C =$50-25')
-    pdelta100 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[1], edgecolor=shift_colors[1], alpha=0.3, lw=0.1, label='$\Delta C =$100-50')
+    cdelta50 = mlines.Line2D([], [], color=shift_colors[0], label='$\Delta c =$50-25')
+    cdelta100 = mlines.Line2D([], [], color=shift_colors[1], label='$\Delta c =$100-50')
+    pdelta50 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[0], edgecolor=shift_colors[0], alpha=0.3, lw=0.1, label='$\Delta c =$50-25')
+    pdelta100 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[1], edgecolor=shift_colors[1], alpha=0.3, lw=0.1, label='$\Delta c =$100-50')
     axf0shifts.legend(handles=[pdelta50, pdelta100], fontsize=ls, frameon=False, loc='upper left')
     #axf0shifts.legend(['$\Delta C =$50-25', '$\Delta C =$100-50'], fontsize=ls, frameon=False)
     axf0shifts.set_title('Shift in gamma peak frequency', fontsize=fs)
