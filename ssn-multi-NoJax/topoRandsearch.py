@@ -27,6 +27,7 @@ class ssn_pars1():
     
     # define the network spatial parameters. Gridsizedeg is the key that determines everything. MagnFactor is biologically observed to be ~2mm/deg. Gridsizedeg = 2 and gridperdeg = 5 means that the network is 11 x 11 neurons (2*5 + 1 x 2*5 + 1)
     gridsizedeg = 3.2
+    #gridsizedeg = 2
     gridperdeg = 5
     gridsize = round(gridsizedeg*gridperdeg) + 1
     magnFactor = 2 #mm/deg
@@ -106,6 +107,8 @@ def ssn_PS(params, ssn_pars=ssn_pars1):
     psi = ssn_pars.psi
     tau_s = ssn_pars.tau_s
     spont_input = ssn_pars.spont_input
+    
+    print(ssn_pars.Ne, ssn_pars.Ni)
     
     W = make_conn.make_full_W(Plocal, Jee, Jei, Jie, Jii, sigEE, sigIE, ssn_pars.deltaD, ssn_pars.OMap, PlocalIE = PlocalIE)
     
