@@ -12,8 +12,8 @@ Tmax = 1000
 #power spectrum resolution and range
 # fnums = 30
 # freq_range = [15,100]
-fnums = 35
-freq_range = [0.1,100]
+fnums = 300
+freq_range = [0.1,150]
 
 #SSN parameters
 t_scale = 1
