@@ -284,9 +284,13 @@ def infl_find_peak_freq(fs, spect):
     hw = onp.empty((cons, nmaxpeaks))
     #err = 1 means that power spectrum was too inflecty, i.e. jagged
     err = onp.zeros((cons))
+    infpt1 = onp.empty((cons))
+    infpt2 = onp.empty((cons))
     
     f0[:] = onp.nan
     hw[:] = onp.nan
+    infpt1[:] = onp.nan
+    infpt2[:] = onp.nan
     
     #jj indexes number of max peaks
     jj = 0
@@ -330,6 +334,9 @@ def infl_find_peak_freq(fs, spect):
                     hw[cc[c], jj] = (fs[end_ind] - fs[start_ind])/2
 
                     jj+=1
+                    infpt1[cc[c]] = fs[start_ind]
+                    infpt2[cc[c]] = fs[end_ind]
+                    
                 else:
                     err[cc[c]] = 1
         else:
@@ -348,4 +355,4 @@ def infl_find_peak_freq(fs, spect):
             peak_ind = onp.nanargmax(f0[c])
             hw_out[c] = hw[c][peak_ind]
     
-    return f0_out, hw_out, err
+    return f0_out, hw_out, err, infpt1, infpt2
