@@ -589,17 +589,29 @@ def dyn_plots(t_range, v_dyn, sim_fs, sim_spect, anal_fs, spect, sim_f0, anal_f0
     
     return fig_sim
 
-def hists_fig2(rs, lams, min_freq=10, dfdc=False):
+def hists_fig2(rs, lams, min_freq=10, dfdc=False, ff = None, gg = None):
+    
+    '''
+    ff is peak frequency found using either infl or RM method. 
+    gg is peak width
+    '''
     
     fs = 18
     ls = 11
     ss = 15
     
     #max(axis=2) is because lams is a 6-dim vector for each contrast and instantiation
-    max_real_lams = np.real(lams).max(axis=2) *1000/2/np.pi #convert to Hz ( * 1000/2/np.pi)
-    max_imag_lams = np.imag(lams).max(axis=2) *1000/2/np.pi
-    inds = np.imag(lams).argmax(axis=2) 
-    gamma_HW = -np.real(lams)[np.arange(lams.shape[0])[:,None], np.arange(lams.shape[1])[None,:], inds] *1000/2/np.pi
+    if (ff is None and gg is None):
+        max_real_lams = np.real(lams).max(axis=2) *1000/2/np.pi #convert to Hz ( * 1000/2/np.pi)
+        max_imag_lams = np.imag(lams).max(axis=2) *1000/2/np.pi
+        inds = np.imag(lams).argmax(axis=2) 
+        gamma_HW = -np.real(lams)[np.arange(lams.shape[0])[:,None], np.arange(lams.shape[1])[None,:], inds] *1000/2/np.pi
+    else:
+        max_real_lams = gg
+        max_imag_lams = ff
+        gamma_HW = gg
+        print(max_imag_lams.shape)
+    
     min_freq = 10 #Hz
     min_width = 0
     
@@ -635,18 +647,21 @@ def hists_fig2(rs, lams, min_freq=10, dfdc=False):
     lbound = 0.7
     rbound = 1500
     
+    n_f0 = 1000*np.ones(nbins)
+    n_hw = 1000*np.ones(nbins)
+    
     for c in np.arange(1, cons):
 #         axErates.hist(np.log10(rs[:, c, 0]), nbins, color=con_color[c], **histstyle)
 #         axErates.hist(np.log10(rs[:, c, 0]), nbins, color=con_color[c], **histstyle_nb)
 #         axIrates.hist(np.log10(rs[:, c, 1]), nbins, color=con_color[c], **histstyle)
-#         axIrates.hist(np.log10(rs[:, c,1]), nbins, color=con_color[c], **histstyle_nb)
-        
+#         axIrates.hist(np.log10(rs[:, c,1]), nbins, color=con_color[c], **histstyle_nb)    
+    
         f0 = max_imag_lams[max_imag_lams[:,c]>min_freq,c]
         hw = gamma_HW[max_imag_lams[:,c]>min_freq,c]
-        hw = hw[hw > min_width]
-        axf0.hist(f0, nbins, color=con_color[c], **histstyle)
+        # hw = hw[hw > min_width]
+        n_f0temp, _, _ = axf0.hist(f0, nbins, color=con_color[c], **histstyle)
         axf0.hist(f0, nbins, color=con_color[c], **histstyle_nb)
-        axhw.hist(hw, nbins, color=con_color[c], **histstyle)
+        n_hwtemp, _, _ = axhw.hist(hw, nbins, color=con_color[c], **histstyle)
         axhw.hist(hw, nbins, color=con_color[c], **histstyle_nb)
         
         _, binsE = np.histogram(rs[:, c, 0], bins=nbins, density= True)
@@ -661,6 +676,11 @@ def hists_fig2(rs, lams, min_freq=10, dfdc=False):
         axIrates.hist(rs[:, c, 1], bins=logbinsI, color=con_color[c], **histstyle)
         axIrates.hist(rs[:, c,1], bins=logbinsI, color=con_color[c], **histstyle_nb)
         
+        if np.sum(n_f0temp) < np.sum(n_f0):
+            n_f0 = n_f0temp
+        if np.sum(n_hwtemp) < np.sum(n_hw):
+            n_hw = n_hwtemp
+            
         if c > 1:
             if not dfdc:
                 dhw = np.diff(gamma_HW[max_imag_lams[:,c]>min_freq,:],axis=1)[:,c-1]
@@ -728,4 +748,4 @@ def hists_fig2(rs, lams, min_freq=10, dfdc=False):
     axhwshifts.text(x_text, y_text, 'F', transform=axhwshifts.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     #axhwshifts.legend(['$\Delta C =$50-25', '$\Delta C =$100-50'], fontsize=ls, frameon=False)
     
-    return fighists
+    return fighists, n_f0, n_hw
