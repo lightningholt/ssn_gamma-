@@ -210,3 +210,62 @@ def sample_multi_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_min
             break
     
     return np.asarray(params_list), np.asarray(rs_list), np.asarray(spect_list), np.asarray(f0_list), fs, jj
+
+
+def sample_target_SSN(Nsamps, contrasts, params_min, params_max, BALANCED = True, ssn_pars=ssn_pars1):
+    
+    Jee_min, Jei_min, Jie_min, Jii_min, gE_min, gI_min, NMDA_min, PlocalEE_min, PlocalIE_min, sigEE_min, sigIE_min = params_min
+    Jee_max, Jei_max, Jie_max, Jii_max, gE_max, gI_max, NMDA_max, PlocalEE_max, PlocalIE_max, sigEE_max, sigIE_max = params_max
+    
+    
+    smp = 0
+    params_list = []
+    rs_list = []
+    spect_list = []
+    f0_list = []
+    
+    for jj in range(Nsamps):
+        print(f"j = {jj}, samples = {smp}")
+        
+        params = []
+        params.append( rand_samp(Jee_min, Jee_max))
+        params.append( rand_samp(Jei_min, Jei_max))
+        params.append( rand_samp(Jie_min, Jie_max))
+        params.append( rand_samp(Jii_min, Jii_max))
+        
+        params.append( rand_samp(gE_min, gE_max))
+        params.append( rand_samp(gI_min, gI_max))
+        
+        params.append( rand_samp(NMDA_min, NMDA_max))
+        params.append( rand_samp(PlocalEE_min, PlocalEE_max))
+        params.append( rand_samp(PlocalIE_min, PlocalIE_max))
+        
+        params.append( rand_samp(sigEE_min, sigEE_max))
+        params.append( rand_samp(sigIE_min, sigIE_max))
+
+        Jee, Jei, Jie, Jii = params[:4]
+        ge, gi = params[4:6]
+
+
+        if not (Jee/Jie < Jei/Jii):
+            continue
+        if BALANCED and not (Jei/Jii < ge/gi):
+            continue
+
+        rs, spect, fs, f0 = ssn_PS(params, ssn_pars= ssn_pars1)
+        
+        #if CONVG is false, returns nans for fs. 
+        if np.isnan(fs).any():
+            continue
+        
+        smp += 1
+        print(f"smp={smp}")
+        params_list.append(params)
+        rs_list.append(rs)
+        spect_list.append(spect)
+        f0_list.append(f0)
+        
+        if smp == Nsamps:
+            break
+    
+    return np.asarray(params_list), np.asarray(rs_list), np.asarray(spect_list), np.asarray(f0_list), fs, jj
