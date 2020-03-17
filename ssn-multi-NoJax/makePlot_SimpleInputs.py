@@ -275,7 +275,7 @@ def fig3_RM(params, rates, fs, spect):
     #label stuff
     lstr = ['R = 0\xb0']
     for pp in range(1, probes):
-        lstr.append('R = {dist:.2f}\xb0'.format(dist=pp*dx))
+        lstr.append('R = {dist:.1f}\xb0'.format(dist=pp*dx))
     ax_spect_maun.legend(lstr, loc='upper right', ncol=1, frameon=False)
     #ax_spect_maun.set_title("Locality of contrast dependence",fontsize=title_size)
     ax_spect_maun.set_xlabel('Frequency (Hz)', fontsize=size_f)
