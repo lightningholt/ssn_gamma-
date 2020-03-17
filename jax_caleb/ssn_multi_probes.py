@@ -25,12 +25,12 @@ from util import sigmoid_params
 
 #fixed point algorithm:
 dt = 1
-xtol = 1e-4
-Tmax = 500
+xtol = 1e-5
+Tmax = 1000
 
 #power spectrum resolution and range
-fnums = 30
-freq_range = [15,100]
+fnums = 35
+freq_range = [0.1,100]
 
 #SSN parameters
 n = 2
@@ -44,7 +44,8 @@ tau_s = np.array([5, 7, 100])*t_scale #in ms, AMPA, GABA, NMDA current decay tim
 # NMDAratio = 0.4 #NMDA strength as a fraction of E synapse weight
 
 # define the network spatial parameters. Gridsizedeg is the key that determines everything. MagnFactor is biologically observed to be ~2mm/deg. Gridsizedeg = 2 and gridperdeg = 5 means that the network is 11 x 11 neurons (2*5 + 1 x 2*5 + 1)
-gridsizedeg = 3.2
+#gridsizedeg = 3.2
+gridsizedeg = 2
 gridperdeg = 5
 gridsize = round(gridsizedeg*gridperdeg) + 1
 magnFactor = 2 #mm/deg
@@ -242,7 +243,7 @@ def loss(params, probes, lamSS = 2, SI = True, ground_truth = True, diffPS = Fal
     PS_inds = np.arange(spect.shape[1])
     #PS_inds = np.arange(len(con_inds)) #just Contrast effect
     
-    suppression_index_loss = losses.loss_rates_SurrSupp(r_fp[trgt, rad_inds],  SI = SI) # the -1 is to not include the gabor
+    suppression_index_loss = losses.loss_rates_SurrSupp(r_fp[trgt, rad_inds], min_SI=0.3,  SI = SI) # the -1 is to not include the gabor
     print(suppression_index_loss)
     
     if CONVG:
@@ -327,7 +328,7 @@ def ssn_FP(pos_params, OLDSTYLE):
     sigEE = sigEE / magnFactor # sigEE now in degress 
     sigIE = sigIE / magnFactor  # sigIE now in degrees
     
-    W = make_conn.make_full_W(Plocal, Jee, Jei, Jie, Jii, sigEE, sigIE, deltaD, OMap, PlocalIE = PlocalIE)
+    W = make_conn.make_full_W(Plocal, Jee, Jei, Jie, Jii, sigEE, sigIE, deltaD, OMap, sigXI = 0.09, PlocalIE = PlocalIE)
 
     ssn = SSN_classes._SSN_AMPAGABA(tau_s, NMDAratio, n, k, Ne, Ni, tau_vec, W)
     ssn.topos_vec = np.ravel(OMap)
