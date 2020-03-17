@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib.patches as mpatches
 import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib as mpl
@@ -338,3 +339,247 @@ def fig3_RM(params, rates, fs, spect):
     #ax_maun_f0.set_title('Locality of contrast dependence', fontsize=title_size)
     
     return fig_RM
+
+# ========================================================================
+
+def hists_fig4(obs_rates, f0s, min_freq=10, dfdc=False):
+    
+    '''
+    obs_rates dimensions are samples, 1 for some reason, neuron, stimConds
+    f0s dimensions are sample, ff/hw/err/inflpt1/inflpt2, stimConds
+    ff is peak frequency found using either infl or RM method. 
+    gg is peak width
+    '''
+    
+    fs = 18
+    ls = 11
+    ss = 15
+    aa = 0.3 #alpha value
+    
+    contrasts = np.array([0, 25, 50, 100])
+    cons = len(contrasts)
+    probes = 5
+    
+    con_inds = np.arange(0, cons)
+    probe_inds = np.arange(cons, f0s.shape[2])
+    
+    #max(axis=2) is because lams is a 6-dim vector for each contrast and instantiation
+    ff_con = f0s[:, 0, con_inds]
+    dff_con = np.diff(ff_con, axis=1)
+    
+    ff_probe = f0s[:, 0, probe_inds]
+    dff_probe = np.diff(ff_probe, axis=1)
+    
+    hw_con = f0s[:, 1, con_inds]
+    hw_probe = f0s[:, 1, probe_inds]
+    
+    #for rates 
+    con_inds_rates = np.array([0,1,2,6])
+    rad_inds = np.array([3,4,5,6])
+    
+    trgt = int(np.floor(obs_rates.shape[2]/4))
+    trgt = (trgt, trgt + int(np.floor(obs_rates.shape[2]/2)))
+    
+    rs = obs_rates[:, 0, trgt, :]
+    
+    T = 1e-2
+    r_targ = rs[:, :, rad_inds]/np.mean(rs[:, :, rad_inds], axis=2)[:, :, None]
+    softmax_r = T * logsumexp( r_targ / T, axis=2 ) 
+    obs_SI = 1 - (r_targ[:,:,-1]/softmax_r)
+    
+    dx = 0.2 # degrees
+    Pdist = np.arange(probes)
+    probe_dist = dx * Pdist
+    #GaborSigma = 0.3*np.max(radii)
+    GaborSigma = 0.5
+    Gabor_Cons = 100*np.exp(- probe_dist**2/2/GaborSigma**2); #for the linear interp1d
+
+    fit_f0 = interp1d(contrasts[1:], ff_con[:,1:])
+    yfit = fit_f0(Gabor_Cons)
+
+    SSE = np.sum( (ff_probe - yfit) **2, axis=1) #SSE = sum of squared error
+    ff_probe_var = np.sum((ff_probe-np.nanmean(ff_probe, axis=1)[:, None])**2, axis=1)
+    R2 = 1- SSE/ff_probe_var
+    #R2 = np.array([rr for rr in R2 if rr is not np.isnan(rr)])
+    R2 = np.array([rr for rr in R2 if rr is not np.isnan(rr) and not np.isinf(rr)])
+    R2 = np.array([rr for rr in R2 if rr > -10])
+    
+    medR2 = np.median(R2)
+    
+    min_freq = 10 #Hz
+    min_width = 0
+    
+    con_color = ['black', 'blue','green','red'] #colors for contrasts 0, 25, 50, 100,
+    shift_colors = ['tab:cyan', 'gold'] #blue and green make cyan, red and green make yellow
+    maun_color = ['tab:orange', 'indigo', 'green', 'm', 'xkcd:sky blue']
+    maunshift = ['r', 'b', 'g', 'k']
+    rates_color = ['xkcd:orange', 'tab:cyan']
+    cons = len(con_color)
+    contrasts = np.array([0, 25, 50, 100])
+    histstyle_paper = {"histtype": "step", "linewidth": 2.25, "density": False}
+    histstyle_nb = {"histtype": "bar", "linewidth":2, "alpha": aa, "density": False}
+
+    histstyle = histstyle_paper
+    
+    nbins = 30
+
+    ctypes = ["E", "I"]
+    #fig, axs = plt.subplots(3,4, figsize=(16,6))
+    
+    fighists = plt.figure(27, constrained_layout=True, figsize=(14, 7))
+    gs = gridspec.GridSpec(2,3, figure=fighists)
+    
+    axErates = fighists.add_subplot(gs[0,0])
+    axIrates = fighists.add_subplot(gs[1,0])
+    axf0 = fighists.add_subplot(gs[0,1])
+    axf0shifts = fighists.add_subplot(gs[1,1])
+#     axMaun = fighists.add_subplot(gs[0,2])
+#     axMaunShifts = fighists.add_subplot(gs[1,])
+    axSIrates = fighists.add_subplot(gs[0,2])
+    axFit = fighists.add_subplot(gs[1,2])
+    
+    Emed = np.median(rs[:,0, :],axis=0)
+    print(Emed)
+    Imed = np.median(rs[:,:, 1],axis=0)
+    print(Imed)
+    
+    lbound = 0.7
+    rbound = 1500
+    
+    n_f0 = 1000*np.ones(nbins)
+    n_hw = 1000*np.ones(nbins)
+    
+    #make the hists below here..............
+    dcon = np.diff(contrasts[1:])
+    
+    # BINS
+    bFreqs = np.arange(0,80, 3)
+    bDFs = np.linspace(0,1,16)
+    #_, bDFs = np.histogram(dff_con[~np.isnan(dff_con[:,0]),0]/dcon[0], nbins//2)
+    _, bSI = np.histogram(obs_SI[~np.isnan(obs_SI[:,1]), 1], nbins)
+    #bin width for SI = 0.02267407
+    
+    _, binsE = np.histogram(rs[~np.isnan(rs[:,0,1]), 0, 1], bins=nbins, density= True)
+    _, binsI = np.histogram(rs[~np.isnan(rs[:,1,1]), 1, 1], bins=nbins, density= True)
+    logbinsE = np.logspace(np.log10(binsE[0]),np.log10(binsE[-1]), len(binsE))
+    logbinsI = np.logspace(np.log10(binsI[0]), np.log10(binsI[-1]), len(binsI))
+    bluebinE = 2 * np.diff(np.log10(logbinsE))[0]
+    bluebinI = 2 * np.diff(np.log10(logbinsI))[0]
+    print(bluebinE)
+    
+    for c in np.arange(1, cons):
+        
+        axf0.hist(ff_con[:, c], bins=bFreqs, color=con_color[c], **histstyle_nb)
+        axf0.hist(ff_con[:, c], bins=bFreqs, color=con_color[c], **histstyle)
+        
+        if c > 1:
+            if c == 2:
+                scale = 1
+            else:
+                scale = 1
+            
+            axf0shifts.hist(scale*dff_con[:,c-1]/dcon[c-2], bins=bDFs, color= shift_colors[c-2], **histstyle)
+            axf0shifts.hist(scale*dff_con[:,c-1]/dcon[c-2], bins=bDFs, color= shift_colors[c-2], **histstyle_nb)
+            #axhwshifts.hist(dhw, nbins, color= shift_colors[c-2], **histstyle)
+            #axhwshifts.hist(dhw, nbins, color= shift_colors[c-2], **histstyle_nb)
+            
+        _, binsE = np.histogram(rs[:, 0, c], bins=nbins, density= True)
+        _, binsI = np.histogram(rs[:, 1, c], bins=nbins, density= True)
+        logbinsE = 10**(np.arange(np.log10(binsE[0]), np.log10(binsE[-1]) + bluebinE, bluebinE))
+        logbinsI = 10**(np.arange(np.log10(binsI[0]), np.log10(binsI[-1]) + bluebinI, bluebinI))
+    
+        axErates.hist(rs[:, 0, c], bins=logbinsE, color=con_color[c], **histstyle)
+        axErates.hist(rs[:, 0, c], bins=logbinsE, color=con_color[c], **histstyle_nb)
+        axIrates.hist(rs[:, 1, c], bins=logbinsI, color=con_color[c], **histstyle)
+        axIrates.hist(rs[:, 1, c], bins=logbinsI, color=con_color[c], **histstyle_nb)
+        
+#     for p in np.arange(probes):
+        
+#         axMaun.hist(ff_probe[:, p], nbins, color=maun_color[p], **histstyle_nb)
+#         axMaun.hist(ff_probe[:, p], nbins, color=maun_color[p], **histstyle)
+        
+#         if p > 0:
+#             axMaunShifts.hist(dff_probe[:, p-1], nbins, color= maunshift[p-1], **histstyle)
+#             axMaunShifts.hist(dff_probe[:, p-1], nbins, color= maunshift[p-1], **histstyle_nb)
+    
+    for celltype in np.arange(len(ctypes)):
+        axSIrates.hist(obs_SI[:, celltype], bins=bSI, color=rates_color[celltype], **histstyle)
+        axSIrates.hist(obs_SI[:, celltype], bins=bSI, color=rates_color[celltype], **histstyle_nb)
+    
+    fit_bins = [0.8, 0.9, 1]
+    R3 = np.maximum(R2, 0.9)
+    goodR3 = np.sum(R3 > 0.9)
+    badR3 = np.sum(R3==0.9)
+    axFit.bar([0.9, 1], [badR3, goodR3], width=0.08, color=['r','forestgreen'], edgecolor='k', alpha=2*aa)
+    #axFit.hist(R3[R3 > 0.9], bins = fit_bins, color='forestgreen', histtype='bar', alpha=aa, align='right')
+    #axFit.hist(R3[R3 > 0.9], bins = fit_bins, color='forestgreen', histtype='step', lw=2*2, align='right')
+    #axFit.hist(R3[R3 == 0.9], bins = fit_bins, color ='red', histtype='bar', alpha=aa, align='left' )
+    #axFit.hist(R3[R3 == 0.9], bins = fit_bins, color ='red', histtype='step', lw=2*2, align='left' )
+    #axFit.axvline(medR2, ls= '--',color='k')
+    axInset = axFit.inset_axes([0.1, 0.6, 0.35, 0.35])
+    axInset.hist(R2, nbins, color='forestgreen', **histstyle)
+    axInset.hist(R2, nbins, color='forestgreen', **histstyle_nb)
+    
+    # =============
+    # =============
+    #cosmetic stuff below
+    #shifts to the A,B,C, etc of the figure, where they appear relative to axes
+    
+    x_text = -0.25
+    y_text = 1.05
+    y_label= "Counts"
+    
+    axErates.set_xlim(left=lbound, right=rbound)
+    axErates.set_xscale('log')
+    #axErates.set_xlabel('$log_{10}$(Firing rates (Hz))', fontsize=fs)
+    axErates.set_xlabel('Firing rate (Hz)', fontsize=ss)
+    axErates.set_ylabel(y_label, fontsize=ss)
+    #axErates.set_title('Excitatory cell', fontsize=fs)
+    p25 = mpatches.Rectangle([1,1], 1, 1, facecolor=con_color[1], edgecolor=con_color[1], alpha=aa, lw=0.1, label=r'$c$ = 25%')
+    p50 = mpatches.Rectangle([1,1], 1, 1, facecolor=con_color[2], edgecolor=con_color[2], alpha=aa, lw=0.1, label=r'$c$ = 50%')
+    p100 = mpatches.Rectangle([1,1], 1, 1, facecolor=con_color[3], edgecolor=con_color[3], alpha=aa, lw=0.1, label=r'$c$ = 100%')
+    axErates.legend(handles=[p25, p50, p100], frameon=False, ncol=1, fontsize=ls)
+    axErates.text(x_text, y_text, 'A', transform=axErates.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    #axErates.legend(['C = 25', 'C = 50', 'C = 100'], frameon=False, loc='upper left', ncol=1, fontsize=ls)
+    
+    axIrates.set_xlim(left=lbound, right=rbound)
+    axIrates.set_xscale('log')
+    axIrates.set_xlabel('Firing rate (Hz)', fontsize=ss)
+    axIrates.set_ylabel(y_label, fontsize=ss)
+    #axIrates.set_title('Inhibitory cell', fontsize=fs)
+    axIrates.text(x_text, y_text, 'D', transform=axIrates.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    
+    axf0.set_xlabel('Peak frequency (Hz)', fontsize=ss)
+    axf0.set_ylabel(y_label, fontsize=ss)
+    #axf0.set_title('Gamma peak frequency', fontsize=fs)
+    axf0.text(x_text, y_text,'B', transform=axf0.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    
+    axf0shifts.set_xlabel(r'$\Delta$Peak freq. / $\Delta c$ (Hz / %)', fontsize=ss)
+    axf0shifts.set_ylabel(y_label, fontsize=ss)
+    pdelta50 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[0], edgecolor=shift_colors[0], alpha=aa, lw=0.1, label='$\Delta c =$50%-25%')
+    pdelta100 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[1], edgecolor=shift_colors[1], alpha=aa, lw=0.1, label='$\Delta c =$100%-50%')
+    axf0shifts.legend(handles=[pdelta50, pdelta100], fontsize=ls, frameon=False, )
+    #axf0shifts.legend(['$\Delta C =$50-25', '$\Delta C =$100-50'], fontsize=ls, frameon=False)
+    #axf0shifts.set_title('Shift in gamma peak frequency', fontsize=fs)
+    axf0shifts.text(x_text, y_text, 'E', transform=axf0shifts.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    
+    axSIrates.set_xlabel('Suppression index', fontsize=ss)
+    axSIrates.set_ylabel(y_label, fontsize=ss)
+    #axSIrates.set_title('E/I suppression index', fontsize =fs)
+    axSIrates.text(x_text, y_text,'C', transform=axSIrates.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    pE = mpatches.Rectangle([1,1], 1, 1, facecolor=rates_color[0], edgecolor=rates_color[0], alpha=aa, lw=0.1, label='center E')
+    pI = mpatches.Rectangle([1,1], 1, 1, facecolor=rates_color[1], edgecolor=rates_color[1], alpha=aa, lw=0.1, label='center I')
+    axSIrates.legend(handles=[pE, pI], frameon=False, ncol=1, fontsize=ls)
+    
+    axFit.set_xlabel(r'$R^2$', fontsize=fs)
+    axFit.set_xticks([0.9, 1])
+    axFit.set_xticklabels(['<0.9', '[0.9,1]'], fontsize=ss)
+    axFit.set_xlim([0.85,1.05])
+    axFit.set_ylabel(y_label, fontsize=fs)
+    #axFit.set_title(r'Linear fit $R^2$', fontsize=fs)
+    axFit.text(x_text, y_text,'F', transform=axFit.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    #axhwshifts.legend(['$\Delta C =$50-25', '$\Delta C =$100-50'], fontsize=ls, frameon=False)
+    axInset.set_yticks([])
+    axInset.set_xticks([-2, -1, 0, 1])
+    
+    return fighists
