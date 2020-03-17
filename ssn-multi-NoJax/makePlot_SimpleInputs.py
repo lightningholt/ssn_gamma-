@@ -536,7 +536,7 @@ def hists_fig4(obs_rates, f0s, min_freq=10, dfdc=False):
     axErates.set_xlim(left=lbound, right=rbound)
     axErates.set_xscale('log')
     #axErates.set_xlabel('$log_{10}$(Firing rates (Hz))', fontsize=fs)
-    axErates.set_xlabel('Firing rate (Hz)', fontsize=ss)
+    axErates.set_xlabel('E firing rate (Hz)', fontsize=ss)
     axErates.set_ylabel(y_label, fontsize=ss)
     #axErates.set_title('Excitatory cell', fontsize=fs)
     p25 = mpatches.Rectangle([1,1], 1, 1, facecolor=con_color[1], edgecolor=con_color[1], alpha=aa, lw=0.1, label=r'$c$ = 25%')
@@ -548,7 +548,7 @@ def hists_fig4(obs_rates, f0s, min_freq=10, dfdc=False):
     
     axIrates.set_xlim(left=lbound, right=rbound)
     axIrates.set_xscale('log')
-    axIrates.set_xlabel('Firing rate (Hz)', fontsize=ss)
+    axIrates.set_xlabel('I firing rate (Hz)', fontsize=ss)
     axIrates.set_ylabel(y_label, fontsize=ss)
     #axIrates.set_title('Inhibitory cell', fontsize=fs)
     axIrates.text(x_text, y_text, 'D', transform=axIrates.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
@@ -575,15 +575,16 @@ def hists_fig4(obs_rates, f0s, min_freq=10, dfdc=False):
     pI = mpatches.Rectangle([1,1], 1, 1, facecolor=rates_color[1], edgecolor=rates_color[1], alpha=aa, lw=0.1, label='center I')
     axSIrates.legend(handles=[pE, pI], frameon=False, ncol=1, fontsize=ls)
     
-    axFit.set_xlabel(r'$R^2$', fontsize=fs)
+    axFit.set_xlabel(r'$R^2$', fontsize=ss)
     axFit.set_xticks([0.9, 1])
-    axFit.set_xticklabels(['<0.9', '[0.9,1]'], fontsize=ss)
+    axFit.set_xticklabels(['<0.9', '>0.9'])#, fontsize=ss)
     axFit.set_xlim([0.85,1.05])
-    axFit.set_ylabel(y_label, fontsize=fs)
+    axFit.set_ylabel(y_label, fontsize=ss)
     #axFit.set_title(r'Linear fit $R^2$', fontsize=fs)
     axFit.text(x_text, y_text,'F', transform=axFit.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     #axhwshifts.legend(['$\Delta C =$50-25', '$\Delta C =$100-50'], fontsize=ls, frameon=False)
     axInset.set_yticks([])
     axInset.set_xticks([-2, -1, 0, 1])
+    axInset.set_xlabel(r'$R^2$')
     
     return fighists
