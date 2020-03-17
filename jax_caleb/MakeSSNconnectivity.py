@@ -192,6 +192,7 @@ def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWi
     
     RFdecay = 0.8/2 #biologic decay is 0.8 mm, magfactor =2 mm/deg 
     RFdecay = RFdecay/10 #trying to find good SI, this parameter has a large impact on the suppression curve
+    RFdecay = 0.04
     #RFdecay = dx
     #GaborSigma = 0.3*np.max(r_cent) 
     GaborSigma = 0.5
