@@ -242,7 +242,7 @@ def fig3_RM(params, rates, fs, spect):
 
     #Figure Parameters
     fignumber = 29
-    fig_RM = plt.figure(fignumber, figsize=(9, 6), constrained_layout=True)
+    fig_RM = plt.figure(fignumber, figsize=(10, 6), constrained_layout=True)
     con_color =  ['black', 'blue', 'green', 'red','gold']
     maun_color = ['tab:orange', 'indigo', 'green', 'm', 'xkcd:sky blue']
     rates_color = ['xkcd:orange', 'tab:cyan']
@@ -263,9 +263,9 @@ def fig3_RM(params, rates, fs, spect):
     
     # label stuff
     #ax_spect_con.set_title('Contrast effect', fontsize=title_size)
-    ax_spect_con.set_ylabel('Power-spectrum (a.u.)', fontsize=size_f)
+    ax_spect_con.set_ylabel('LFP power (a.u.)', fontsize=size_f)
     ax_spect_con.set_xlabel('Frequency (Hz)', fontsize=size_f)
-    ax_spect_con.legend([r'$c = 0$', r'$c = 25$', r'$c = 50$', r'$c = 100$'], frameon=False, loc='upper right', ncol=2)
+    ax_spect_con.legend([r'$c = 0 \%$', r'$c = 25\%$', r'$c = 50\%$', r'$c = 100\%$'], frameon=False, loc='upper right', ncol=2)
 
     ### Maun effect
     #plot stuff
@@ -273,13 +273,13 @@ def fig3_RM(params, rates, fs, spect):
     ax_spect_maun.set_prop_cycle('color', maun_color)
     ax_spect_maun.plot(new_fs, spect[new_inds, -probes:], lw= thick_line)
     #label stuff
-    lstr = ['R = 0']
+    lstr = ['R = 0\xb0']
     for pp in range(1, probes):
-        lstr.append('R = '+str(pp))
-    ax_spect_maun.legend(lstr, loc='upper right', ncol=2, frameon=False)
+        lstr.append('R = {dist:.2f}\xb0'.format(dist=pp*dx))
+    ax_spect_maun.legend(lstr, loc='upper right', ncol=1, frameon=False)
     #ax_spect_maun.set_title("Locality of contrast dependence",fontsize=title_size)
     ax_spect_maun.set_xlabel('Frequency (Hz)', fontsize=size_f)
-    ax_spect_maun.set_ylabel('Power-spectrum (a.u.)', fontsize=size_f)
+    ax_spect_maun.set_ylabel('LFP power (a.u.)', fontsize=size_f)
 
     #rates contrasts plots
     #Plot stuff
@@ -290,7 +290,7 @@ def fig3_RM(params, rates, fs, spect):
     #ax_EI.plot(contrasts[-1], rates[gabor_inds,0], '^', ms=big_mark)
     #ax_EI.plot(contrasts[-1], rates[gabor_inds,1], '^', ms=big_mark)
     #label stuff
-    ax_EI.set_xlabel('Contrast', fontsize=size_f)
+    ax_EI.set_xlabel('Contrast (%)', fontsize=size_f)
     ax_EI.set_ylabel('Firing rate (Hz)', fontsize=size_f)
     ax_EI.set_xticks(contrasts)
     ax_EI.legend(['Center E', 'Center I'], frameon=False)
@@ -300,7 +300,7 @@ def fig3_RM(params, rates, fs, spect):
     ax_SS.set_prop_cycle('color', rates_color)
     ax_SS.plot(radii, rates[rad_inds, :], '-o', lw= thick_line)
     #label stuff
-    ax_SS.set_xlabel('Stimulus radius (degrees)', fontsize=size_f)
+    ax_SS.set_xlabel('Stimulus radius (\xb0)', fontsize=size_f)
     ax_SS.set_xticks(radii)
     ax_SS.set_ylabel('Firing rate (Hz)', fontsize=size_f)
     #tstr = 'SI = '+'({:.2f}, {:.2f})'.format(SI[0], SI[1]) #+', SI_I = '+'{:.2f}'.format(SI[1])
@@ -315,7 +315,7 @@ def fig3_RM(params, rates, fs, spect):
     for cc in range(1, cons):
         ax_con_f0.plot(contrasts[cc], f0[cc],'o', ms=big_mark)
     #label stuff
-    ax_con_f0.set_xlabel('Contrast', fontsize=size_f)
+    ax_con_f0.set_xlabel('Contrast (%)', fontsize=size_f)
     ax_con_f0.set_xticks(contrasts[1:])
     ax_con_f0.set_ylabel('Peak frequency (Hz)', fontsize=size_f)
     #ax_con_f0.set_ylim(bottom=np.min(f0[1:])-5)
@@ -333,8 +333,12 @@ def fig3_RM(params, rates, fs, spect):
     
     #label stuff
     ax_maun_f0.legend(frameon=False)
-    ax_maun_f0.set_xlabel('Probe location', fontsize=size_f)
+    ax_maun_f0.set_xlabel('Probe location (\xb0)', fontsize=size_f)
     ax_maun_f0.set_xticks(Pdist)
+    labelstring = []
+    for pp in Pdist*dx:
+        labelstring.append('{dist:.2f}'.format(dist= pp))
+    ax_maun_f0.set_xticklabels(labelstring)
     ax_maun_f0.set_ylabel('Peak frequency (Hz)', fontsize=size_f)
     #ax_maun_f0.set_title('Locality of contrast dependence', fontsize=title_size)
     
