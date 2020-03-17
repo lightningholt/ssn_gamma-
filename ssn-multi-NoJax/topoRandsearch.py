@@ -18,7 +18,7 @@ t_scale = 1
 class ssn_pars1():
     n = 2
     k = 0.04
-    tauE = 30 * t_scale
+    tauE = 50 * t_scale
     tauI = 10 * t_scale
     psi = 0.774 
     
