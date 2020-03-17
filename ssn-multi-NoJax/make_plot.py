@@ -356,7 +356,7 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
     ax_con_f0.set_prop_cycle('color', con_color[1:])
     for cc in range(1, cons):
         ind = con_inds[cc] -1 #removed BS from f0 calculations
-        ax_con_f0.plot(contrasts[cc], obs_f0[cc - 1],'o')
+        ax_con_f0.plot(contrasts[cc], obs_f0[cc],'o')
     ax_con_f0.set_xlabel('Contrast')
     ax_con_f0.set_ylabel('Peak frequency (Hz)')
     
@@ -382,7 +382,7 @@ def Maun_Con_SS(fs, obs_spect, target_spect, obs_rates, obs_f0, contrasts, radii
 #         fit_f0 = np.interp(Gabor_Cons, contrasts[1:], obs_f0[:3]) #contrast[1:] means I'm not looking at 0 contrast, also why I stop at [:3] cause indices greater than 3 are for the Gabor and Maunsell effect.
 #         ax_maun_f0.plot(RR, fit_f0,'gray')
         
-        fit_f0 = interp1d(contrasts[1:], obs_f0[:3], fill_value='extrapolate')
+        fit_f0 = interp1d(contrasts[1:], obs_f0[1:cons], fill_value='extrapolate')
         ax_maun_f0.plot(RR, fit_f0(Gabor_Cons),'gray')
 
     
