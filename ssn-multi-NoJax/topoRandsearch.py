@@ -18,8 +18,13 @@ t_scale = 1
 class ssn_pars1():
     n = 2
     k = 0.04
+<<<<<<< Updated upstream
     tauE = 50 * t_scale
     tauI = 10 * t_scale
+=======
+    tauE = 20 * t_scale
+    tauI = 5 * t_scale
+>>>>>>> Stashed changes
     psi = 0.774 
     
     tau_s = np.array([5, 7, 100])*t_scale #in ms, AMPA, GABA, NMDA current decay time constants
