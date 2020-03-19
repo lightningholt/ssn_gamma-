@@ -30,7 +30,7 @@ sig_max = 0.1 # in mm
 BALANCED = True
 
 t0 = time.time()
-params, rs, spects, f0s, paramsNL, rsNL, spectNL, f0NL, interesting_inds, fs, j = tRs.multi_NonLocal_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_min, NMDA_max, Plocal_min, Plocal_max, sig_min, sig_max, Jxi_max=Jxi_max, Jxi_min=Jxi_min, ARRAY =False)
+params, paramsNL, rsNL, spectNL, f0NL, interesting_inds, fs, j = tRs.multi_NonLocal_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_min, NMDA_max, Plocal_min, Plocal_max, sig_min, sig_max, Jxi_max=Jxi_max, Jxi_min=Jxi_min, ARRAY =False)
 #params dimensions are smp x num_params
 #rs dimensions are smp x 1 x 242 x stimcons
 #spects dimensions are smp x (cons + probes) x fnums
@@ -41,9 +41,10 @@ print('run time was', t0)
 
 dobj = date.today()
 f_ender = dobj.strftime("%y-%m-%d")
-fname = 'NL-rand-CorrTimeRetino_1-3-'+f_ender+'.json'
+fname = 'NL-rand-CorrTimeRetino_10-'+f_ender+'.json'
 
-results = {'params':params, 'rates':rs, 'spects':spects, 'f0s':f0s, 'paramsNL':paramsNL, 'rsNL':rsNL, 'spectNL':spectNL, 'f0NL':f0NL, 'interesting_inds':interesting_inds}
+#results = {'params':params, 'rates':rs, 'spects':spects, 'f0s':f0s, 'paramsNL':paramsNL, 'rsNL':rsNL, 'spectNL':spectNL, 'f0NL':f0NL, 'interesting_inds':interesting_inds}
+results = {'params':params, 'paramsNL':paramsNL, 'rsNL':rsNL, 'spectNL':spectNL, 'f0NL':f0NL, 'interesting_inds':interesting_inds}
 
 with open(fname, 'w') as json_file:
     json.dump(results, json_file)
