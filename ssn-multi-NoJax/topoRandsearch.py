@@ -26,8 +26,8 @@ class ssn_pars1():
     # NMDAratio = 0.4 #NMDA strength as a fraction of E synapse weight
     
     # define the network spatial parameters. Gridsizedeg is the key that determines everything. MagnFactor is biologically observed to be ~2mm/deg. Gridsizedeg = 2 and gridperdeg = 5 means that the network is 11 x 11 neurons (2*5 + 1 x 2*5 + 1)
-    gridsizedeg = 3.2
-    #gridsizedeg = 2
+    #gridsizedeg = 3.2
+    gridsizedeg = 2
     gridperdeg = 5
     gridsize = round(gridsizedeg*gridperdeg) + 1
     magnFactor = 2 #mm/deg
@@ -81,6 +81,18 @@ class ssn_pars1():
     spont_input = np.array([1,1]) * 2
     make_J2x2 = lambda Jee, Jei, Jie, Jii: np.array([[Jee, -Jei], [Jie, -Jii]]) * np.pi * ssn_pars.psi
 
+class ssn_pars2D():
+    n = 2
+    k = 0.04
+    tauE = 50 * t_scale
+    tauI = 10 * t_scale
+    psi = 0.774 
+    
+    tau_s = np.array([5, 7, 100])*t_scale #in ms, AMPA, GABA, NMDA current decay time constants
+    contrasts = np.array([0, 25, 50, 100])
+    spont_input = np.array([1,1]) * 2
+    make_J2x2 = lambda Jee, Jei, Jie, Jii: np.array([[Jee, -Jei], [Jie, -Jii]]) * np.pi * ssn_pars.psi
+    
 ### ==========================================================================================
 
 
@@ -143,9 +155,58 @@ def ssn_PS(params, ssn_pars=ssn_pars1):
     rs = np.array(rs)
     spect = np.array(spect)
     
-    f0 = SSN_power_spec.infl_find_peak_freq(fs, spect.T)
+    f0, _, _, _, _ = SSN_power_spec.infl_find_peak_freq(fs, spect.T)
     
     return rs, spect, fs, f0
+
+def ssn_2D_PS(params, ssn_pars=ssn_pars2D):
+    Jee = params[0] * np.pi * ssn_pars.psi
+    Jei = params[1] * np.pi * ssn_pars.psi
+    Jie = params[2] * np.pi * ssn_pars.psi
+    Jii = params[3] * np.pi * ssn_pars.psi
+    gE = params[4]
+    gI = params[5]
+    NMDAratio = params[6]
+    
+    n = ssn_pars.n
+    k = ssn_pars.k
+    tauE = ssn_pars.tauE
+    tauI = ssn_pars.tauI
+    psi = ssn_pars.psi
+    tau_s = ssn_pars.tau_s
+    spont_input = ssn_pars.spont_input
+    
+    ssn = SSN_classes.SSN_2D_AMPAGABA(tau_s, NMDAratio, n, k, tauE, tauI, Jee, Jei, Jie, Jii, )
+    
+    rs = []
+    spect = []
+    
+    r_init = np.zeros([ssn.N, len(ssn_pars.contrasts)])
+    inp_vec = np.array([[gE], [gI]])*ssn_pars2D.contrasts
+    
+    r_fp, CONVG = ssn.fixed_point_r(inp_vec, r_init=r_init, Tmax=Tmax, dt = dt, xtol = xtol)
+    
+    if not CONVG:
+        dfdc = np.nan * np.ones(2)
+        return dfdc
+    
+    rs.append(r_fp)
+    
+    for cc in range(len(ssn_pars.contrasts)):
+        powspecE, fs, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], SSN_power_spec.NoisePars(corr_time=1), freq_range=freq_range, fnums=fnums)
+        
+        spect.append(powspecE)
+    
+    rs = np.array(rs)
+    spect = np.array(spect)
+    
+    f0,_,_,_,_ = SSN_power_spec.infl_find_peak_freq(fs, spect.T)
+    
+    dfdc = np.diff(f0[1:])/np.diff(ssn_pars2D.contrasts[1:])
+    print(dfdc)
+    
+    return dfdc
+
 
 ### ==========================================================================================
 
@@ -178,20 +239,19 @@ def sample_multi_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_min
             params.append( rand_samp(g_min, g_max) )
 
         params.append( rand_samp(NMDA_min, NMDA_max))
-
+        
         for i in range(2):
             params.append( rand_samp(Plocal_min, Plocal_max))
         for i in range(2):
             params.append( rand_samp(sig_min, sig_max))
-
+        
         Jee, Jei, Jie, Jii = params[:4]
         ge, gi = params[4:6]
-
 
         if not (Jee/Jie < Jei/Jii):
             continue
         if BALANCED and not (Jei/Jii < ge/gi):
-            continue
+            continue 
 
         rs, spect, fs, f0 = ssn_PS(params, ssn_pars= ssn_pars1)
         
@@ -269,3 +329,115 @@ def sample_target_SSN(Nsamps, contrasts, params_min, params_max, BALANCED = True
             break
     
     return np.asarray(params_list), np.asarray(rs_list), np.asarray(spect_list), np.asarray(f0_list), fs, jj
+
+
+def multi_NonLocal_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_min, NMDA_max, Plocal_min, Plocal_max, sig_min, sig_max, BALANCED = True, ssn_pars=ssn_pars1, Jxi_min = None, Jxi_max = None, ARRAY = True):
+    Jxi_min = Jxi_min if Jxi_min is not None else Jxe_min
+    Jxi_max = Jxi_max if Jxi_max is not None else Jxe_min
+    
+    smp = 0
+    rads_cons = len(ssn_pars.Contrasts)
+    probes_cons = ssn_pars.probes + ssn_pars.cons-1
+    params_list = np.empty((Nsamps, 11))
+    rs_list = np.empty((Nsamps, ssn_pars.N, rads_cons))
+    spect_list = np.empty((Nsamps, probes_cons, fnums))
+    f0_list = np.empty((Nsamps, probes_cons))
+    
+    params_listNL = np.empty((Nsamps, 11))
+    rs_listNL = np.empty((Nsamps, ssn_pars.N, rads_cons))
+    spect_listNL = np.empty((Nsamps, probes_cons, fnums))
+    f0_listNL = np.empty((Nsamps, probes_cons))
+    interesting_inds = []
+    
+    for jj in range(Nsamps):
+        print(f"j = {jj}, samples = {smp}")
+        params = [1,1,1,1]
+
+        for i in [0,2]:
+            params[i] = rand_samp(Jxe_min, Jxe_max)
+
+        for i in [1,3]:
+            params[i] = rand_samp(Jxi_min, Jxi_max)
+
+        for i in range(2):
+            params.append( rand_samp(g_min, g_max) )
+
+        params.append( rand_samp(NMDA_min, NMDA_max))
+        
+        Jee, Jei, Jie, Jii = params[:4]
+        ge, gi = params[4:6]
+        
+        if not (Jee/Jie < Jei/Jii):
+            continue
+        if BALANCED and not (Jei/Jii < ge/gi):
+            continue
+        
+        dfdc2d = ssn_2D_PS(params, ssn_pars=ssn_pars2D)
+        
+        if np.any(np.isnan(dfdc2d)):
+            continue
+            
+        for i in range(2):
+            params.append( rand_samp(Plocal_min, Plocal_max))
+        for i in range(2):
+            params.append( rand_samp(sig_min, sig_max))
+        
+        if params[-2] > params[-1]:
+            sigTemp = params[-1]
+            params[-1] = params[-2]
+            params[-2] = sigTemp
+        
+
+        #rs, spect, fs, f0 = ssn_PS(params, ssn_pars= ssn_pars1)
+        
+        #if CONVG is false, returns nans for fs. 
+#         if np.isnan(fs).any():
+#             continue
+        
+        paramsNL = params[:7] + [0,0] + params[-2:]
+        rsNL, spectNL, fs, f0NL = ssn_PS(paramsNL, ssn_pars = ssn_pars1)
+        
+        if np.isnan(fs).any():
+            continue
+        
+        if np.all(~np.isnan(f0NL[1:])):
+            interesting_inds.append(smp)
+            
+        
+        print(f"smp={smp}")
+        params_list[smp, :] = np.array(params)
+#         rs_list[smp, :, :] = rs
+#         spect_list[smp, :, :] = spect
+#         f0_list[smp, :] = f0
+        
+        if np.isnan(f0NL[1:]).any():
+            smp+=1
+            continue
+        
+        params_listNL[smp,:] = np.array(paramsNL)
+        rs_listNL[smp, :,:] = rsNL
+        spect_listNL[smp, :,:] = spectNL
+        f0_listNL[smp, :] = f0NL
+        
+        smp += 1
+        if smp == Nsamps:
+            break
+            
+    
+    params_list = params_list[:smp, :]
+#     rs_list = rs_list[:smp, :, :]
+#     spect_list = spect_list[:smp, :, :] 
+#     f0_list = f0_list[:smp, :]
+        
+    params_listNL = params_listNL[:smp,:]
+    rs_listNL = rs_listNL[:smp, :,:]
+    spect_listNL= spect_listNL[:smp, :,:]
+    f0_listNL = f0_listNL[:smp, :]
+    
+    
+    if ARRAY:
+        return np.asarray(params_list), np.asarray(rs_list), np.asarray(spect_list), np.asarray(f0_list), np.asarray(params_listNL), np.asarray(rs_listNL), np.asarray(spect_listNL), np.asarray(f0_listNL), interesting_inds, fs, jj
+    
+    else:
+        #return params_list.tolist(), rs_list.tolist(), spect_list.tolist(), f0_list.tolist(), params_listNL.tolist(), rs_listNL.tolist(), spect_listNL.tolist(), f0_listNL.tolist(), interesting_inds, fs.tolist(), jj
+        return params_list.tolist(), params_listNL.tolist(), rs_listNL.tolist(), spect_listNL.tolist(), f0_listNL.tolist(), interesting_inds, fs.tolist(), jj
