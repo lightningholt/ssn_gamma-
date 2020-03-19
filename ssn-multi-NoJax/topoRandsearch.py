@@ -76,7 +76,7 @@ class ssn_pars1():
     gabor_inds = -1 #the last index is always the gabor at max contrast and max gabor sigma
     cons = len(con_inds)
     
-    noise_pars = SSN_power_spec.NoisePars(corr_time= 1)
+    noise_pars = SSN_power_spec.NoisePars(corr_time= 10)
     
     spont_input = np.array([1,1]) * 2
     make_J2x2 = lambda Jee, Jei, Jie, Jii: np.array([[Jee, -Jei], [Jie, -Jii]]) * np.pi * ssn_pars.psi
@@ -388,26 +388,29 @@ def multi_NonLocal_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_m
             params[-2] = sigTemp
         
 
-        rs, spect, fs, f0 = ssn_PS(params, ssn_pars= ssn_pars1)
+        #rs, spect, fs, f0 = ssn_PS(params, ssn_pars= ssn_pars1)
         
         #if CONVG is false, returns nans for fs. 
+#         if np.isnan(fs).any():
+#             continue
+        
+        paramsNL = params[:7] + [0,0] + params[-2:]
+        rsNL, spectNL, fs, f0NL = ssn_PS(paramsNL, ssn_pars = ssn_pars1)
+        
         if np.isnan(fs).any():
             continue
         
-        paramsNL = params[:7] + [0,0] + params[-2:]
-        rsNL, spectNL, _, f0NL = ssn_PS(paramsNL, ssn_pars = ssn_pars1)
-        
         if np.all(~np.isnan(f0NL[1:])):
             interesting_inds.append(smp)
-        
+            
         
         print(f"smp={smp}")
         params_list[smp, :] = np.array(params)
-        rs_list[smp, :, :] = rs
-        spect_list[smp, :, :] = spect
-        f0_list[smp, :] = f0
+#         rs_list[smp, :, :] = rs
+#         spect_list[smp, :, :] = spect
+#         f0_list[smp, :] = f0
         
-        if np.isnan(f0NL).any():
+        if np.isnan(f0NL[1:]).any():
             smp+=1
             continue
         
@@ -422,9 +425,9 @@ def multi_NonLocal_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_m
             
     
     params_list = params_list[:smp, :]
-    rs_list = rs_list[:smp, :, :]
-    spect_list = spect_list[:smp, :, :] 
-    f0_list = f0_list[:smp, :]
+#     rs_list = rs_list[:smp, :, :]
+#     spect_list = spect_list[:smp, :, :] 
+#     f0_list = f0_list[:smp, :]
         
     params_listNL = params_listNL[:smp,:]
     rs_listNL = rs_listNL[:smp, :,:]
@@ -436,4 +439,5 @@ def multi_NonLocal_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_m
         return np.asarray(params_list), np.asarray(rs_list), np.asarray(spect_list), np.asarray(f0_list), np.asarray(params_listNL), np.asarray(rs_listNL), np.asarray(spect_listNL), np.asarray(f0_listNL), interesting_inds, fs, jj
     
     else:
-        return params_list.tolist(), rs_list.tolist(), spect_list.tolist(), f0_list.tolist(), params_listNL.tolist(), rs_listNL.tolist(), spect_listNL.tolist(), f0_listNL.tolist(), interesting_inds, fs.tolist(), jj
+        #return params_list.tolist(), rs_list.tolist(), spect_list.tolist(), f0_list.tolist(), params_listNL.tolist(), rs_listNL.tolist(), spect_listNL.tolist(), f0_listNL.tolist(), interesting_inds, fs.tolist(), jj
+        return params_list.tolist(), params_listNL.tolist(), rs_listNL.tolist(), spect_listNL.tolist(), f0_listNL.tolist(), interesting_inds, fs.tolist(), jj
