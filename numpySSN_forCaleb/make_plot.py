@@ -650,6 +650,20 @@ def hists_fig2(rs, lams, min_freq=10, dfdc=False, ff = None, gg = None):
     n_f0 = 1000*np.ones(nbins)
     n_hw = 1000*np.ones(nbins)
     
+    # BINS
+    bFreqs = np.arange(0, 120, 6)
+    bDFs = np.linspace(0, 1,16)
+    bHw = np.linspace(0, 20, 16)
+    bDHs = np.linspace(-0.3,0.3,16)
+    
+    _, binsE = np.histogram(rs[~np.isnan(rs[:,1, 0]), 1, 0], bins=nbins, density= True)
+    _, binsI = np.histogram(rs[~np.isnan(rs[:,1, 1]), 1, 1], bins=nbins, density= True)
+    logbinsE = np.logspace(np.log10(binsE[0]),np.log10(binsE[-1]), len(binsE))
+    logbinsI = np.logspace(np.log10(binsI[0]), np.log10(binsI[-1]), len(binsI))
+    bluebinE = 2 * np.diff(np.log10(logbinsE))[0]
+    bluebinI = 2 * np.diff(np.log10(logbinsI))[0]
+    
+    
     for c in np.arange(1, cons):
 #         axErates.hist(np.log10(rs[:, c, 0]), nbins, color=con_color[c], **histstyle)
 #         axErates.hist(np.log10(rs[:, c, 0]), nbins, color=con_color[c], **histstyle_nb)
@@ -659,16 +673,15 @@ def hists_fig2(rs, lams, min_freq=10, dfdc=False, ff = None, gg = None):
         f0 = max_imag_lams[max_imag_lams[:,c]>min_freq,c]
         hw = gamma_HW[max_imag_lams[:,c]>min_freq,c]
         # hw = hw[hw > min_width]
-        n_f0temp, _, _ = axf0.hist(f0, nbins, color=con_color[c], **histstyle)
-        axf0.hist(f0, nbins, color=con_color[c], **histstyle_nb)
-        n_hwtemp, _, _ = axhw.hist(hw, nbins, color=con_color[c], **histstyle)
-        axhw.hist(hw, nbins, color=con_color[c], **histstyle_nb)
+        n_f0temp, _, _ = axf0.hist(f0, bins = bFreqs, color=con_color[c], **histstyle)
+        axf0.hist(f0, bins =bFreqs, color=con_color[c], **histstyle_nb)
+        n_hwtemp, _, _ = axhw.hist(hw, bins = bHw, color=con_color[c], **histstyle)
+        axhw.hist(hw, bins = bHw, color=con_color[c], **histstyle_nb)
         
         _, binsE = np.histogram(rs[:, c, 0], bins=nbins, density= True)
         _, binsI = np.histogram(rs[:, c, 1], bins=nbins, density= True)
-        
-        logbinsE = np.logspace(np.log10(binsE[0]),np.log10(binsE[-1]), len(binsE))
-        logbinsI = np.logspace(np.log10(binsI[0]), np.log10(binsI[-1]), len(binsI))
+        logbinsE = 10**(np.arange(np.log10(binsE[0]), np.log10(binsE[-1]) + bluebinE, bluebinE))
+        logbinsI = 10**(np.arange(np.log10(binsI[0]), np.log10(binsI[-1]) + bluebinI, bluebinI))
         
     
         axErates.hist(rs[:, c, 0], bins=logbinsE, color=con_color[c], **histstyle)
@@ -688,10 +701,10 @@ def hists_fig2(rs, lams, min_freq=10, dfdc=False, ff = None, gg = None):
             else:
                 dhw = (np.diff(gamma_HW[max_imag_lams[:,c]>min_freq,:],axis=1)/np.diff(contrasts))[:,c-1]
                 df0 = (np.diff(max_imag_lams[max_imag_lams[:,c]>min_freq,:],axis=1)/np.diff(contrasts))[:,c-1]
-            axf0shifts.hist(df0, nbins, color= shift_colors[c-2], **histstyle)
-            axf0shifts.hist(df0, nbins, color= shift_colors[c-2], **histstyle_nb)
-            axhwshifts.hist(dhw, nbins, color= shift_colors[c-2], **histstyle)
-            axhwshifts.hist(dhw, nbins, color= shift_colors[c-2], **histstyle_nb)
+            axf0shifts.hist(df0, bins= bDFs, color= shift_colors[c-2], **histstyle)
+            axf0shifts.hist(df0, bins = bDFs, color= shift_colors[c-2], **histstyle_nb)
+            axhwshifts.hist(dhw, bins = bDHs, color= shift_colors[c-2], **histstyle)
+            axhwshifts.hist(dhw, bins = bDHs, color= shift_colors[c-2], **histstyle_nb)
     
     #shifts to the A,B,C, etc of the figure, where they appear relative to axes
     x_text = -0.25
@@ -701,50 +714,50 @@ def hists_fig2(rs, lams, min_freq=10, dfdc=False, ff = None, gg = None):
     axErates.set_xlim(left=lbound, right=rbound)
     axErates.set_xscale('log')
     #axErates.set_xlabel('$log_{10}$(Firing rates (Hz))', fontsize=fs)
-    axErates.set_xlabel('Firing rate (Hz)', fontsize=ss)
+    axErates.set_xlabel('E firing rate (Hz)', fontsize=ss)
     axErates.set_ylabel(y_label, fontsize=ss)
-    axErates.set_title('Excitatory cell', fontsize=fs)
+    #axErates.set_title('Excitatory cell', fontsize=fs)
     p25 = mpatches.Rectangle([1,1], 1, 1, facecolor=con_color[1], edgecolor=con_color[1], alpha=0.3, lw=0.1, label=r'$c$ = 25')
     p50 = mpatches.Rectangle([1,1], 1, 1, facecolor=con_color[2], edgecolor=con_color[2], alpha=0.3, lw=0.1, label=r'$c$ = 50')
     p100 = mpatches.Rectangle([1,1], 1, 1, facecolor=con_color[3], edgecolor=con_color[3], alpha=0.3, lw=0.1, label=r'$c$ = 100')
-    c25 = mlines.Line2D([], [], color=con_color[1], label=r'$c$ = 25')
-    c50 = mlines.Line2D([], [], color=con_color[2], label=r'$c$ = 50')
-    c100 = mlines.Line2D([], [], color=con_color[3], label=r'$c$ = 100')
+    c25 = mlines.Line2D([], [], color=con_color[1], label=r'$c$ = 25%')
+    c50 = mlines.Line2D([], [], color=con_color[2], label=r'$c$ = 50%')
+    c100 = mlines.Line2D([], [], color=con_color[3], label=r'$c$ = 100%')
     axErates.legend(handles=[p25, p50, p100], frameon=False, ncol=1, fontsize=ls)
     axErates.text(x_text, y_text, 'A', transform=axErates.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     #axErates.legend(['C = 25', 'C = 50', 'C = 100'], frameon=False, loc='upper left', ncol=1, fontsize=ls)
     
     axIrates.set_xlim(left=lbound, right=rbound)
     axIrates.set_xscale('log')
-    axIrates.set_xlabel('Firing rate (Hz)', fontsize=ss)
+    axIrates.set_xlabel('I firing rate (Hz)', fontsize=ss)
     axIrates.set_ylabel(y_label, fontsize=ss)
-    axIrates.set_title('Inhibitory cell', fontsize=fs)
+    #axIrates.set_title('Inhibitory cell', fontsize=fs)
     axIrates.text(x_text, y_text, 'D', transform=axIrates.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     
     axf0.set_xlabel('Peak frequency (Hz)', fontsize=ss)
     axf0.set_ylabel(y_label, fontsize=fs)
-    axf0.set_title('Gamma peak frequency', fontsize=fs)
+    #axf0.set_title('Gamma peak frequency', fontsize=fs)
     axf0.text(x_text, y_text,'B', transform=axf0.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     
     axhw.set_xlabel('Peak width (Hz)', fontsize=ss)
     axhw.set_ylabel(y_label, fontsize=fs)
-    axhw.set_title('Gamma peak width', fontsize=fs)
+    #axhw.set_title('Gamma peak width', fontsize=fs)
     axhw.text(x_text, y_text, 'C', transform=axhw.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     
-    axf0shifts.set_xlabel('$\Delta$Peak frequency (Hz)', fontsize=ss)
+    axf0shifts.set_xlabel('$\Delta$Peak freq. / $\Delta c$ (Hz / %)', fontsize=ss)
     axf0shifts.set_ylabel(y_label, fontsize=fs)
     cdelta50 = mlines.Line2D([], [], color=shift_colors[0], label='$\Delta c =$50-25')
     cdelta100 = mlines.Line2D([], [], color=shift_colors[1], label='$\Delta c =$100-50')
-    pdelta50 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[0], edgecolor=shift_colors[0], alpha=0.3, lw=0.1, label='$\Delta c =$50-25')
-    pdelta100 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[1], edgecolor=shift_colors[1], alpha=0.3, lw=0.1, label='$\Delta c =$100-50')
-    axf0shifts.legend(handles=[pdelta50, pdelta100], fontsize=ls, frameon=False, loc='upper left')
+    pdelta50 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[0], edgecolor=shift_colors[0], alpha=0.3, lw=0.1, label='$\Delta c =$50%-25%')
+    pdelta100 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[1], edgecolor=shift_colors[1], alpha=0.3, lw=0.1, label='$\Delta c =$100%-50%')
+    axf0shifts.legend(handles=[pdelta50, pdelta100], fontsize=ls, frameon=False,)
     #axf0shifts.legend(['$\Delta C =$50-25', '$\Delta C =$100-50'], fontsize=ls, frameon=False)
-    axf0shifts.set_title('Shift in gamma peak frequency', fontsize=fs)
+    #axf0shifts.set_title('Shift in gamma peak frequency', fontsize=fs)
     axf0shifts.text(x_text, y_text, 'E', transform=axf0shifts.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     
-    axhwshifts.set_xlabel('$\Delta$Peak width (Hz)', fontsize=ss)
+    axhwshifts.set_xlabel('$\Delta$Peak width / $\Delta c$ (Hz / %)', fontsize=ss)
     axhwshifts.set_ylabel(y_label, fontsize=fs)
-    axhwshifts.set_title('Shift in gamma peak width', fontsize=fs)
+    #axhwshifts.set_title('Shift in gamma peak width', fontsize=fs)
     axhwshifts.text(x_text, y_text, 'F', transform=axhwshifts.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     #axhwshifts.legend(['$\Delta C =$50-25', '$\Delta C =$100-50'], fontsize=ls, frameon=False)
     
