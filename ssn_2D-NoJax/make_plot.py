@@ -533,6 +533,9 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     ls = 11
     ss = 15
     
+    x_text = -0.25
+    y_text = 1.05
+    
     contrasts = np.array([0, 25, 50, 100])
     cons = len(contrasts)
     
@@ -550,12 +553,12 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     ax_blank = fig_sim.add_subplot(gs[0,0:1])
     ax_blank.set_xticks([])
     ax_blank.set_yticks([])
-    ax_blank.text(-0.1, 1.0, 'A', transform=ax_blank.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_blank.text(x_text, y_text, 'A', transform=ax_blank.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     ax_blank.spines['right'].set_visible(False)
     ax_blank.spines['top'].set_visible(False)
     ax_blank.spines['left'].set_visible(False)
     ax_blank.spines['bottom'].set_visible(False)
-    ax_fcn = ax_blank.inset_axes([0.52, 0.07, 0.43, 0.43])
+    ax_fcn = ax_blank.inset_axes([-0.1, 0.6, 0.43, 0.43])
     
     n = 2
     k = 0.04
@@ -565,6 +568,7 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     W = 1
     ssn = SSN_classes._SSN_Base(n, k, Ne, Ni, tau_vec, W)
     x = np.arange(-1, 3, 0.1)
+    
 
     ax_fcn.plot(x, ssn.powlaw(x), 'k', lw= 2.25)
     ax_fcn.set_xlabel('Input')
@@ -577,6 +581,9 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     
     
     vE = np.sum(v_dyn[t_inds[0]:t_inds[1],::2,:], axis=1)
+    vI = np.sum(v_dyn[t_inds[0]:t_inds[1],1::2,:], axis=1)
+    sim_rE = np.mean(ssn.powlaw(vE), axis = 0)
+    sim_rI = np.mean(ssn.powlaw(vI), axis = 0)
     
     ax_volts = fig_sim.add_subplot(gs[0,1])
     ax_volts.set_prop_cycle('color', con_color)
@@ -586,20 +593,27 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
 #     ax_volts.set_xticks(fontsize=ss)
 #     ax_volts.set_yticks(fontsize=ss)
     ax_volts.set_ylabel('LFP (a.u.)', fontsize=fs)
-    ax_volts.legend([r'$c = 0$', r'$c = 25$', r'$c = 50$', r'$c = 100$'], frameon=False, loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=2, fontsize=ls)
+    ax_volts.legend([r'$c = 0\%$', r'$c = 25\%$', r'$c = 50\%$', r'$c = 100\%$'], frameon=False, loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=2, fontsize=ls)
     ax_volts.set_ylim(top = 1.25*np.max(vE))
-    ax_volts.text(-0.1, 1.0, 'B', transform=ax_volts.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_volts.text(x_text, y_text, 'B', transform=ax_volts.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     
     ax_rates = fig_sim.add_subplot(gs[0, 2])
     ax_rates.set_prop_cycle('color', rates_color)
-    ax_rates.plot(contrasts, r_fp, '-o', lw=2.25)
-    ax_rates.legend(['Excitatory mean-field neuron', 'Inhibitory mean-field neuron'], fontsize=ls, frameon=False)
+    ax_rates.plot(contrasts, r_fp, '-*', lw=2.25, ms=2*8)
+    E_leg = mlines.Line2D([], [], linewidth=2.25, color=rates_color[0], label='Excitatory unit')
+    I_leg = mlines.Line2D([], [], linewidth=2.25, color=rates_color[1], label='Inhibitory unit')
+    ax_rates.legend(handles=[E_leg, I_leg],fontsize=ls, frameon=False)
+    #ax_rates.legend(['Excitatory unit', 'Inhibitory unit'], fontsize=ls, frameon=False)
+    ax_rates.set_prop_cycle('color', rates_color)
+    ax_rates.plot(contrasts, sim_rE, 'o', lw=2.25, ms=12)
+    ax_rates.plot(contrasts, sim_rI, 'o', lw = 2.25, ms=12)
+
     ax_rates.set_ylabel('Firing rate (Hz)', fontsize=fs)
     ax_rates.set_xticks(contrasts)
     ax_rates.set_xlabel('Contrast', fontsize=fs)
     ax_rates.spines['right'].set_visible(False)    
     ax_rates.spines['top'].set_visible(False)
-    ax_rates.text(-0.1, 1.0, 'C', transform=ax_rates.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_rates.text(x_text, y_text, 'C', transform=ax_rates.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     
     f_inds = np.where(sim_fs > np.min(anal_fs), sim_fs, 0)
     f_inds = np.where(sim_fs< np.max(anal_fs), f_inds, 0)
@@ -610,7 +624,7 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     
     #recreate/repost Maunsell Data
     ax_recreate = fig_sim.add_subplot(gs[1,0])
-    ax_recreate.text(-0.1, 1.0, 'D', transform=ax_recreate.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_recreate.text(x_text, y_text, 'D', transform=ax_recreate.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     ax_recreate.set_xticks([])
     ax_recreate.set_yticks([])
     ax_recreate.spines['right'].set_visible(False)
@@ -623,11 +637,11 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     sim = ax_comp.plot(new_fs, new_sim_spect, 'o')
     anal = ax_comp.plot(anal_fs, spect)
     ax_comp.set_xlabel('Frequency (Hz)', fontsize=fs)
-    ax_comp.set_ylabel('Power spectrum (a.u.)', fontsize=fs)
+    ax_comp.set_ylabel('LFP power (a.u.)', fontsize=fs)
     ax_comp.set_ylim(top=1.3*np.max(new_sim_spect))
-    ax_comp.text(-0.1, 1.0, 'E', transform=ax_comp.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_comp.text(x_text, y_text, 'E', transform=ax_comp.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     
-    sim = mlines.Line2D([], [], linestyle='none', color='gray', marker='o', label='Simulated')
+    sim = mlines.Line2D([], [], linestyle='none', color='gray', marker='o', label='Stochastic method')
     anal = mlines.Line2D([], [], color='gray', label='Linear approximation')
     ax_comp.legend(handles=[sim, anal], fontsize=ls, loc='upper center', frameon=False)
     
@@ -636,17 +650,17 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     ax_inset.plot(contrasts[1:], sim_f0, 'k', ls='dashed', lw=1.5)
     ax_inset.plot(contrasts[1:], anal_f0[1:], 'k' ,lw=1.5)
     for cc in range(1, cons):
-        ax_inset.plot(contrasts[cc], sim_f0[cc-1],'o', markersize=10, color=con_color[cc])
-        ax_inset.plot(contrasts[cc], anal_f0[cc],'*', markersize=12, color=con_color[cc])
-    ax_inset.set_xlabel('Contrast', fontsize=fs)
+        ax_inset.plot(contrasts[cc], sim_f0[cc-1],'o', markersize=12, color=con_color[cc])
+        ax_inset.plot(contrasts[cc], anal_f0[cc],'*', markersize=16, color=con_color[cc])
+    ax_inset.set_xlabel('Contrast (%)', fontsize=fs)
     ax_inset.set_ylabel('Peak frequency (Hz)', fontsize=fs)
     ax_inset.set_xticks(contrasts[1:])
     ax_inset.spines['right'].set_visible(False)    
     ax_inset.spines['top'].set_visible(False)
-    sim = mlines.Line2D([], [], linestyle='none', color='gray', marker='o', markersize=10, label='Simulated')
-    anal = mlines.Line2D([], [], linestyle='none', color='gray', marker='*', markersize=12, label='Linear approximation')
+    sim = mlines.Line2D([], [], linestyle='none', color='gray', marker='o', markersize=12, label='Stochastic method')
+    anal = mlines.Line2D([], [], linestyle='none', color='gray', marker='*', markersize=16, label='Linear approximation')
     ax_inset.legend(handles=[sim, anal],fontsize=ls, loc='upper left', frameon=False)
-    ax_inset.text(-0.1, 1.0, 'F', transform=ax_inset.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_inset.text(x_text, y_text, 'F', transform=ax_inset.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
         #ax_inset.set_ylabel('Peak frequency (Hz)')
     
     #plt.tight_layout()
