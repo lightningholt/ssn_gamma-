@@ -6,10 +6,10 @@ import MakeSSNconnectivity as make_conn
 
 dt = 1
 xtol = 1e-5
-Tmax = 1000
+Tmax = 100000
 
 #power spectrum resolution and range
-fnums = 35 #resolution
+fnums = 100 #resolution
 freq_range = [0.1, 100]
 
 #SSN parameters
@@ -18,7 +18,7 @@ t_scale = 1
 class ssn_pars1():
     n = 2
     k = 0.04
-    tauE = 50 * t_scale
+    tauE = 30 * t_scale
     tauI = 10 * t_scale
     psi = 0.774 
     
@@ -26,8 +26,8 @@ class ssn_pars1():
     # NMDAratio = 0.4 #NMDA strength as a fraction of E synapse weight
     
     # define the network spatial parameters. Gridsizedeg is the key that determines everything. MagnFactor is biologically observed to be ~2mm/deg. Gridsizedeg = 2 and gridperdeg = 5 means that the network is 11 x 11 neurons (2*5 + 1 x 2*5 + 1)
-    #gridsizedeg = 3.2
-    gridsizedeg = 2
+    gridsizedeg = 3.2
+    #gridsizedeg = 2
     gridperdeg = 5
     gridsize = round(gridsizedeg*gridperdeg) + 1
     magnFactor = 2 #mm/deg
