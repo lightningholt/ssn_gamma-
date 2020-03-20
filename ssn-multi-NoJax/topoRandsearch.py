@@ -9,7 +9,7 @@ xtol = 1e-5
 Tmax = 100000
 
 #power spectrum resolution and range
-fnums = 35 #resolution
+fnums = 100 #resolution
 freq_range = [0.1, 100]
 
 #SSN parameters
@@ -26,8 +26,8 @@ class ssn_pars1():
     # NMDAratio = 0.4 #NMDA strength as a fraction of E synapse weight
     
     # define the network spatial parameters. Gridsizedeg is the key that determines everything. MagnFactor is biologically observed to be ~2mm/deg. Gridsizedeg = 2 and gridperdeg = 5 means that the network is 11 x 11 neurons (2*5 + 1 x 2*5 + 1)
-    #gridsizedeg = 3.2
-    gridsizedeg = 2
+    gridsizedeg = 3.2
+    #gridsizedeg = 2
     gridperdeg = 5
     gridsize = round(gridsizedeg*gridperdeg) + 1
     magnFactor = 2 #mm/deg
