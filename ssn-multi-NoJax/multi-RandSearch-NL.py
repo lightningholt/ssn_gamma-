@@ -19,7 +19,7 @@ Jxi_max = W0*1.5 * .5
 Jxi_min = W0*.5 * .5
 g_max = g0*1.5 #np.sqrt(10)
 g_min = g0*.5 #np.sqrt(1/10)
-NMDA_min = 0.5
+NMDA_min = 0.0
 NMDA_max = 0.5 
 Plocal_min = 0
 Plocal_max = 1
@@ -41,7 +41,7 @@ print('run time was', t0)
 
 dobj = date.today()
 f_ender = dobj.strftime("%y-%m-%d")
-fname = 'NL-rand-CorrTimeRetino_10-'+f_ender+'.json'
+fname = 'NL-rand-CorrTimeRetino_10-2-'+f_ender+'.json'
 
 #results = {'params':params, 'rates':rs, 'spects':spects, 'f0s':f0s, 'paramsNL':paramsNL, 'rsNL':rsNL, 'spectNL':spectNL, 'f0NL':f0NL, 'interesting_inds':interesting_inds}
 results = {'params':params, 'paramsNL':paramsNL, 'rsNL':rsNL, 'spectNL':spectNL, 'f0NL':f0NL, 'interesting_inds':interesting_inds}
