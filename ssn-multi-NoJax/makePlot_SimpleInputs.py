@@ -303,7 +303,11 @@ def fig3_RM(params, rates, fs, spect):
     ax_SS.set_xlabel('Stimulus radius (\xb0)', fontsize=size_f)
     ax_SS.set_xticks(radii)
     ax_SS.set_ylabel('Firing rate (Hz)', fontsize=size_f)
-    #tstr = 'SI = '+'({:.2f}, {:.2f})'.format(SI[0], SI[1]) #+', SI_I = '+'{:.2f}'.format(SI[1])
+    E_SI = 'SI = '+'{:.2f}'.format(SI[0])
+    I_SI = 'SI = '+'{:.2f}'.format(SI[1]) #+', SI_I = '+'{:.2f}'.format(SI[1])
+    ax_SS.text(radii[2], 0.5*rates[rad_inds[3],0], E_SI, color=rates_color[0], fontsize=size_f)
+    ax_SS.text(radii[1], 0.8*rates[rad_inds[1],1], I_SI, color=rates_color[1], fontsize=size_f)
+    
     #ax_SS.set_title('Suppression curve', fontsize=title_size)
     ax_SS.set_ylim(bottom=0)
 

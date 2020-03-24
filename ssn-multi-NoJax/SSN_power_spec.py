@@ -264,7 +264,7 @@ def infl_find_peak_freq(fs, spect):
     '''
     import numpy as onp
     
-    nps = 6 # max number of inflection pts 
+    nps = 12 # max number of inflection pts 
     nmaxpeaks = int(onp.floor(nps/2))
     cons = spect.shape[1]
     
