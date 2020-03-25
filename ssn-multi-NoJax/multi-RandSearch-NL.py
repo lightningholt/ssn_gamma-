@@ -9,7 +9,7 @@ import gamma_SSN_losses as losses
 import MakeSSNconnectivity as make_conn
 import topoRandsearch as tRs
 
-Nsamps = 10000 
+Nsamps = 100000
 contrasts = np.asarray([0, 25, 50, 100])
 W0 = 1.8
 g0 = 0.44
@@ -23,8 +23,8 @@ NMDA_min = 0.0
 NMDA_max = 0.5 
 Plocal_min = 0
 Plocal_max = 1
-sig_min = 0.5 # in mm 
-sig_max = 0.1 # in mm
+sig_min = 0.1 # in mm 
+sig_max = 0.5 # in mm
 
 
 BALANCED = True
