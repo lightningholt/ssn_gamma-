@@ -5,6 +5,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib as mpl
 from scipy.special import logsumexp
+import json
 
 import SSN_power_spec
 
@@ -227,9 +228,11 @@ def fig3_RM(params, rates, fs, spect):
 
     #Functions to find
     r_targ = rates[rad_inds, :]/np.mean(rates[rad_inds, :], axis=0)[None, :]
-    softmax_r = T * logsumexp( r_targ / T )
+    #softmax_r = T * logsumexp( r_targ / T , axis=0)
+    #SI = 1 - (r_targ[-1, :]/softmax_r)
+    max_r = np.max(r_targ, axis=0)
+    SI = 1 - (r_targ[-1, :]/max_r)
     #for rates the last index is max radius and max contrast
-    SI = 1 - (r_targ[-1, :]/softmax_r)
 
     #f0 is what I call peak freq, also outputs hw = halfwidth, and err = error.
     f0, _, _, infpt1, infpt2 = SSN_power_spec.infl_find_peak_freq(fs, spect)
@@ -392,8 +395,10 @@ def hists_fig4(obs_rates, f0s, min_freq=10, dfdc=False):
     
     T = 1e-2
     r_targ = rs[:, :, rad_inds]/np.mean(rs[:, :, rad_inds], axis=2)[:, :, None]
-    softmax_r = T * logsumexp( r_targ / T, axis=2 ) 
-    obs_SI = 1 - (r_targ[:,:,-1]/softmax_r)
+    #softmax_r = T * logsumexp( r_targ / T, axis=2 ) 
+    #obs_SI = 1 - (r_targ[:,:,-1]/softmax_r)
+    max_r = np.max(r_targ, axis=2)
+    obs_SI = 1 - (r_targ[:,:, -1]/max_r)
     
     dx = 0.2 # degrees
     Pdist = np.arange(probes)
@@ -404,13 +409,15 @@ def hists_fig4(obs_rates, f0s, min_freq=10, dfdc=False):
 
     fit_f0 = interp1d(contrasts[1:], ff_con[:,1:])
     yfit = fit_f0(Gabor_Cons)
-
+    
+    
+    minR2 = -10
     SSE = np.sum( (ff_probe - yfit) **2, axis=1) #SSE = sum of squared error
     ff_probe_var = np.sum((ff_probe-np.nanmean(ff_probe, axis=1)[:, None])**2, axis=1)
     R2 = 1- SSE/ff_probe_var
     #R2 = np.array([rr for rr in R2 if rr is not np.isnan(rr)])
     R2 = np.array([rr for rr in R2 if rr is not np.isnan(rr) and not np.isinf(rr)])
-    R2 = np.array([rr for rr in R2 if rr > -10])
+    R2 = np.array([rr for rr in R2 if rr > minR2])
     
     medR2 = np.median(R2)
     
@@ -590,5 +597,296 @@ def hists_fig4(obs_rates, f0s, min_freq=10, dfdc=False):
     axInset.set_yticks([])
     axInset.set_xticks([-2, -1, 0, 1])
     axInset.set_xlabel(r'$R^2$')
+    
+    return fighists
+
+
+# ========================================================================
+
+def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False):
+    
+    '''
+    obs_rates dimensions are samples, 1 for some reason, neuron, stimConds
+    f0s dimensions are sample, ff/hw/err/inflpt1/inflpt2, stimConds
+    ff is peak frequency found using either infl or RM method. 
+    gg is peak width
+    '''
+    
+    fs = 18
+    ls = 11
+    ss = 15
+    aa = 0.3 #alpha value
+    size_f = 12
+    thick_line = 2.5
+    big_mark = 8
+    
+    contrasts = np.array([0, 25, 50, 100])
+    cons = len(contrasts)
+    probes = 5
+    
+    con_inds = np.arange(0, cons)
+    probe_inds = np.arange(cons, f0s.shape[-1])
+    
+    #for rates 
+    con_inds_rates = np.array([0,1,2,6])
+    rad_inds = np.array([0, 3,4,5,6])
+    radii = np.arange(0, 1.25, 0.25) # in degrees -- gives [0, 0.25, 0.5, 0.75, 1]
+    
+    trgt = int(np.floor(obs_rates.shape[1]/4))
+    trgt = (trgt, trgt + int(np.ceil(obs_rates.shape[1]/2)))
+    
+    # EXAMPLE DATA STUFF 
+    fname = 'best-NL-spect.json'
+
+    with open(fname,'r') as js:
+        data = json.load(js)
+    
+    best_spect = np.array(data['spect']).T
+    best_rates = np.array(data['rates'])
+    best_rates = best_rates[0, trgt, :]
+    best_f0 = np.array(data['f0'])
+    #new freqs for plotting
+    fnums = best_spect.shape[0]
+    old_fs = np.linspace(0.1,100, fnums)
+    freq_important = [15, 100]
+    fs = [ff for ff in old_fs if ff >= freq_important[0] and ff <= freq_important[1]]
+    new_inds = [ii for ii in np.arange(fnums) if old_fs[ii] >= freq_important[0] and old_fs[ii] <= freq_important[1]]
+    print(new_inds)
+    ff_con = best_f0[con_inds]
+    
+    dx = 0.2 # degrees
+    Pdist = np.arange(probes)
+    probe_dist = dx * Pdist
+    #GaborSigma = 0.3*np.max(radii)
+    GaborSigma = 0.5
+    Gabor_Cons = 100*np.exp(- probe_dist**2/2/GaborSigma**2); #for the linear interp1d
+
+    best_fit_f0 = interp1d(contrasts[1:], ff_con[1:])
+    best_fit_f0 = best_fit_f0(Gabor_Cons)
+    
+    T = 1e-2
+    r_targ = best_rates[:, rad_inds]/np.mean(best_rates[:, rad_inds], axis=1)[:,None]
+    #softmax_r = T * logsumexp( r_targ / T, axis=1 ) 
+    #best_SI = 1 - (r_targ[:,-1]/softmax_r)
+    max_r = np.max(r_targ, axis=1)
+    best_SI = 1 - (r_targ[:,-1]/ max_r)
+    
+    best_rates = best_rates.T
+    
+    
+    #max(axis=2) is because lams is a 6-dim vector for each contrast and instantiation
+    ff_con = f0s[:, con_inds]
+    ff_con[ff_con<min_freq] = np.nan
+    dff_con = np.diff(ff_con, axis=1)
+    
+    ff_probe = f0s[:, probe_inds]
+    ff_probe[ff_probe<min_freq] = np.nan
+    dff_probe = np.diff(ff_probe, axis=1)
+    
+    rs = obs_rates[:, trgt, :]
+    
+    T = 1e-2
+    r_targ = rs[:, :, rad_inds]/np.mean(rs[:, :, rad_inds], axis=2)[:, :, None]
+    #softmax_r = T * logsumexp( r_targ / T, axis=2 ) 
+    #obs_SI = 1 - (r_targ[:,:,-1]/softmax_r)
+    max_r = np.max(r_targ, axis=2 ) 
+    obs_SI = 1 - (r_targ[:,:,-1]/max_r)
+    
+    
+    fit_f0 = interp1d(contrasts[1:], ff_con[:,1:])
+    yfit = fit_f0(Gabor_Cons)
+    
+    minR2 = -100
+    SSE = np.sum( (ff_probe - yfit) **2, axis=1) #SSE = sum of squared error
+    ff_probe_var = np.sum((ff_probe-np.nanmean(ff_probe, axis=1)[:, None])**2, axis=1)
+    R2 = 1- SSE/ff_probe_var
+    #R2 = np.array([rr for rr in R2 if rr is not np.isnan(rr)])
+    R2 = np.array([rr for rr in R2 if rr is not np.isnan(rr) and not np.isinf(rr)])
+    R2 = np.array([rr for rr in R2 if rr > minR2])
+    
+    medR2 = np.median(R2)
+    
+    min_freq = 10 #Hz
+    min_width = 0
+    
+    con_color = ['black', 'blue','green','red'] #colors for contrasts 0, 25, 50, 100,
+    shift_colors = ['tab:cyan', 'gold'] #blue and green make cyan, red and green make yellow
+    maun_color = ['tab:orange', 'indigo', 'green', 'm', 'xkcd:sky blue']
+    maunshift = ['r', 'b', 'g', 'k']
+    rates_color = ['xkcd:orange', 'tab:cyan']
+    cons = len(con_color)
+    contrasts = np.array([0, 25, 50, 100])
+    histstyle_paper = {"histtype": "step", "linewidth": 2.25, "density": False}
+    histstyle_nb = {"histtype": "bar", "linewidth":2, "alpha": aa, "density": False}
+
+    histstyle = histstyle_paper
+    
+    nbins = 30
+
+    ctypes = ["E", "I"]
+    #fig, axs = plt.subplots(3,4, figsize=(16,6))
+    
+    fighists = plt.figure(27, tight_layout=True, figsize=(14, 7))
+    gs = gridspec.GridSpec(2,9, figure=fighists)
+    
+    ax_spect_con = fighists.add_subplot(gs[0,0:3]) # ex Contrast dep PS
+    ax_spect_maun = fighists.add_subplot(gs[1,0:3]) # ex Local contrast dep PS
+    ax_SS = fighists.add_subplot(gs[0,3:5]) # size-tuning curve ex
+    ax_maun_f0 = fighists.add_subplot(gs[1, 3:5]) # ex peak freq RM effect
+    axf0 = fighists.add_subplot(gs[0,5:7])  # histograms of c-dep peak freq
+    axf0shifts = fighists.add_subplot(gs[1,5:7]) #histograms of c-dep change
+    axSIrates = fighists.add_subplot(gs[0,7:9])
+    axFit = fighists.add_subplot(gs[1,7:9])
+    
+    Emed = np.median(rs[:,0, :],axis=0)
+    print(Emed)
+    Imed = np.median(rs[:,:, 1],axis=0)
+    print(Imed)
+    
+    lbound = 0.7
+    rbound = 1500
+    
+    n_f0 = 1000*np.ones(nbins)
+    n_hw = 1000*np.ones(nbins)
+    dcon = np.diff(contrasts[1:])
+    
+    
+    #make the plots below here.........................................
+    
+    ax_spect_con.set_prop_cycle('color', con_color)
+    ax_spect_con.plot(fs, best_spect[new_inds, :cons], lw= thick_line)
+    #label stuff
+    ax_spect_con.set_ylabel('LFP power (a.u.)', fontsize=size_f)
+    ax_spect_con.set_xlabel('Frequency (Hz)', fontsize=size_f)
+    ax_spect_con.legend([r'$c = 0 \%$', r'$c = 25\%$', r'$c = 50\%$', r'$c = 100\%$'], frameon=False, loc='upper right', ncol=2)
+    
+    #RM effect Example
+    ax_spect_maun.set_prop_cycle('color', maun_color)
+    ax_spect_maun.plot(fs, best_spect[new_inds, -probes:], lw= thick_line)
+    #label stuff
+    lstr = ['R = 0\xb0']
+    for pp in range(1, probes):
+        lstr.append('R = {dist:.1f}\xb0'.format(dist=pp*dx))
+    ax_spect_maun.legend(lstr, loc='upper right', ncol=1, frameon=False)
+    ax_spect_maun.set_xlabel('Frequency (Hz)', fontsize=size_f)
+    ax_spect_maun.set_ylabel('LFP power (a.u.)', fontsize=size_f)
+    
+    
+    #SI example
+    ax_SS.set_prop_cycle('color', rates_color)
+    ax_SS.plot(radii, best_rates[rad_inds, :], '-o', lw= thick_line)
+    #label stuff
+    ax_SS.set_xlabel('Stimulus radius (\xb0)', fontsize=size_f)
+    ax_SS.set_xticks(radii)
+    ax_SS.set_ylabel('Firing rate (Hz)', fontsize=size_f)
+    E_SI = 'SI = '+'{:.2f}'.format(best_SI[0])
+    I_SI = 'SI = '+'{:.2f}'.format(best_SI[1]) #+', SI_I = '+'{:.2f}'.format(SI[1])
+    ax_SS.text(radii[2], 0.8*best_rates[rad_inds[3],0], E_SI, color=rates_color[0], fontsize=size_f)
+    ax_SS.text(radii[2], 0.8*best_rates[rad_inds[1],1], I_SI, color=rates_color[1], fontsize=size_f)
+    ax_SS.set_ylim(bottom=0)
+    
+    #Peak freq Locality
+    ax_maun_f0.plot(Pdist, best_fit_f0, 'gray', label='Prediction', lw= thick_line)
+    ax_maun_f0.set_prop_cycle('color', maun_color)
+    for pp in range(0, probes):
+        ax_maun_f0.plot(Pdist[pp], best_f0[-probes+pp],'o', label='_nolegend_', ms=big_mark)
+    #label stuff
+    ax_maun_f0.legend(frameon=False, loc='lower left')
+    ax_maun_f0.set_xlabel('Probe location (\xb0)', fontsize=size_f)
+    ax_maun_f0.set_xticks(Pdist)
+    labelstring = []
+    for pp in Pdist*dx:
+        labelstring.append('{dist:.2f}'.format(dist= pp))
+    ax_maun_f0.set_xticklabels(labelstring)
+    ax_maun_f0.set_ylabel('Peak frequency (Hz)', fontsize=size_f)
+    
+    
+    # make HisTs below here .........................................
+    # BINS
+    bFreqs = np.arange(0,80, 3)
+    bDFs = np.linspace(0,1,16)
+    #_, bDFs = np.histogram(dff_con[~np.isnan(dff_con[:,0]),0]/dcon[0], nbins//2)
+    _, bSI = np.histogram(obs_SI[~np.isnan(obs_SI[:,1]), 1], nbins)
+    #bin width for SI = 0.02267407
+    
+    
+    for c in np.arange(1, cons):
+        axf0.hist(ff_con[:, c], bins=bFreqs, color=con_color[c], **histstyle_nb)
+        axf0.hist(ff_con[:, c], bins=bFreqs, color=con_color[c], **histstyle)
+        
+        if c > 1:
+            if c == 2:
+                scale = 1
+            else:
+                scale = 1
+            
+            axf0shifts.hist(scale*dff_con[:,c-1]/dcon[c-2], bins=bDFs, color= shift_colors[c-2], **histstyle)
+            axf0shifts.hist(scale*dff_con[:,c-1]/dcon[c-2], bins=bDFs, color= shift_colors[c-2], **histstyle_nb)
+            
+    
+    for celltype in np.arange(len(ctypes)):
+        axSIrates.hist(obs_SI[:, celltype], bins=bSI, color=rates_color[celltype], **histstyle)
+        axSIrates.hist(obs_SI[:, celltype], bins=bSI, color=rates_color[celltype], **histstyle_nb)
+    
+    fit_bins = [0.8, 0.9, 1]
+    R3 = np.maximum(R2, 0.9)
+    goodR3 = np.sum(R3 > 0.9)
+    badR3 = np.sum(R3==0.9)
+    axFit.bar([0.9, 1], [badR3, goodR3], width=0.08, color=['r','forestgreen'], edgecolor='k', alpha=2*aa)
+    #axFit.hist(R3[R3 > 0.9], bins = fit_bins, color='forestgreen', histtype='bar', alpha=aa, align='right')
+    #axFit.hist(R3[R3 > 0.9], bins = fit_bins, color='forestgreen', histtype='step', lw=2*2, align='right')
+    #axFit.hist(R3[R3 == 0.9], bins = fit_bins, color ='red', histtype='bar', alpha=aa, align='left' )
+    #axFit.hist(R3[R3 == 0.9], bins = fit_bins, color ='red', histtype='step', lw=2*2, align='left' )
+    #axFit.axvline(medR2, ls= '--',color='k')
+    axInset = axFit.inset_axes([0.6, 0.6, 0.35, 0.35])
+    axInset.hist(R2, nbins, color='forestgreen', **histstyle)
+    axInset.hist(R2, nbins, color='forestgreen', **histstyle_nb)
+    
+    # =============
+    # =============
+    #cosmetic stuff below
+    #shifts to the A,B,C, etc of the figure, where they appear relative to axes
+    
+    x_text = -0.25
+    y_text = 1.05
+    y_label= "Counts"
+    
+    axf0.set_xlabel('Peak frequency (Hz)', fontsize=size_f)
+    axf0.set_ylabel(y_label, fontsize=size_f)
+    #axf0.set_title('Gamma peak frequency', fontsize=fs)
+    
+    
+    axf0shifts.set_xlabel(r'$\Delta$Peak freq. / $\Delta c$ (Hz / %)', fontsize=size_f)
+    axf0shifts.set_ylabel(y_label, fontsize=size_f)
+    pdelta50 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[0], edgecolor=shift_colors[0], alpha=aa, lw=0.1, label='$\Delta c =$50%-25%')
+    pdelta100 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[1], edgecolor=shift_colors[1], alpha=aa, lw=0.1, label='$\Delta c =$100%-50%')
+    axf0shifts.legend(handles=[pdelta50, pdelta100], fontsize=ls, frameon=False, )
+    
+    
+    axSIrates.set_xlabel('Suppression index', fontsize=size_f)
+    axSIrates.set_ylabel(y_label, fontsize=size_f)
+    pE = mpatches.Rectangle([1,1], 1, 1, facecolor=rates_color[0], edgecolor=rates_color[0], alpha=aa, lw=0.1, label='center E')
+    pI = mpatches.Rectangle([1,1], 1, 1, facecolor=rates_color[1], edgecolor=rates_color[1], alpha=aa, lw=0.1, label='center I')
+    axSIrates.legend(handles=[pE, pI], frameon=False, ncol=1, fontsize=ls)
+    
+    axFit.set_xlabel(r'$R^2$', fontsize=size_f)
+    axFit.set_xticks([0.9, 1])
+    axFit.set_xticklabels(['<0.9', '>0.9'])#, fontsize=ss)
+    axFit.set_xlim([0.85,1.05])
+    axFit.set_ylabel(y_label, fontsize=size_f)
+    axInset.set_yticks([])
+    axInset.set_xticks([minR2, 0])
+    axInset.set_xlabel(r'$R^2$')
+    #axInset.set_xlim(right=1)
+    
+    ax_spect_con.text(x_text, y_text,'A', transform=ax_spect_con.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_spect_maun.text(x_text, y_text,'E', transform=ax_spect_maun.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_SS.text(x_text, y_text,'B', transform=ax_SS.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_maun_f0.text(x_text, y_text,'F', transform=ax_maun_f0.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    axf0.text(x_text, y_text,'C', transform=axf0.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    axf0shifts.text(x_text, y_text, 'G', transform=axf0shifts.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    axSIrates.text(x_text, y_text,'D', transform=axSIrates.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    axFit.text(x_text, y_text,'H', transform=axFit.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    
     
     return fighists
