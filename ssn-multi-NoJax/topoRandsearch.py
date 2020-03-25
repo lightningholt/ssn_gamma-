@@ -6,10 +6,10 @@ import MakeSSNconnectivity as make_conn
 
 dt = 1
 xtol = 1e-5
-Tmax = 100000
+Tmax = 500
 
 #power spectrum resolution and range
-fnums = 100 #resolution
+fnums = 35 #resolution
 freq_range = [0.1, 100]
 
 #SSN parameters
@@ -410,8 +410,10 @@ def multi_NonLocal_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_m
 #         spect_list[smp, :, :] = spect
 #         f0_list[smp, :] = f0
         
-        if np.isnan(f0NL[1:]).any():
-            smp+=1
+#         if np.isnan(f0NL[1:]).any():
+#             smp+=1
+#             continue
+        if np.isnan(fs).any():
             continue
         
         params_listNL[smp,:] = np.array(paramsNL)
@@ -420,7 +422,7 @@ def multi_NonLocal_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_m
         f0_listNL[smp, :] = f0NL
         
         smp += 1
-        if smp == Nsamps:
+        if smp == 500:
             break
             
     
