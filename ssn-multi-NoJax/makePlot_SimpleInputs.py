@@ -233,7 +233,7 @@ def fig3_RM(params, rates, fs, spect):
     max_r = np.max(r_targ, axis=0)
     SI = 1 - (r_targ[-1, :]/max_r)
     #for rates the last index is max radius and max contrast
-
+    
     #f0 is what I call peak freq, also outputs hw = halfwidth, and err = error.
     f0, _, _, infpt1, infpt2 = SSN_power_spec.infl_find_peak_freq(fs, spect)
     print(f0)
@@ -242,7 +242,9 @@ def fig3_RM(params, rates, fs, spect):
     #GaborSigma = 0.3*np.max(radii)
     GaborSigma = 0.5
     Gabor_Cons = 100*np.exp(- probe_dist**2/2/GaborSigma**2); #for the linear interp1d
-
+    
+    
+    
     #Figure Parameters
     fignumber = 29
     fig_RM = plt.figure(fignumber, figsize=(10, 6), constrained_layout=True)
@@ -334,6 +336,11 @@ def fig3_RM(params, rates, fs, spect):
     ax_maun_f0 = fig_RM.add_subplot(gs[1, 3:5])
     ax_maun_f0.plot(Pdist, fit_f0(Gabor_Cons), 'gray', label='Prediction', lw= thick_line)
     ax_maun_f0.set_prop_cycle('color', maun_color)
+    
+    SSE = np.sum( (f0[-probes:] - fit_f0(Gabor_Cons)) **2) #SSE = sum of squared error
+    ff_probe_var = np.sum((f0[-probes:]-np.nanmean(f0[-probes:]))**2)
+    R2 = 1- SSE/ff_probe_var
+    
     for pp in range(0, probes):
         ax_maun_f0.plot(Pdist[pp], f0[-probes+pp],'o', label='_nolegend_', ms=big_mark)
     
@@ -348,6 +355,8 @@ def fig3_RM(params, rates, fs, spect):
     ax_maun_f0.set_xticklabels(labelstring)
     ax_maun_f0.set_ylabel('Peak frequency (Hz)', fontsize=size_f)
     #ax_maun_f0.set_title('Locality of contrast dependence', fontsize=title_size)
+    sR2 = r'$R^2 = $'+'{:.2f}'.format(R2) #+', SI_I = '+'{:.2f}'.format(SI[1])
+    ax_maun_f0.text(0.1, 0.1, sR2, transform=ax_maun_f0.transAxes, color=con_color[0], fontsize=size_f)
     
     return fig_RM
 
