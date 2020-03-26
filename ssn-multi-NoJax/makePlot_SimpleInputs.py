@@ -858,6 +858,7 @@ def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False):
     
     axf0shifts.set_xlabel(r'$\Delta$Peak freq. / $\Delta c$ (Hz / %)', fontsize=size_f)
     axf0shifts.set_ylabel(y_label, fontsize=size_f)
+    axf0shifts.set_ylim(top=11)
     pdelta50 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[0], edgecolor=shift_colors[0], alpha=aa, lw=0.1, label='$\Delta c =$50%-25%')
     pdelta100 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[1], edgecolor=shift_colors[1], alpha=aa, lw=0.1, label='$\Delta c =$100%-50%')
     axf0shifts.legend(handles=[pdelta50, pdelta100], fontsize=ls, frameon=False, )
