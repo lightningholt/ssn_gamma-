@@ -6,7 +6,7 @@ import MakeSSNconnectivity as make_conn
 
 dt = 1
 xtol = 1e-5
-Tmax = 500
+Tmax = 5000
 
 #power spectrum resolution and range
 fnums = 35 #resolution
