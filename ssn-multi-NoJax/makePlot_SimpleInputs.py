@@ -795,12 +795,17 @@ def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False):
     ax_SS.set_ylim(bottom=0)
     
     #Peak freq Locality
+    SSE = np.nansum( (best_f0[-probes:] - best_fit_f0) **2) #SSE = sum of squared error
+    ff_probe_var = np.nansum((best_f0[-probes:]-np.nanmean(best_f0[-probes:]))**2)
+    best_R2 = 1- SSE/ff_probe_var
+    
     ax_maun_f0.plot(Pdist, best_fit_f0, 'gray', label='Prediction', lw= thick_line)
     ax_maun_f0.set_prop_cycle('color', maun_color)
     for pp in range(0, probes):
         ax_maun_f0.plot(Pdist[pp], best_f0[-probes+pp],'o', label='_nolegend_', ms=big_mark)
     #label stuff
-    ax_maun_f0.legend(frameon=False, loc='lower left')
+    #ax_maun_f0.legend(frameon=False, bbox_to_anchor=(0.95, 0.725),bbox_transform=ax_maun_f0.transAxes)
+    ax_maun_f0.legend(frameon=False, loc='upper right')
     ax_maun_f0.set_xlabel('Probe location (\xb0)', fontsize=size_f)
     ax_maun_f0.set_xticks(Pdist)
     labelstring = []
@@ -808,14 +813,16 @@ def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False):
         labelstring.append('{dist:.2f}'.format(dist= pp))
     ax_maun_f0.set_xticklabels(labelstring)
     ax_maun_f0.set_ylabel('Peak frequency (Hz)', fontsize=size_f)
-    
+    sR2 = r'$R^2 = $'+'{:.2f}'.format(best_R2) #+', SI_I = '+'{:.2f}'.format(SI[1])
+    ax_maun_f0.text(0.05, 0.05, sR2, transform=ax_maun_f0.transAxes, color=con_color[0], fontsize=size_f)
+    ax_maun_f0.set_ylim(top=90)
     
     # make HisTs below here .........................................
     # BINS
-    bFreqs = np.arange(0,80, 3)
-    bDFs = np.linspace(0,1,16)
+    bFreqs = np.arange(20,100, 5)
+    bDFs = np.linspace(-0.5,1, 20)
     #_, bDFs = np.histogram(dff_con[~np.isnan(dff_con[:,0]),0]/dcon[0], nbins//2)
-    _, bSI = np.histogram(obs_SI[~np.isnan(obs_SI[:,1]), 1], nbins)
+    _, bSI = np.histogram(obs_SI[~np.isnan(obs_SI[:,1]), 1], nbins//3)
     #bin width for SI = 0.02267407
     
     
@@ -867,7 +874,7 @@ def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False):
     
     axf0shifts.set_xlabel(r'$\Delta$Peak freq. / $\Delta c$ (Hz / %)', fontsize=size_f)
     axf0shifts.set_ylabel(y_label, fontsize=size_f)
-    axf0shifts.set_ylim(top=11)
+    axf0shifts.set_ylim(top=20)
     pdelta50 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[0], edgecolor=shift_colors[0], alpha=aa, lw=0.1, label='$\Delta c =$50%-25%')
     pdelta100 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[1], edgecolor=shift_colors[1], alpha=aa, lw=0.1, label='$\Delta c =$100%-50%')
     axf0shifts.legend(handles=[pdelta50, pdelta100], fontsize=ls, frameon=False, )
@@ -884,6 +891,7 @@ def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False):
     axFit.set_xticklabels(['<0.9', '>0.9'])#, fontsize=ss)
     axFit.set_xlim([0.85,1.05])
     axFit.set_ylabel(y_label, fontsize=size_f)
+    #axFit.set_yticks(np.arange(0,19,3))
     axInset.set_yticks([])
     axInset.set_xticks([minR2, 0])
     axInset.set_xlabel(r'$R^2$')
