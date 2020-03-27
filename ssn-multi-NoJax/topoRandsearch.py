@@ -325,7 +325,7 @@ def sample_target_SSN(Nsamps, contrasts, params_min, params_max, BALANCED = True
         spect_list.append(spect)
         f0_list.append(f0)
         
-        if smp == Nsamps:
+        if smp == 500:
             break
     
     return np.asarray(params_list), np.asarray(rs_list), np.asarray(spect_list), np.asarray(f0_list), fs, jj
