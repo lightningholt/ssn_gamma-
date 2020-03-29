@@ -381,24 +381,26 @@ def hists_fig4(obs_rates, f0s, min_freq=10, dfdc=False):
     probes = 5
     
     con_inds = np.arange(0, cons)
-    probe_inds = np.arange(cons, f0s.shape[2])
+    probe_inds = np.arange(cons, f0s.shape[-1])
     
     #max(axis=2) is because lams is a 6-dim vector for each contrast and instantiation
     ff_con = f0s[:, 0, con_inds]
+    #ff_con = f0s[:, con_inds]
     dff_con = np.diff(ff_con, axis=1)
     
     ff_probe = f0s[:, 0, probe_inds]
+    #ff_probe = f0s[:, probe_inds]
     dff_probe = np.diff(ff_probe, axis=1)
     
-    hw_con = f0s[:, 1, con_inds]
-    hw_probe = f0s[:, 1, probe_inds]
+    #hw_con = f0s[:, 1, con_inds]
+    #hw_probe = f0s[:, 1, probe_inds]
     
     #for rates 
     con_inds_rates = np.array([0,1,2,6])
     rad_inds = np.array([3,4,5,6])
     
     trgt = int(np.floor(obs_rates.shape[2]/4))
-    trgt = (trgt, trgt + int(np.floor(obs_rates.shape[2]/2)))
+    trgt = [trgt, trgt + int(np.ceil(obs_rates.shape[2]/2))]
     
     rs = obs_rates[:, 0, trgt, :]
     
@@ -425,6 +427,7 @@ def hists_fig4(obs_rates, f0s, min_freq=10, dfdc=False):
     ff_probe_var = np.sum((ff_probe-np.nanmean(ff_probe, axis=1)[:, None])**2, axis=1)
     R2 = 1- SSE/ff_probe_var
     #R2 = np.array([rr for rr in R2 if rr is not np.isnan(rr)])
+    nn_fits = len(R2) - np.sum(np.isnan(R2)) - np.sum(np.isinf(R2))
     R2 = np.array([rr for rr in R2 if rr is not np.isnan(rr) and not np.isinf(rr)])
     R2 = np.array([rr for rr in R2 if rr > minR2])
     
@@ -531,10 +534,11 @@ def hists_fig4(obs_rates, f0s, min_freq=10, dfdc=False):
         axSIrates.hist(obs_SI[:, celltype], bins=bSI, color=rates_color[celltype], **histstyle_nb)
     
     fit_bins = [0.8, 0.9, 1]
-    R3 = np.maximum(R2, 0.9)
-    goodR3 = np.sum(R3 > 0.9)
-    badR3 = np.sum(R3==0.9)
-    axFit.bar([0.9, 1], [badR3, goodR3], width=0.08, color=['r','forestgreen'], edgecolor='k', alpha=2*aa)
+    cut_off_R2 = 0.9
+    R3 = np.maximum(R2, cut_off_R2)
+    goodR3 = np.sum(R3 > cut_off_R2)
+    badR3 = np.sum(R3 <= cut_off_R2)
+    axFit.bar([cut_off_R2, 1], [badR3, goodR3], width=0.08, color=['r','forestgreen'], edgecolor='k', alpha=2*aa)
     #axFit.hist(R3[R3 > 0.9], bins = fit_bins, color='forestgreen', histtype='bar', alpha=aa, align='right')
     #axFit.hist(R3[R3 > 0.9], bins = fit_bins, color='forestgreen', histtype='step', lw=2*2, align='right')
     #axFit.hist(R3[R3 == 0.9], bins = fit_bins, color ='red', histtype='bar', alpha=aa, align='left' )
@@ -596,23 +600,25 @@ def hists_fig4(obs_rates, f0s, min_freq=10, dfdc=False):
     axSIrates.legend(handles=[pE, pI], frameon=False, ncol=1, fontsize=ls)
     
     axFit.set_xlabel(r'$R^2$', fontsize=ss)
-    axFit.set_xticks([0.9, 1])
+    axFit.set_xticks([cut_off_R2, 1])
     axFit.set_xticklabels(['<0.9', '>0.9'])#, fontsize=ss)
-    axFit.set_xlim([0.85,1.05])
+    axFit.set_xlim([cut_off_R2-0.05,1.05])
     axFit.set_ylabel(y_label, fontsize=ss)
     #axFit.set_title(r'Linear fit $R^2$', fontsize=fs)
     axFit.text(x_text, y_text,'F', transform=axFit.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     #axhwshifts.legend(['$\Delta C =$50-25', '$\Delta C =$100-50'], fontsize=ls, frameon=False)
     axInset.set_yticks([])
-    axInset.set_xticks([-2, -1, 0, 1])
+    #axInset.set_xticks([-2, -1, 0, 1])
     axInset.set_xlabel(r'$R^2$')
     
-    return fighists
+     
+    
+    return fighists, nn_fits
 
 
 # ========================================================================
 
-def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False):
+def hists_fig5(obs_rates, spect, min_freq=10, dfdc=False):
     
     '''
     obs_rates dimensions are samples, 1 for some reason, neuron, stimConds
@@ -684,13 +690,19 @@ def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False):
     
     
     #max(axis=2) is because lams is a 6-dim vector for each contrast and instantiation
+    f0s, _, _, _, _ = SSN_power_spec.infl_find_peak_freq(fs, spect)
+    
     ff_con = f0s[:, con_inds]
     ff_con[ff_con<min_freq] = np.nan
     dff_con = np.diff(ff_con, axis=1)
+    nn_ffcon = f0s.shape[0] - np.sum(np.isnan(ff_con), axis=0)
+    nn_dfcon = f0s.shape[0] - np.sum(np.isnan(dff_con), axis=0)
     
     ff_probe = f0s[:, probe_inds]
     ff_probe[ff_probe<min_freq] = np.nan
     dff_probe = np.diff(ff_probe, axis=1)
+    nn_ffprobe = f0s.shape[0] - np.sum(np.isnan(ff_probe), axis=0)
+    nn_dfprobe = f0s.shape[0] - np.sum(np.isnan(dff_probe), axis=0)
     
     rs = obs_rates[:, trgt, :]
     
@@ -710,6 +722,8 @@ def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False):
     ff_probe_var = np.sum((ff_probe-np.nanmean(ff_probe, axis=1)[:, None])**2, axis=1)
     R2 = 1- SSE/ff_probe_var
     #R2 = np.array([rr for rr in R2 if rr is not np.isnan(rr)])
+    nn_fits = len(R2) - np.sum(np.isnan(R2)) - np.sum(np.isinf(R2))
+    obs_E_SI = obs_SI[R2>minR2, 0]
     R2 = np.array([rr for rr in R2 if rr is not np.isnan(rr) and not np.isinf(rr)])
     R2 = np.array([rr for rr in R2 if rr > minR2])
     
@@ -735,17 +749,18 @@ def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False):
     ctypes = ["E", "I"]
     #fig, axs = plt.subplots(3,4, figsize=(16,6))
     
-    fighists = plt.figure(27, tight_layout=True, figsize=(14, 7))
-    gs = gridspec.GridSpec(2,9, figure=fighists)
+    fighists = plt.figure(27, constrained_layout=True, figsize=(21, 7))
+    gs = gridspec.GridSpec(2,17, figure=fighists)
     
-    ax_spect_con = fighists.add_subplot(gs[0,0:3]) # ex Contrast dep PS
-    ax_spect_maun = fighists.add_subplot(gs[1,0:3]) # ex Local contrast dep PS
-    ax_SS = fighists.add_subplot(gs[0,3:5]) # size-tuning curve ex
-    ax_maun_f0 = fighists.add_subplot(gs[1, 3:5]) # ex peak freq RM effect
-    axf0 = fighists.add_subplot(gs[0,5:7])  # histograms of c-dep peak freq
-    axf0shifts = fighists.add_subplot(gs[1,5:7]) #histograms of c-dep change
-    axSIrates = fighists.add_subplot(gs[0,7:9])
-    axFit = fighists.add_subplot(gs[1,7:9])
+    ax_spect_con = fighists.add_subplot(gs[0,0:5]) # ex Contrast dep PS
+    ax_spect_maun = fighists.add_subplot(gs[1,0:5]) # ex Local contrast dep PS
+    ax_SS = fighists.add_subplot(gs[0,5:9]) # size-tuning curve ex
+    ax_maun_f0 = fighists.add_subplot(gs[1, 5:9]) # ex peak freq RM effect
+    axf0 = fighists.add_subplot(gs[0,9:13])  # histograms of c-dep peak freq
+    axf0shifts = fighists.add_subplot(gs[1,9:13]) #histograms of c-dep change
+    axSIrates = fighists.add_subplot(gs[0,13:15])
+    axFit = fighists.add_subplot(gs[0,15:])
+    ax_corr = fighists.add_subplot(gs[1, 13:])
     
     Emed = np.median(rs[:,0, :],axis=0)
     print(Emed)
@@ -823,6 +838,7 @@ def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False):
     bDFs = np.linspace(-0.5,1, 20)
     #_, bDFs = np.histogram(dff_con[~np.isnan(dff_con[:,0]),0]/dcon[0], nbins//2)
     _, bSI = np.histogram(obs_SI[~np.isnan(obs_SI[:,1]), 1], nbins//3)
+    nSI = obs_SI.shape[0] - np.sum(np.isnan(obs_SI), axis=0)
     #bin width for SI = 0.02267407
     
     
@@ -844,20 +860,26 @@ def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False):
         axSIrates.hist(obs_SI[:, celltype], bins=bSI, color=rates_color[celltype], **histstyle)
         axSIrates.hist(obs_SI[:, celltype], bins=bSI, color=rates_color[celltype], **histstyle_nb)
     
-    fit_bins = [0.8, 0.9, 1]
-    R3 = np.maximum(R2, 0.9)
-    goodR3 = np.sum(R3 > 0.9)
-    badR3 = np.sum(R3==0.9)
-    axFit.bar([0.9, 1], [badR3, goodR3], width=0.08, color=['r','forestgreen'], edgecolor='k', alpha=2*aa)
+    #fit_bins = [0.8, 0.9, 1]
+    #R3 = np.maximum(R2, 0.9)
+    #goodR3 = np.sum(R3 > 0.9)
+    #badR3 = np.sum(R3==0.9)
+    #axFit.bar([0.9, 1], [badR3, goodR3], width=0.08, color=['r','forestgreen'], edgecolor='k', alpha=2*aa)
     #axFit.hist(R3[R3 > 0.9], bins = fit_bins, color='forestgreen', histtype='bar', alpha=aa, align='right')
     #axFit.hist(R3[R3 > 0.9], bins = fit_bins, color='forestgreen', histtype='step', lw=2*2, align='right')
     #axFit.hist(R3[R3 == 0.9], bins = fit_bins, color ='red', histtype='bar', alpha=aa, align='left' )
     #axFit.hist(R3[R3 == 0.9], bins = fit_bins, color ='red', histtype='step', lw=2*2, align='left' )
     #axFit.axvline(medR2, ls= '--',color='k')
-    axInset = axFit.inset_axes([0.6, 0.6, 0.35, 0.35])
-    axInset.hist(R2, nbins, color='forestgreen', **histstyle)
-    axInset.hist(R2, nbins, color='forestgreen', **histstyle_nb)
+    #axInset = axFit.inset_axes([0.6, 0.6, 0.35, 0.35])
+    #axInset.hist(R2, nbins, color='forestgreen', **histstyle)
+    #axInset.hist(R2, nbins, color='forestgreen', **histstyle_
     
+    fit_bins = np.linspace(0, 1, 10)
+    axFit.hist(R2, bins=fit_bins, color='red', **histstyle)
+    axFit.hist(R2, bins=fit_bins, color='red', **histstyle_nb)
+    
+    
+    ax_corr.plot(R2, obs_E_SI, 'o')
     # =============
     # =============
     #cosmetic stuff below
@@ -886,25 +908,31 @@ def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False):
     pI = mpatches.Rectangle([1,1], 1, 1, facecolor=rates_color[1], edgecolor=rates_color[1], alpha=aa, lw=0.1, label='center I')
     axSIrates.legend(handles=[pE, pI], frameon=False, ncol=1, fontsize=ls)
     
-    axFit.set_xlabel(r'$R^2$', fontsize=size_f)
-    axFit.set_xticks([0.9, 1])
-    axFit.set_xticklabels(['<0.9', '>0.9'])#, fontsize=ss)
-    axFit.set_xlim([0.85,1.05])
-    axFit.set_ylabel(y_label, fontsize=size_f)
-    #axFit.set_yticks(np.arange(0,19,3))
-    axInset.set_yticks([])
-    axInset.set_xticks([minR2, 0])
-    axInset.set_xlabel(r'$R^2$')
+#     axFit.set_xlabel(r'$R^2$', fontsize=size_f)
+#     axFit.set_xticks([0.9, 1])
+#     axFit.set_xticklabels(['<0.9', '>0.9'])#, fontsize=ss)
+#     axFit.set_xlim([0.85,1.05])
+#     axFit.set_ylabel(y_label, fontsize=size_f)
+#     #axFit.set_yticks(np.arange(0,19,3))
+    #axInset.set_yticks([])
+    #axInset.set_xticks([minR2, 0])
+    #axInset.set_xlabel(r'$R^2$')
     #axInset.set_xlim(right=1)
+    axFit.set_xlabel(r'$R^2$', fontsize=size_f)
+    axFit.set_ylabel(y_label, fontsize=size_f)
+    
+    
+    ax_corr.set_xlabel(r'$R^2$', fontsize=size_f)
+    ax_corr.set_ylabel('SI of E', fontsize=size_f)
     
     ax_spect_con.text(x_text, y_text,'A', transform=ax_spect_con.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
-    ax_spect_maun.text(x_text, y_text,'E', transform=ax_spect_maun.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_spect_maun.text(x_text, y_text,'F', transform=ax_spect_maun.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     ax_SS.text(x_text, y_text,'B', transform=ax_SS.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
-    ax_maun_f0.text(x_text, y_text,'F', transform=ax_maun_f0.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_maun_f0.text(x_text, y_text,'G', transform=ax_maun_f0.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     axf0.text(x_text, y_text,'C', transform=axf0.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
-    axf0shifts.text(x_text, y_text, 'G', transform=axf0shifts.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    axf0shifts.text(x_text, y_text, 'H', transform=axf0shifts.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     axSIrates.text(x_text, y_text,'D', transform=axSIrates.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
-    axFit.text(x_text, y_text,'H', transform=axFit.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    axFit.text(x_text, y_text,'E', transform=axFit.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
+    ax_corr.text(x_text, y_text,'I', transform=ax_corr.transAxes, fontsize=16, fontweight='bold', va='top', ha='right')
     
-    
-    return fighists
+    return fighists, nn_fits, nSI, nn_ffcon, nn_dfcon, nn_ffprobe, nn_dfprobe
