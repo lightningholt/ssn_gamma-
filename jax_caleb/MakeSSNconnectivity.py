@@ -165,6 +165,7 @@ def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWi
     OMap = orientation preference across the cortex
     r_cent = array of stimulus radii
     contrasts = array of stimulus contrasts
+    X,Y = matrices of distances in X and Y in degrees
     various parameters of the network
     
     Outputs
