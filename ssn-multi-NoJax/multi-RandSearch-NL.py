@@ -23,7 +23,7 @@ NMDA_min = 0.0
 NMDA_max = 0.5 
 Plocal_min = 0
 Plocal_max = 1
-sig_min = 0.1 # in mm 
+sig_min = 0.15 # in mm 
 sig_max = 0.5 # in mm
 
 
@@ -41,7 +41,7 @@ print('run time was', t0)
 
 dobj = date.today()
 f_ender = dobj.strftime("%y-%m-%d")
-fname = 'NL-rand-CorrTimeRetino_10-2-'+f_ender+'.json'
+fname = 'NL-rand-CorrTimeRetino_10-'+f_ender+'.json'
 
 #results = {'params':params, 'rates':rs, 'spects':spects, 'f0s':f0s, 'paramsNL':paramsNL, 'rsNL':rsNL, 'spectNL':spectNL, 'f0NL':f0NL, 'interesting_inds':interesting_inds}
 results = {'params':params, 'paramsNL':paramsNL, 'rsNL':rsNL, 'spectNL':spectNL, 'f0NL':f0NL, 'interesting_inds':interesting_inds}
