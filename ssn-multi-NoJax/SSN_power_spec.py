@@ -297,9 +297,10 @@ def infl_find_peak_freq(fs, spect):
     
     #bunch of if statements to find the peak frequencies, f0, and  half width, hw
     for c in np.arange(len(cc)):
+        
         #is there a peak before the end of frequencies
         if np.all(pos_curvature[ff[c]:, cc[c]] ==0):
-            if cc[c] ==0:
+            if cc[c] == 0:
                 # report an error if I get a gamma bump at 0 contrast
                 err[cc[c]] = 1
                 
@@ -318,7 +319,7 @@ def infl_find_peak_freq(fs, spect):
             # if this is the last c, and it's negatively curved, just reset jj.
             jj = 0
 
-        elif cc[c+1] == cc[c]: 
+        elif np.abs(cc[c+1] - cc[c]) <0.1: 
             if cc[c] == 0:
                 # report an error if I get a gamma bump at 0 contrast
                 err[cc[c]] = 1.4
@@ -327,8 +328,9 @@ def infl_find_peak_freq(fs, spect):
             #if statement makes sure the contrasts doesn't change
             end_ind = ff[c+1]
             start_ind = ff[c]
+            
             #make sure everything is negatively curved, i.e. not positively curved
-            if np.all(pos_curvature[cc[c], start_ind:end_ind-1] == 0):
+            if np.all(pos_curvature[start_ind:end_ind-1, cc[c]] == 0):
                 if jj < nmaxpeaks:
                     f0[cc[c], jj] = (fs[end_ind] + fs[start_ind])/2
                     hw[cc[c], jj] = (fs[end_ind] - fs[start_ind])/2
@@ -339,6 +341,8 @@ def infl_find_peak_freq(fs, spect):
                     
                 else:
                     err[cc[c]] = 1
+            else:
+                err[cc[c]]=2
         else:
             #catch all other cases
             jj = 0
