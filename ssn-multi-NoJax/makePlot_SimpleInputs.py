@@ -235,7 +235,8 @@ def fig3_RM(params, rates, fs, spect):
     #for rates the last index is max radius and max contrast
     
     #f0 is what I call peak freq, also outputs hw = halfwidth, and err = error.
-    f0, _, _, infpt1, infpt2 = SSN_power_spec.infl_find_peak_freq(fs, spect)
+    f0, _, err, infpt1, infpt2 = SSN_power_spec.infl_find_peak_freq(fs, spect)
+    #print(infpt1)
     print(f0)
 
     probe_dist = dx * Pdist
