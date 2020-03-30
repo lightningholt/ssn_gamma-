@@ -500,7 +500,7 @@ def peak_hists(df0, dhw, params=None):
     corr_hwmean= np.corrcoef(dhw[nums_mean, 2], params[:, nums_mean])[0, 1:]
     corr_hw =  np.vstack((corr_hw25, corr_hw100, corr_hwmean))
     
-    print(corr_f0.shape)
+    #print(corr_f0.shape)
     
     width = 0.3
     param_labels = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA']
