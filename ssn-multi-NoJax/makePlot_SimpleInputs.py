@@ -619,7 +619,8 @@ def hists_fig4(obs_rates, f0s, min_freq=10, dfdc=False):
 
 # ========================================================================
 
-def hists_fig5(obs_rates, spect, min_freq=10, dfdc=False):
+def hists_fig5(obs_rates, spect, f0s, min_freq=10, dfdc=False, tau_corr_new=0.01):
+    
     
     '''
     obs_rates dimensions are samples, 1 for some reason, neuron, stimConds
@@ -641,7 +642,8 @@ def hists_fig5(obs_rates, spect, min_freq=10, dfdc=False):
     probes = 5
     
     con_inds = np.arange(0, cons)
-    probe_inds = np.arange(cons, f0s.shape[-1])
+    #probe_inds = np.arange(cons, f0s.shape[-1])
+    probe_inds = np.arange(cons, 9)
     
     #for rates 
     con_inds_rates = np.array([0,1,2,6])
@@ -657,15 +659,20 @@ def hists_fig5(obs_rates, spect, min_freq=10, dfdc=False):
     with open(fname,'r') as js:
         data = json.load(js)
     
-    best_spect = np.array(data['spect']).T
-    best_rates = np.array(data['rates'])
-    best_rates = best_rates[0, trgt, :]
-    best_f0 = np.array(data['f0'])
     #new freqs for plotting
-    fnums = best_spect.shape[0]
+    fnums = 35#best_spect.shape[0]
     old_fs = np.linspace(0.1,100, fnums)
     freq_important = [15, 100]
     fs = [ff for ff in old_fs if ff >= freq_important[0] and ff <= freq_important[1]]
+    
+    tau_corr_old = 0.01
+    best_spect = np.array(data['spect']).T
+    best_spect = best_spect * (tau_corr_new/np.abs((-1j*2*np.pi*old_fs * tau_corr_new + 1)**2 ) / (tau_corr_old/np.abs((-1j*2*np.pi*old_fs * tau_corr_old + 1)**2 )))[:,None] 
+    best_rates = np.array(data['rates'])
+    best_rates = best_rates[0, trgt, :]
+    best_f0 = np.array(data['f0'])
+    best_f0, _, _, _, _ = SSN_power_spec.infl_find_peak_freq(old_fs, best_spect)
+
     new_inds = [ii for ii in np.arange(fnums) if old_fs[ii] >= freq_important[0] and old_fs[ii] <= freq_important[1]]
     print(new_inds)
     ff_con = best_f0[con_inds]
@@ -691,7 +698,7 @@ def hists_fig5(obs_rates, spect, min_freq=10, dfdc=False):
     
     
     #max(axis=2) is because lams is a 6-dim vector for each contrast and instantiation
-    f0s, _, _, _, _ = SSN_power_spec.infl_find_peak_freq(fs, spect)
+    #f0s, _, _, _, _ = SSN_power_spec.infl_find_peak_freq(fs, spect)
     
     ff_con = f0s[:, con_inds]
     ff_con[ff_con<min_freq] = np.nan
@@ -897,7 +904,7 @@ def hists_fig5(obs_rates, spect, min_freq=10, dfdc=False):
     
     axf0shifts.set_xlabel(r'$\Delta$Peak freq. / $\Delta c$ (Hz / %)', fontsize=size_f)
     axf0shifts.set_ylabel(y_label, fontsize=size_f)
-    axf0shifts.set_ylim(top=20)
+    #axf0shifts.set_ylim(top=20)
     pdelta50 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[0], edgecolor=shift_colors[0], alpha=aa, lw=0.1, label='$\Delta c =$50%-25%')
     pdelta100 = mpatches.Rectangle([1,1], 1, 1, facecolor=shift_colors[1], edgecolor=shift_colors[1], alpha=aa, lw=0.1, label='$\Delta c =$100%-50%')
     axf0shifts.legend(handles=[pdelta50, pdelta100], fontsize=ls, frameon=False, )
