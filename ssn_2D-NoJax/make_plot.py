@@ -500,7 +500,7 @@ def peak_hists(df0, dhw, params=None):
     corr_hwmean= np.corrcoef(dhw[nums_mean, 2], params[:, nums_mean])[0, 1:]
     corr_hw =  np.vstack((corr_hw25, corr_hw100, corr_hwmean))
     
-    #print(corr_f0.shape)
+    print(corr_f0.shape)
     
     width = 0.3
     param_labels = ['Jee', 'Jei', 'Jie', 'Jii', 'gE', 'gI', 'NMDA']
@@ -558,7 +558,7 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     ax_blank.spines['top'].set_visible(False)
     ax_blank.spines['left'].set_visible(False)
     ax_blank.spines['bottom'].set_visible(False)
-    ax_fcn = ax_blank.inset_axes([-0.1, 0.6, 0.43, 0.43])
+    ax_fcn = ax_blank.inset_axes([0.6, 0.05, 0.33, 0.23])
     
     n = 2
     k = 0.04
@@ -568,14 +568,18 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     W = 1
     ssn = SSN_classes._SSN_Base(n, k, Ne, Ni, tau_vec, W)
     x = np.arange(-1, 3, 0.1)
-    
+    #gain lines
+    y_005 = gain_lines(0.5, ssn.powlaw, x[11:22], 0.1)
+    y_02 = gain_lines(2, ssn.powlaw, x[-13:-6], 0.1)
 
     ax_fcn.plot(x, ssn.powlaw(x), 'k', lw= 2.25)
+    ax_fcn.plot(x[-13:-6], y_02, 'r', lw=2.25)
+    ax_fcn.plot(x[11:22], y_005, 'r', lw=2.25)
     ax_fcn.set_xlabel('Input')
     ax_fcn.set_xticks([])
     ax_fcn.set_ylabel('Response')
     ax_fcn.set_yticks([])
-    ax_fcn.set_title(r' $f(x) = k [ x ]_+^n$ ')
+    ax_fcn.set_title(r' $f(v) = k [ v ]_+^n$ ')
     ax_fcn.spines['right'].set_visible(False)
     ax_fcn.spines['top'].set_visible(False)
     
@@ -666,3 +670,21 @@ def dyn_plots(t_range, v_dyn, r_fp, sim_fs, sim_spect, anal_fs, spect, sim_f0, a
     #plt.tight_layout()
     
     return fig_sim
+
+
+def gain_lines(x, f, span, dx=None):
+    '''
+    x - x0 the point you want to find tangent line at
+    f - fcn you want to find the tangent line of
+    span - length of tangent line you want to draw
+    dx - step size of x
+    
+    '''
+    if dx is None:
+        dx = np.mean(np.diff(span))
+    xprime = (f(x+dx) - f(x))/dx
+    y_0 = f(x)
+    tan_line = xprime * (span - x) + y_0 
+    return tan_line
+    
+    
