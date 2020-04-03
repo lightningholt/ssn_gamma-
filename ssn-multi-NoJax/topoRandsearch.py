@@ -14,6 +14,7 @@ freq_range = [0.1, 100]
 
 #SSN parameters
 t_scale = 1 
+tau_corr_noise = 5 # ms
 
 class ssn_pars1():
     n = 2
@@ -76,7 +77,7 @@ class ssn_pars1():
     gabor_inds = -1 #the last index is always the gabor at max contrast and max gabor sigma
     cons = len(con_inds)
     
-    noise_pars = SSN_power_spec.NoisePars(corr_time= 10)
+    noise_pars = SSN_power_spec.NoisePars(corr_time= tau_corr_noise)
     
     spont_input = np.array([1,1]) * 2
     make_J2x2 = lambda Jee, Jei, Jie, Jii: np.array([[Jee, -Jei], [Jie, -Jii]]) * np.pi * ssn_pars.psi
@@ -193,7 +194,7 @@ def ssn_2D_PS(params, ssn_pars=ssn_pars2D):
     rs.append(r_fp)
     
     for cc in range(len(ssn_pars.contrasts)):
-        powspecE, fs, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], SSN_power_spec.NoisePars(corr_time=1), freq_range=freq_range, fnums=fnums)
+        powspecE, fs, _ = SSN_power_spec.linear_power_spect(ssn, r_fp[:, cc], SSN_power_spec.NoisePars(corr_time=tau_corr_noise), freq_range=freq_range, fnums=fnums)
         
         spect.append(powspecE)
     
@@ -325,7 +326,7 @@ def sample_target_SSN(Nsamps, contrasts, params_min, params_max, BALANCED = True
         spect_list.append(spect)
         f0_list.append(f0)
         
-        if smp == 500:
+        if smp == 1000:
             break
     
     return np.asarray(params_list), np.asarray(rs_list), np.asarray(spect_list), np.asarray(f0_list), fs, jj
@@ -422,7 +423,7 @@ def multi_NonLocal_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_m
         f0_listNL[smp, :] = f0NL
         
         smp += 1
-        if smp == 500:
+        if smp == 1000:
             break
             
     
