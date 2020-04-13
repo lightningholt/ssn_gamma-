@@ -99,7 +99,8 @@ class ssn_pars2D():
 ### ==========================================================================================
 
 
-def ssn_PS(params, ssn_pars=ssn_pars1):
+def ssn_PS(params, ssn_pars=ssn_pars1, EX = False):
+    
     Jee = params[0] * np.pi * ssn_pars.psi
     Jei = params[1] * np.pi * ssn_pars.psi
     Jie = params[2] * np.pi * ssn_pars.psi
@@ -160,7 +161,10 @@ def ssn_PS(params, ssn_pars=ssn_pars1):
     
     f0, _, _, _, _ = SSN_power_spec.infl_find_peak_freq(fs, spect.T)
     
-    return rs, spect, fs, f0
+    if EX:
+        return rs, spect, fs, f0, ssn_pars
+    else:
+        return rs, spect, fs, f0
 
 def ssn_2D_PS(params, ssn_pars=ssn_pars2D):
     Jee = params[0] * np.pi * ssn_pars.psi
