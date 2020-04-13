@@ -59,8 +59,10 @@ class ssn_pars1():
     # LFPtarget = trgt + np.hstack((np.array([ii for ii in range(probes-2)])*gridsize, np.array([ii*gridsize - 1 for ii in range(1,3)])))
     #second choice will find diagonally separted ones. 
     
+    AngWidth = 32
+    RFdecay = 0.04
     # Inp = N**2 x stimulus conditions (typically 8 - one for each contrasts and radius (shared at max con and max rad) which gives 7 conditions + gabor)
-    Inp, stimCon, _ = make_conn.makeInputs(OMap, r_cent, contrasts, X, Y, gridperdeg=gridperdeg, gridsizedeg=gridsizedeg)
+    Inp, stimCon, _ = make_conn.makeInputs(OMap, r_cent, contrasts, X, Y, gridperdeg=gridperdeg, gridsizedeg=gridsizedeg, AngWidth=AngWidth, RFdecay=RFdecay)
     
     # re-Define contrasts/radius to find indices for max contrast/ radius to make SS curves and such things later
     Contrasts = stimCon[0,:]
@@ -270,7 +272,7 @@ def sample_multi_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_min
         if smp == Nsamps:
             break
     
-    return np.asarray(params_list), np.asarray(rs_list), np.asarray(spect_list), np.asarray(f0_list), fs, jj
+    return np.asarray(params_list), np.asarray(rs_list), np.asarray(spect_list), np.asarray(f0_list), fs, jj, ssn_pars
 
 
 def sample_target_SSN(Nsamps, contrasts, params_min, params_max, BALANCED = True, ssn_pars=ssn_pars1):
@@ -303,7 +305,7 @@ def sample_target_SSN(Nsamps, contrasts, params_min, params_max, BALANCED = True
         
         params.append( rand_samp(sigEE_min, sigEE_max))
         params.append( rand_samp(sigIE_min, sigIE_max))
-
+                      
         Jee, Jei, Jie, Jii = params[:4]
         ge, gi = params[4:6]
 
@@ -329,7 +331,7 @@ def sample_target_SSN(Nsamps, contrasts, params_min, params_max, BALANCED = True
         if smp == 1000:
             break
     
-    return np.asarray(params_list), np.asarray(rs_list), np.asarray(spect_list), np.asarray(f0_list), fs, jj
+    return np.asarray(params_list), np.asarray(rs_list), np.asarray(spect_list), np.asarray(f0_list), fs, jj, ssn_pars
 
 
 def multi_NonLocal_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_min, NMDA_max, Plocal_min, Plocal_max, sig_min, sig_max, BALANCED = True, ssn_pars=ssn_pars1, Jxi_min = None, Jxi_max = None, ARRAY = True):
@@ -384,6 +386,7 @@ def multi_NonLocal_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_m
             params.append( rand_samp(sig_min, sig_max))
         
         if params[-2] > params[-1]:
+            #impose sig_EE < sig_IE
             sigTemp = params[-1]
             params[-1] = params[-2]
             params[-2] = sigTemp
@@ -439,8 +442,8 @@ def multi_NonLocal_SSN(Nsamps, contrasts, Jxe_max, Jxe_min, g_max, g_min, NMDA_m
     
     
     if ARRAY:
-        return np.asarray(params_list), np.asarray(rs_list), np.asarray(spect_list), np.asarray(f0_list), np.asarray(params_listNL), np.asarray(rs_listNL), np.asarray(spect_listNL), np.asarray(f0_listNL), interesting_inds, fs, jj
+        return np.asarray(params_list), np.asarray(rs_list), np.asarray(spect_list), np.asarray(f0_list), np.asarray(params_listNL), np.asarray(rs_listNL), np.asarray(spect_listNL), np.asarray(f0_listNL), interesting_inds, fs, jj, ssn_pars
     
     else:
         #return params_list.tolist(), rs_list.tolist(), spect_list.tolist(), f0_list.tolist(), params_listNL.tolist(), rs_listNL.tolist(), spect_listNL.tolist(), f0_listNL.tolist(), interesting_inds, fs.tolist(), jj
-        return params_list.tolist(), params_listNL.tolist(), rs_listNL.tolist(), spect_listNL.tolist(), f0_listNL.tolist(), interesting_inds, fs.tolist(), jj
+        return params_list.tolist(), params_listNL.tolist(), rs_listNL.tolist(), spect_listNL.tolist(), f0_listNL.tolist(), interesting_inds, fs.tolist(), jj, ssn_pars
