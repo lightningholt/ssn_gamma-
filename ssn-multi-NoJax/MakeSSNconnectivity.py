@@ -155,7 +155,7 @@ def make_full_W(Plocal, Jee, Jei, Jie, Jii, sigEE, sigIE, deltaD, OMap, sigXI = 
     
     return W
 
-def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWidth=32):
+def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWidth=32, RFdecay=0.04):
     '''
     makes the input arrays for the various stimulus conditions
     all radii at the highest contrast - to test Surround Suppression
@@ -190,9 +190,9 @@ def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWi
     dOri = np.where(dOri > 90, 180-dOri, dOri)
     In0 = np.ravel(np.exp(-dOri**2/(2*AngWidth**2)))
     
-    RFdecay = 0.8/2 #biologic decay is 0.8 mm, magfactor =2 mm/deg 
-    RFdecay = 0.1 * RFdecay
-    RFdecay = 0.04
+#     RFdecay = 0.8/2 #biologic decay is 0.8 mm, magfactor =2 mm/deg 
+#     RFdecay = 0.1 * RFdecay
+#     RFdecay = 0.04
     #RFdecay = dx
     #GaborSigma = 0.3*np.max(r_cent) 
     GaborSigma = 0.5
@@ -222,4 +222,4 @@ def makeInputs(OMap, r_cent, contrasts, X, Y, gridsizedeg=4, gridperdeg=5, AngWi
     #array to reference to find max contrasts, etc
     stimulus_condition = np.vstack((Contrasts, np.hstack((rads, np.max(rads)))))
     
-    return StimConds.T, stimulus_condition, InSr
+    return StimConds.T, stimulus_condition, InSr, 
